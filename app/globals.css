@@ -1,0 +1,92 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 45 36% 96%;
+  --foreground: 211 54% 14%;
+  --muted: 42 28% 92%;
+  --muted-foreground: 210 8% 19%;
+  --border: 40 24% 82%;
+  --card: 0 0% 100%;
+  --card-foreground: 211 54% 14%;
+  --primary: 211 62% 17%;
+  --primary-foreground: 45 36% 96%;
+  --accent: 42 42% 88%;
+  --accent-foreground: 211 54% 18%;
+  --highlight: 40 51% 56%;
+  --highlight-foreground: 211 62% 17%;
+  --ochre: 38 47% 37%;
+  --destructive: 0 72% 58%;
+  --success: 156 62% 38%;
+}
+
+.dark {
+  --background: 211 58% 10%;
+  --foreground: 45 36% 96%;
+  --muted: 212 30% 16%;
+  --muted-foreground: 40 14% 74%;
+  --border: 213 24% 23%;
+  --card: 211 49% 13%;
+  --card-foreground: 45 36% 96%;
+  --primary: 211 55% 28%;
+  --primary-foreground: 45 36% 96%;
+  --accent: 38 28% 22%;
+  --accent-foreground: 42 38% 88%;
+  --highlight: 40 51% 56%;
+  --highlight-foreground: 211 62% 17%;
+  --ochre: 38 47% 37%;
+  --destructive: 0 68% 62%;
+  --success: 157 70% 45%;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply min-h-screen bg-background bg-radial-soft font-body text-foreground antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display tracking-tight;
+  }
+
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 1000px transparent inset;
+    -webkit-text-fill-color: currentColor;
+    transition: background-color 9999s ease-out;
+  }
+}
+
+@layer components {
+  .surface {
+    @apply border border-border/70 bg-card/85 shadow-glow backdrop-blur-xl;
+  }
+
+  .auth-atmosphere {
+    background-image:
+      radial-gradient(circle at 12% 16%, hsl(var(--highlight) / 0.26), transparent 18%),
+      radial-gradient(circle at 86% 14%, hsl(var(--primary) / 0.12), transparent 24%),
+      radial-gradient(circle at 18% 88%, hsl(var(--ochre) / 0.18), transparent 22%),
+      radial-gradient(circle at 50% 100%, hsl(var(--primary) / 0.08), transparent 28%),
+      linear-gradient(180deg, hsl(var(--background) / 0.92), hsl(var(--background) / 0.98));
+  }
+
+  .soft-grid {
+    background-image:
+      linear-gradient(to right, hsl(var(--border) / 0.18) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--border) / 0.18) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+}
