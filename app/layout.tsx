@@ -4,6 +4,8 @@ import type { ReactNode } from "react";
 
 import "@/app/globals.css";
 
+import { PersistentMiniPlayer } from "@/components/app/mini-player";
+import { AudioProvider } from "@/components/providers/audio-context";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 
 const fontBody = Inter({
@@ -24,8 +26,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
-      <body className={fontBody.variable}>
-        <ThemeProvider>{children}</ThemeProvider>
+      <body className={`${fontBody.variable} pb-20`}>
+        <ThemeProvider>
+          <AudioProvider>
+            {children}
+            <PersistentMiniPlayer />
+          </AudioProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
