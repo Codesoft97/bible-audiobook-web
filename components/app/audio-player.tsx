@@ -1,7 +1,5 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-
 import {
   AudioLines,
   Headphones,
@@ -14,31 +12,13 @@ import {
   VolumeX,
 } from "lucide-react";
 
+import { useAudio } from "@/components/providers/audio-context";
+import type { AudioTrack } from "@/components/providers/audio-context";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-/* ------------------------------------------------------------------ */
-/*  Types                                                              */
-/* ------------------------------------------------------------------ */
-
-export interface AudioTrack {
-  id: string;
-  title: string;
-  subtitle?: string;
-  src: string;
-}
-
-interface AudioPlayerProps {
-  /** Player header title */
-  title: string;
-  /** Optional description shown below the title */
-  description?: string;
-  /** One or more tracks to play */
-  tracks: AudioTrack[];
-  /** Optional badge shown next to the header */
-  badgeLabel?: string;
-}
+export type { AudioTrack };
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -56,6 +36,22 @@ function formatTime(value: number) {
   return h > 0 ? `${pad(h)}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
 }
 
+function isSamePlaylist(a: AudioTrack[], b: AudioTrack[]) {
+  if (a.length !== b.length) return false;
+  return a.every((t, i) => t.id === b[i].id);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Props                                                              */
+/* ------------------------------------------------------------------ */
+
+interface AudioPlayerProps {
+  title: string;
+  description?: string;
+  tracks: AudioTrack[];
+  badgeLabel?: string;
+}
+
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
@@ -66,121 +62,57 @@ export function AudioPlayer({
   tracks,
   badgeLabel,
 }: AudioPlayerProps) {
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const progressRef = useRef<HTMLDivElement>(null);
+  const audio = useAudio();
 
-  const [trackIndex, setTrackIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isBuffering, setIsBuffering] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [error, setError] = useState("");
-  const [muted, setMuted] = useState(false);
-  const [shouldAutoplay, setShouldAutoplay] = useState(false);
+  // Check if THIS player's playlist is the active one in the global context
+  const isActivePlaylist = isSamePlaylist(audio.playlist, tracks);
+  const activeTrackIndex = isActivePlaylist ? audio.trackIndex : -1;
+  const isPlaying = isActivePlaylist && audio.isPlaying;
+  const isBuffering = isActivePlaylist && audio.isBuffering;
+  const currentTime = isActivePlaylist ? audio.currentTime : 0;
+  const duration = isActivePlaylist ? audio.duration : 0;
+  const error = isActivePlaylist ? audio.error : "";
+  const currentTrack = isActivePlaylist ? audio.currentTrack : null;
 
-  const track = tracks[trackIndex] ?? null;
-  const hasPrev = trackIndex > 0;
-  const hasNext = trackIndex < tracks.length - 1;
   const multiTrack = tracks.length > 1;
+  const hasPrev = activeTrackIndex > 0;
+  const hasNext = activeTrackIndex < tracks.length - 1;
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
-  /* Reset when tracks change (e.g. user selects a different book) */
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (audio) audio.pause();
-
-    setTrackIndex(0);
-    setIsPlaying(false);
-    setIsBuffering(false);
-    setCurrentTime(0);
-    setDuration(0);
-    setError("");
-    setShouldAutoplay(false);
-  }, [tracks]);
-
-  /* Autoplay after programmatic track change */
-  useEffect(() => {
-    if (!track || !shouldAutoplay) return;
-
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    audio.load();
-    let active = true;
-
-    void audio.play().catch(() => {
-      if (!active) return;
-      setError("Nao foi possivel reproduzir o audio. Tente novamente.");
-      setIsPlaying(false);
-      setIsBuffering(false);
-    });
-
-    setShouldAutoplay(false);
-    return () => {
-      active = false;
-    };
-  }, [track, shouldAutoplay]);
-
-  /* ---- playback controls ---- */
-
-  const togglePlayback = useCallback(() => {
-    const audio = audioRef.current;
-    if (!audio || !track) return;
-
-    setError("");
-
-    if (audio.paused) {
-      setIsBuffering(true);
-      void audio.play().catch(() => {
-        setError("Nao foi possivel reproduzir o audio. Tente novamente.");
-        setIsPlaying(false);
-        setIsBuffering(false);
-      });
+  function handlePlay() {
+    if (isActivePlaylist) {
+      if (audio.isPlaying) {
+        audio.pause();
+      } else {
+        audio.resume();
+      }
     } else {
-      audio.pause();
+      audio.play(tracks, 0);
     }
-  }, [track]);
-
-  function goTo(offset: -1 | 1) {
-    const nextIndex = trackIndex + offset;
-    if (nextIndex < 0 || nextIndex >= tracks.length) return;
-
-    setTrackIndex(nextIndex);
-    setCurrentTime(0);
-    setDuration(0);
-    setError("");
-    setIsBuffering(true);
-    setShouldAutoplay(true);
   }
 
-  function selectTrack(index: number) {
-    if (index === trackIndex) {
-      togglePlayback();
-      return;
+  function handleSelectTrack(index: number) {
+    if (isActivePlaylist) {
+      audio.selectTrack(index);
+    } else {
+      audio.play(tracks, index);
     }
-
-    setTrackIndex(index);
-    setCurrentTime(0);
-    setDuration(0);
-    setError("");
-    setIsBuffering(true);
-    setShouldAutoplay(true);
   }
 
   function handleProgressClick(e: React.MouseEvent<HTMLDivElement>) {
-    const audio = audioRef.current;
-    const bar = progressRef.current;
-    if (!audio || !bar || duration <= 0) return;
-
-    const rect = bar.getBoundingClientRect();
+    if (!isActivePlaylist || duration <= 0) return;
+    const rect = e.currentTarget.getBoundingClientRect();
     const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-    const nextTime = ratio * duration;
-    audio.currentTime = nextTime;
-    setCurrentTime(nextTime);
+    audio.seek(ratio * duration);
   }
 
-  /* ---- status label ---- */
-  const statusLabel = isBuffering ? "Carregando" : isPlaying ? "Tocando" : "Pronto";
+  const statusLabel = isBuffering
+    ? "Carregando"
+    : isPlaying
+      ? "Tocando"
+      : isActivePlaylist
+        ? "Pausado"
+        : "Pronto";
 
   return (
     <div className="space-y-4">
@@ -207,7 +139,7 @@ export function AudioPlayer({
               Agora ouvindo
             </p>
             <h4 className="text-xl font-semibold leading-tight sm:text-2xl">
-              {track ? track.title : title}
+              {currentTrack ? currentTrack.title : title}
             </h4>
             {description && (
               <p className="text-sm leading-6 text-muted-foreground">{description}</p>
@@ -221,7 +153,7 @@ export function AudioPlayer({
                 variant="secondary"
                 size="icon"
                 className="size-10 rounded-full"
-                onClick={() => goTo(-1)}
+                onClick={() => isActivePlaylist && audio.prev()}
                 disabled={!hasPrev}
                 aria-label="Faixa anterior"
               >
@@ -232,8 +164,8 @@ export function AudioPlayer({
             <Button
               size="icon"
               className="size-14 rounded-full shadow-md transition-transform hover:scale-105 active:scale-95"
-              onClick={togglePlayback}
-              disabled={!track}
+              onClick={handlePlay}
+              disabled={tracks.length === 0}
               aria-label={isPlaying ? "Pausar" : "Reproduzir"}
             >
               {isBuffering ? (
@@ -250,7 +182,7 @@ export function AudioPlayer({
                 variant="secondary"
                 size="icon"
                 className="size-10 rounded-full"
-                onClick={() => goTo(1)}
+                onClick={() => isActivePlaylist && audio.next()}
                 disabled={!hasNext}
                 aria-label="Proxima faixa"
               >
@@ -262,21 +194,16 @@ export function AudioPlayer({
               variant="ghost"
               size="icon"
               className="ml-2 size-9 rounded-full text-muted-foreground hover:text-foreground"
-              onClick={() => {
-                setMuted((m) => !m);
-                const audio = audioRef.current;
-                if (audio) audio.muted = !muted;
-              }}
-              aria-label={muted ? "Ativar som" : "Silenciar"}
+              onClick={audio.toggleMute}
+              aria-label={audio.muted ? "Ativar som" : "Silenciar"}
             >
-              {muted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
+              {audio.muted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
             </Button>
           </div>
 
           {/* Progress bar */}
           <div className="space-y-2">
             <div
-              ref={progressRef}
               role="slider"
               tabIndex={0}
               aria-label="Progresso do audio"
@@ -285,7 +212,7 @@ export function AudioPlayer({
               aria-valuenow={currentTime}
               className={cn(
                 "group relative h-2 w-full cursor-pointer overflow-hidden rounded-full bg-highlight/15",
-                (!track || duration <= 0) && "cursor-not-allowed opacity-50",
+                (!isActivePlaylist || duration <= 0) && "cursor-not-allowed opacity-50",
               )}
               onClick={handleProgressClick}
             >
@@ -311,53 +238,20 @@ export function AudioPlayer({
             </div>
           )}
         </div>
-
-        {/* Hidden audio element */}
-        <audio
-          ref={audioRef}
-          preload="metadata"
-          src={track?.src}
-          muted={muted}
-          onCanPlay={() => setIsBuffering(false)}
-          onWaiting={() => setIsBuffering(true)}
-          onPlay={() => {
-            setIsPlaying(true);
-            setIsBuffering(false);
-          }}
-          onPause={() => setIsPlaying(false)}
-          onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
-          onLoadedMetadata={(e) => {
-            const d = e.currentTarget.duration;
-            setDuration(Number.isFinite(d) ? d : 0);
-          }}
-          onEnded={() => {
-            if (hasNext) {
-              goTo(1);
-              return;
-            }
-            setIsPlaying(false);
-            setIsBuffering(false);
-          }}
-          onError={() => {
-            setError("Nao foi possivel reproduzir o audio. Tente novamente.");
-            setIsPlaying(false);
-            setIsBuffering(false);
-          }}
-        />
       </div>
 
       {/* ---- Track list (only for multi-track) ---- */}
       {multiTrack && (
         <div className="space-y-2.5">
           {tracks.map((t, i) => {
-            const isCurrent = i === trackIndex;
+            const isCurrent = i === activeTrackIndex;
             const isCurrentPlaying = isCurrent && isPlaying;
 
             return (
               <button
                 key={t.id}
                 type="button"
-                onClick={() => selectTrack(i)}
+                onClick={() => handleSelectTrack(i)}
                 className={cn(
                   "flex w-full items-center justify-between gap-4 rounded-2xl border px-4 py-3 text-left transition",
                   isCurrent
@@ -395,7 +289,7 @@ export function AudioPlayer({
                       : "bg-highlight/10 text-highlight",
                   )}
                 >
-                  {isCurrentPlaying ? "Tocando" : isCurrent ? "Selecionado" : "Ouvir"}
+                  {isCurrentPlaying ? "Tocando" : isCurrent ? "Pausado" : "Ouvir"}
                 </Badge>
               </button>
             );
