@@ -17,16 +17,23 @@ export interface CharacterJourneyStreamPayload {
   audioUrl: string;
 }
 
-export async function fetchCharacterJourneys(token?: string) {
-  if (!token) {
-    return [] as CharacterJourney[];
+export async function fetchCharacterJourneys(options: {
+  token?: string;
+  cookieHeader?: string;
+} = {}) {
+  const headers: Record<string, string> = {};
+
+  if (options.token) {
+    headers.Authorization = `Bearer ${options.token}`;
+  }
+
+  if (options.cookieHeader) {
+    headers.cookie = options.cookieHeader;
   }
 
   const response = await fetchBackend("/character-journeys", {
     method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+    headers,
   });
 
   const envelope = await parseBackendEnvelope<CharacterJourney[]>(response);

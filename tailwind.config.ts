@@ -28,11 +28,11 @@ const config: Config = {
         success: "hsl(var(--success))",
       },
       boxShadow: {
-        glow: "0 24px 80px -36px rgba(16, 42, 69, 0.42), 0 10px 32px -18px rgba(140, 107, 50, 0.42)",
+        glow: "0 26px 78px -38px rgba(11, 31, 53, 0.6), 0 12px 36px -24px rgba(142, 107, 48, 0.42)",
       },
       backgroundImage: {
         "radial-soft":
-          "radial-gradient(circle at top, rgba(16, 42, 69, 0.22), transparent 38%), radial-gradient(circle at bottom right, rgba(140, 107, 50, 0.3), transparent 28%)",
+          "radial-gradient(circle at top, rgba(9, 38, 70, 0.2), transparent 38%), radial-gradient(circle at bottom right, rgba(164, 128, 66, 0.28), transparent 34%)",
       },
       fontFamily: {
         body: ["var(--font-body)"],

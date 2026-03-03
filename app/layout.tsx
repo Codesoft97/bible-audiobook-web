@@ -11,6 +11,7 @@ import { ThemeProvider } from "@/components/providers/theme-provider";
 const fontBody = Inter({
   subsets: ["latin"],
   variable: "--font-body",
+  weight: ["400", "500", "600", "700", "800"],
 });
 
 export const metadata: Metadata = {
@@ -26,7 +27,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
-      <body className={`${fontBody.variable} pb-20`}>
+      <body className={fontBody.variable}>
         <ThemeProvider>
           <AudioProvider>
             {children}

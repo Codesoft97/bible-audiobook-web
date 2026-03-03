@@ -217,16 +217,22 @@ export function sortAudiobookChapters(items: Audiobook[]) {
   return [...items].sort((first, second) => first.chapter - second.chapter);
 }
 
-export async function fetchAudiobooks(options: { token?: string; book?: string } = {}) {
-  if (!options.token) {
-    return [] as Audiobook[];
+export async function fetchAudiobooks(
+  options: { token?: string; book?: string; cookieHeader?: string } = {},
+) {
+  const headers: Record<string, string> = {};
+
+  if (options.token) {
+    headers.Authorization = `Bearer ${options.token}`;
+  }
+
+  if (options.cookieHeader) {
+    headers.cookie = options.cookieHeader;
   }
 
   const response = await fetchBackend("/audiobooks", {
     method: "GET",
-    headers: {
-      Authorization: `Bearer ${options.token}`,
-    },
+    headers,
   });
 
   const envelope = await parseBackendEnvelope<Audiobook[]>(response);
