@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import {
   BookOpenText,
+  Clock3,
   Compass,
   Crown,
   Home,
@@ -15,6 +16,7 @@ import type { LucideIcon } from "lucide-react";
 import type { Audiobook } from "@/lib/audiobooks";
 import type { CharacterJourney } from "@/lib/character-journeys";
 import { AudiobookBrowser } from "@/components/app/audiobook-browser";
+import { HistoryPanel } from "@/components/app/history-panel";
 import { Logo } from "@/components/logo";
 import { LogoutButton } from "@/components/app/logout-button";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
@@ -24,7 +26,7 @@ import type { AppSession } from "@/lib/auth/types";
 import { cn, formatPlanLabel, formatProfileTypeLabel } from "@/lib/utils";
 
 type LibraryView = "books" | "journeys";
-type SidebarKey = "books" | "journeys" | "home" | "explore" | "library" | "plans";
+type SidebarKey = "books" | "journeys" | "history" | "home" | "explore" | "library" | "plans";
 
 const SIDEBAR_ITEMS: Array<{
   key: Exclude<SidebarKey, "books" | "journeys">;
@@ -32,6 +34,7 @@ const SIDEBAR_ITEMS: Array<{
   icon: LucideIcon;
   soon?: boolean;
 }> = [
+  { key: "history", label: "Historico", icon: Clock3 },
   { key: "home", label: "Home", icon: Home },
   { key: "explore", label: "Explorar", icon: Compass },
   { key: "library", label: "Biblioteca", icon: Library },
@@ -66,6 +69,7 @@ export function AppShell({
   }
 
   const profileInitial = selectedProfile.name.trim().charAt(0).toUpperCase() || "P";
+  const showingHistory = activeSidebar === "history";
 
   return (
     <main className="dashboard-atmosphere min-h-screen px-3 py-3 md:px-5 md:py-5">
@@ -179,7 +183,13 @@ export function AppShell({
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
                 <p className="text-sm text-muted-foreground">Bom dia, {selectedProfile.name}</p>
-                
+                <h1 className="text-3xl font-semibold text-foreground md:text-4xl">
+                  {showingHistory
+                    ? "Historico de escuta"
+                    : libraryView === "books"
+                      ? "Biblioteca Voz da Palavra"
+                      : "Jornadas Voz da Palavra"}
+                </h1>
               </div>
               <div className="flex items-center gap-2">
                 <Badge className="bg-primary/10 text-primary dark:bg-primary-foreground/10 dark:text-primary-foreground">
@@ -210,15 +220,27 @@ export function AppShell({
             </Card>
           </div>
 
-          <AudiobookBrowser
-            initialAudiobooks={initialAudiobooks}
-            initialCharacterJourneys={initialCharacterJourneys}
-            view={libraryView}
-            onViewChange={(view) => {
-              setLibraryView(view);
-              setActiveSidebar(view);
-            }}
-          />
+          {showingHistory ? (
+            <HistoryPanel
+              initialAudiobooks={initialAudiobooks}
+              initialCharacterJourneys={initialCharacterJourneys}
+              onOpenContent={(contentType) => {
+                const nextView = contentType === "bible" ? "books" : "journeys";
+                setLibraryView(nextView);
+                setActiveSidebar(nextView);
+              }}
+            />
+          ) : (
+            <AudiobookBrowser
+              initialAudiobooks={initialAudiobooks}
+              initialCharacterJourneys={initialCharacterJourneys}
+              view={libraryView}
+              onViewChange={(view) => {
+                setLibraryView(view);
+                setActiveSidebar(view);
+              }}
+            />
+          )}
         </section>
       </div>
     </main>

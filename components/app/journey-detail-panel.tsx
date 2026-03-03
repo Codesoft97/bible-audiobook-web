@@ -86,6 +86,8 @@ export function JourneyDetailPanel({
                 id: selectedJourney.id,
                 title: selectedJourney.titulo,
                 src: audioUrl,
+                progressContentType: "character-journey",
+                progressContentId: selectedJourney.id,
               },
             ]}
           />
