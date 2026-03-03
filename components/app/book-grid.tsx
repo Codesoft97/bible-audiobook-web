@@ -31,15 +31,26 @@ export function BookGrid({ books, selectedSlug, onSelect }: BookGridProps) {
           type="button"
           onClick={() => onSelect(book)}
           className={cn(
-            "surface rounded-[28px] p-6 text-left transition hover:-translate-y-1 hover:border-highlight/35",
+            "surface overflow-hidden rounded-[28px] text-left transition hover:-translate-y-1 hover:border-highlight/35",
             selectedSlug === book.slug ? "border-highlight/40 bg-accent/65" : "",
           )}
         >
-          <div className="space-y-4">
+          {book.coverImageUrl ? (
+            <div className="relative aspect-[16/9] w-full overflow-hidden bg-accent/40">
+              <img
+                src={book.coverImageUrl}
+                alt={book.title}
+                className="size-full object-cover"
+              />
+            </div>
+          ) : null}
+          <div className="space-y-4 p-6">
             <div className="flex items-center justify-between gap-3">
-              <div className="flex size-12 items-center justify-center rounded-2xl bg-highlight/12 text-highlight">
-                <BookOpenText className="size-6" />
-              </div>
+              {!book.coverImageUrl ? (
+                <div className="flex size-12 items-center justify-center rounded-2xl bg-highlight/12 text-highlight">
+                  <BookOpenText className="size-6" />
+                </div>
+              ) : null}
               <Badge>{book.totalChapters} capitulos</Badge>
             </div>
             <div>

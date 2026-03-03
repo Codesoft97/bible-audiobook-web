@@ -36,8 +36,17 @@ export function JourneyDetailPanel({
   }
 
   return (
-    <Card className="rounded-[32px] p-7">
-      <div className="space-y-5">
+    <Card className="overflow-hidden rounded-[32px] p-0">
+      {selectedJourney.coverImageUrl ? (
+        <div className="relative aspect-[2/1] w-full overflow-hidden bg-accent/40">
+          <img
+            src={selectedJourney.coverImageUrl}
+            alt={selectedJourney.titulo}
+            className="size-full object-cover"
+          />
+        </div>
+      ) : null}
+      <div className="space-y-5 p-7">
         <div className="space-y-2">
           <div className="inline-flex items-center gap-2 rounded-full border border-highlight/25 bg-highlight/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.2em] text-highlight">
             <UserRound className="size-3.5" />

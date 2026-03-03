@@ -5,6 +5,8 @@ export interface Audiobook {
   id: string;
   book: string;
   chapter: number;
+  isActive: boolean;
+  coverImageUrl: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -14,6 +16,7 @@ export interface AudiobookBookSummary {
   title: string;
   totalChapters: number;
   latestChapter: number;
+  coverImageUrl: string;
   updatedAt: string;
 }
 
@@ -203,6 +206,7 @@ export function groupAudiobooksByBook(items: Audiobook[]) {
         title: formatBookLabel(slug),
         totalChapters: sortedChapters.length,
         latestChapter: sortedChapters[sortedChapters.length - 1]?.chapter ?? 0,
+        coverImageUrl: sortedChapters[0]?.coverImageUrl ?? "",
         updatedAt: sortedChapters[sortedChapters.length - 1]?.updatedAt ?? "",
       } satisfies AudiobookBookSummary;
     })
@@ -231,11 +235,11 @@ export async function fetchAudiobooks(options: { token?: string; book?: string }
     return [] as Audiobook[];
   }
 
-  const items = envelope.data;
+  const activeItems = envelope.data.filter((item) => item.isActive);
 
   if (!options.book) {
-    return items;
+    return activeItems;
   }
 
-  return items.filter((item) => item.book.toLowerCase() === options.book?.toLowerCase());
+  return activeItems.filter((item) => item.book.toLowerCase() === options.book?.toLowerCase());
 }

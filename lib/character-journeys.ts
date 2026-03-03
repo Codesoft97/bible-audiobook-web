@@ -7,6 +7,8 @@ export interface CharacterJourney {
   categoria: string;
   perfilAlvo: string;
   duracaoEstimadaMinutos: number;
+  isActive: boolean;
+  coverImageUrl: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -33,5 +35,5 @@ export async function fetchCharacterJourneys(token?: string) {
     return [] as CharacterJourney[];
   }
 
-  return envelope.data;
+  return envelope.data.filter((item) => item.isActive);
 }
