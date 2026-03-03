@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { useDeferredValue, useMemo, useState } from "react";
 
-import { Search, Sparkles } from "lucide-react";
+import { BookOpenText, Search, UserRound } from "lucide-react";
 
 import type { Audiobook, AudiobookBookSummary } from "@/lib/audiobooks";
 import { groupAudiobooksByBook } from "@/lib/audiobooks";
@@ -22,6 +22,8 @@ type LibraryView = "books" | "journeys";
 interface AudiobookBrowserProps {
   initialAudiobooks: Audiobook[];
   initialCharacterJourneys: CharacterJourney[];
+  view: LibraryView;
+  onViewChange: (view: LibraryView) => void;
 }
 
 function FilterTab({
@@ -40,8 +42,8 @@ function FilterTab({
       className={cn(
         "rounded-full px-4 py-2 text-sm font-medium transition",
         active
-          ? "bg-primary text-primary-foreground"
-          : "border border-highlight/20 bg-accent/80 text-accent-foreground hover:bg-accent",
+          ? "bg-primary text-primary-foreground shadow-sm"
+          : "text-accent-foreground hover:bg-background/80",
       )}
     >
       {children}
@@ -52,8 +54,9 @@ function FilterTab({
 export function AudiobookBrowser({
   initialAudiobooks,
   initialCharacterJourneys,
+  view,
+  onViewChange,
 }: AudiobookBrowserProps) {
-  const [view, setView] = useState<LibraryView>("books");
   const [query, setQuery] = useState("");
   const deferredQuery = useDeferredValue(query);
 
@@ -104,83 +107,103 @@ export function AudiobookBrowser({
     void journey.handleSelectJourney(selected);
   }
 
-  return (
-    <div className="space-y-6">
-      <div className="surface rounded-[32px] p-6 md:p-8">
-        <div className="flex flex-col gap-5">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="space-y-3">
-              <div className="inline-flex items-center gap-2 rounded-full border border-highlight/30 bg-highlight/10 px-4 py-2 text-sm text-highlight">
-                <Sparkles className="size-4" />
-                Catalogo carregado do backend
-              </div>
-              <div>
-                <h2 className="text-3xl font-semibold">Explore livros e jornadas biblicas.</h2>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-                  A tela inicial lista os livros e as jornadas recebidos pelo backend. Ao abrir um
-                  item, o app consulta novamente o backend para retornar o conteudo reproduzivel.
-                </p>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <FilterTab active={view === "books"} onClick={() => setView("books")}>
-                Livros da Biblia
-              </FilterTab>
-              <FilterTab active={view === "journeys"} onClick={() => setView("journeys")}>
-                Jornadas de personagens
-              </FilterTab>
-            </div>
-          </div>
+  const resultCount = view === "books" ? filteredBooks.length : filteredJourneys.length;
 
-          <div className="relative">
+  return (
+    <div className="space-y-5">
+      <div className="surface rounded-[24px] p-4 md:p-5">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+          <div className="relative w-full xl:max-w-[680px]">
             <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={query}
               placeholder={
                 view === "books"
-                  ? "Busque por livro. Ex: Jonas, Genesis, Marcos..."
-                  : "Busque por jornada. Ex: Isaque, Jesus, Moises..."
+                  ? "Buscar por livro, tema ou capitulo"
+                  : "Buscar por personagem, categoria ou perfil"
               }
-              className="pl-11"
+              className="h-12 rounded-full border-border/70 bg-background/80 pl-11"
               onChange={(event) => setQuery(event.target.value)}
             />
+          </div>
+
+          <div className="inline-flex w-fit items-center rounded-full bg-accent/75 p-1">
+            <FilterTab active={view === "books"} onClick={() => onViewChange("books")}>
+              Livros da Biblia
+            </FilterTab>
+            <FilterTab active={view === "journeys"} onClick={() => onViewChange("journeys")}>
+              Jornadas
+            </FilterTab>
           </div>
         </div>
       </div>
 
-      {view === "books" ? (
-        <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-          <div className="grid gap-4 sm:grid-cols-2">
+      <div className="surface rounded-[24px] p-4 md:p-5">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-muted-foreground">
+              {view === "books" ? (
+                <BookOpenText className="size-3.5 text-highlight" />
+              ) : (
+                <UserRound className="size-3.5 text-highlight" />
+              )}
+              {view === "books" ? "Catalogo principal" : "Colecao de jornadas"}
+            </p>
+            <h2 className="mt-1 text-3xl font-semibold text-foreground md:text-[2.15rem]">
+              {view === "books" ? "Biblioteca em destaque" : "Personagens para ouvir"}
+            </h2>
+            <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
+              {view === "books"
+                ? "Escolha um livro para carregar os capitulos em audio e comecar a reproducao."
+                : "Selecione uma jornada para ouvir uma narracao guiada por personagem biblico."}
+            </p>
+          </div>
+          <span className="rounded-full border border-highlight/35 bg-highlight/12 px-3 py-1.5 text-xs font-medium uppercase tracking-[0.12em] text-highlight">
+            {resultCount} itens
+          </span>
+        </div>
+
+        <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {view === "books" ? (
             <BookGrid
               books={filteredBooks}
               selectedSlug={book.selectedBook?.slug ?? null}
               onSelect={handleSelectBook}
             />
-          </div>
+          ) : (
+            <JourneyGrid
+              journeys={filteredJourneys}
+              selectedId={journey.selectedJourney?.id ?? null}
+              onSelect={handleSelectJourney}
+            />
+          )}
+        </div>
+      </div>
+
+      <div className="surface rounded-[24px] p-4 md:p-6">
+        <div className="mb-4">
+          <h3 className="text-2xl font-semibold text-foreground">Player</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            A reproducao abaixo segue o item selecionado na grade.
+          </p>
+        </div>
+
+        {view === "books" ? (
           <BookDetailPanel
             selectedBook={book.selectedBook}
             chapters={book.sortedChapters}
             loading={book.bookLoading}
             error={book.bookError}
           />
-        </div>
-      ) : (
-        <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <JourneyGrid
-              journeys={filteredJourneys}
-              selectedId={journey.selectedJourney?.id ?? null}
-              onSelect={handleSelectJourney}
-            />
-          </div>
+        ) : (
           <JourneyDetailPanel
             selectedJourney={journey.selectedJourney}
             audioUrl={journey.journeyAudioUrl}
             loading={journey.journeyLoading}
             error={journey.journeyError}
           />
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
