@@ -15,6 +15,8 @@ function chaptersToTracks(bookTitle: string, chapters: Audiobook[]): AudioTrack[
     title: `Capitulo ${ch.chapter}`,
     subtitle: `Faixa ${i + 1} do livro ${bookTitle}`,
     src: buildStreamUrl(ch.id),
+    progressContentType: "bible",
+    progressContentId: ch.id,
   }));
 }
 
