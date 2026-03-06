@@ -6,6 +6,7 @@ import "@/app/globals.css";
 
 import { PersistentMiniPlayer } from "@/components/app/mini-player";
 import { AudioProvider } from "@/components/providers/audio-context";
+import { AppGoogleOAuthProvider } from "@/components/providers/google-oauth-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 
 const fontBody = Inter({
@@ -28,12 +29,14 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" suppressHydrationWarning>
       <body className={fontBody.variable}>
-        <ThemeProvider>
-          <AudioProvider>
-            {children}
-            <PersistentMiniPlayer />
-          </AudioProvider>
-        </ThemeProvider>
+        <AppGoogleOAuthProvider>
+          <ThemeProvider>
+            <AudioProvider>
+              {children}
+              <PersistentMiniPlayer />
+            </AudioProvider>
+          </ThemeProvider>
+        </AppGoogleOAuthProvider>
       </body>
     </html>
   );
