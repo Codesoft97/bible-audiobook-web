@@ -6,11 +6,13 @@ import "@/app/globals.css";
 
 import { PersistentMiniPlayer } from "@/components/app/mini-player";
 import { AudioProvider } from "@/components/providers/audio-context";
+import { AppGoogleOAuthProvider } from "@/components/providers/google-oauth-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 
 const fontBody = Inter({
   subsets: ["latin"],
   variable: "--font-body",
+  weight: ["400", "500", "600", "700", "800"],
 });
 
 export const metadata: Metadata = {
@@ -26,13 +28,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
-      <body className={`${fontBody.variable} pb-20`}>
-        <ThemeProvider>
-          <AudioProvider>
-            {children}
-            <PersistentMiniPlayer />
-          </AudioProvider>
-        </ThemeProvider>
+      <body className={fontBody.variable}>
+        <AppGoogleOAuthProvider>
+          <ThemeProvider>
+            <AudioProvider>
+              {children}
+              <PersistentMiniPlayer />
+            </AudioProvider>
+          </ThemeProvider>
+        </AppGoogleOAuthProvider>
       </body>
     </html>
   );

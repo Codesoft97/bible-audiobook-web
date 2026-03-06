@@ -3,38 +3,38 @@
 @tailwind utilities;
 
 :root {
-  --background: 45 36% 96%;
-  --foreground: 211 54% 14%;
-  --muted: 42 28% 92%;
-  --muted-foreground: 210 8% 19%;
-  --border: 40 24% 82%;
-  --card: 0 0% 100%;
-  --card-foreground: 211 54% 14%;
-  --primary: 211 62% 17%;
-  --primary-foreground: 45 36% 96%;
-  --accent: 42 42% 88%;
-  --accent-foreground: 211 54% 18%;
-  --highlight: 40 51% 56%;
-  --highlight-foreground: 211 62% 17%;
+  --background: 42 42% 95%;
+  --foreground: 214 63% 15%;
+  --muted: 39 26% 90%;
+  --muted-foreground: 216 17% 36%;
+  --border: 38 27% 80%;
+  --card: 46 31% 98%;
+  --card-foreground: 214 63% 15%;
+  --primary: 213 72% 18%;
+  --primary-foreground: 45 38% 93%;
+  --accent: 42 34% 88%;
+  --accent-foreground: 214 55% 20%;
+  --highlight: 42 54% 58%;
+  --highlight-foreground: 214 63% 15%;
   --ochre: 38 47% 37%;
   --destructive: 0 72% 58%;
   --success: 156 62% 38%;
 }
 
 .dark {
-  --background: 211 58% 10%;
-  --foreground: 45 36% 96%;
-  --muted: 212 30% 16%;
-  --muted-foreground: 40 14% 74%;
-  --border: 213 24% 23%;
-  --card: 211 49% 13%;
-  --card-foreground: 45 36% 96%;
-  --primary: 211 55% 28%;
-  --primary-foreground: 45 36% 96%;
-  --accent: 38 28% 22%;
-  --accent-foreground: 42 38% 88%;
-  --highlight: 40 51% 56%;
-  --highlight-foreground: 211 62% 17%;
+  --background: 214 55% 9%;
+  --foreground: 45 34% 94%;
+  --muted: 214 27% 15%;
+  --muted-foreground: 42 18% 71%;
+  --border: 214 22% 25%;
+  --card: 214 46% 12%;
+  --card-foreground: 45 34% 94%;
+  --primary: 210 63% 30%;
+  --primary-foreground: 43 42% 93%;
+  --accent: 37 26% 22%;
+  --accent-foreground: 44 37% 87%;
+  --highlight: 42 54% 58%;
+  --highlight-foreground: 214 63% 15%;
   --ochre: 38 47% 37%;
   --destructive: 0 68% 62%;
   --success: 157 70% 45%;
@@ -50,7 +50,21 @@
   }
 
   body {
-    @apply min-h-screen bg-background bg-radial-soft font-body text-foreground antialiased;
+    @apply min-h-screen bg-background bg-radial-soft bg-fixed font-body text-foreground antialiased;
+  }
+
+  body.mini-player-visible {
+    padding-bottom: 96px;
+  }
+
+  .mini-player-shell {
+    transition: left 300ms ease, padding 300ms ease;
+  }
+
+  @media (min-width: 1024px) {
+    body.app-sidebar-open .mini-player-shell {
+      left: 292px;
+    }
   }
 
   h1,
@@ -71,7 +85,15 @@
 
 @layer components {
   .surface {
-    @apply border border-border/70 bg-card/85 shadow-glow backdrop-blur-xl;
+    @apply border border-border/70 bg-card/90 shadow-glow backdrop-blur-sm;
+  }
+
+  .dashboard-atmosphere {
+    background-image:
+      radial-gradient(circle at 8% 6%, hsl(var(--highlight) / 0.26), transparent 18%),
+      radial-gradient(circle at 82% 12%, hsl(var(--primary) / 0.14), transparent 28%),
+      radial-gradient(circle at 18% 96%, hsl(var(--ochre) / 0.18), transparent 28%),
+      linear-gradient(150deg, hsl(var(--background) / 0.95), hsl(var(--background)));
   }
 
   .auth-atmosphere {

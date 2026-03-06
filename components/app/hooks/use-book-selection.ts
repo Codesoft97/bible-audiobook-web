@@ -4,9 +4,15 @@ import { useMemo, useState } from "react";
 
 import type { Audiobook, AudiobookBookSummary } from "@/lib/audiobooks";
 import { sortAudiobookChapters } from "@/lib/audiobooks";
-import type { ApiEnvelope } from "@/lib/auth/types";
+import { useAudio } from "@/components/providers/audio-context";
 
-export function useBookSelection() {
+function buildStreamUrl(trackId: string) {
+  return `/api/audiobooks/${encodeURIComponent(trackId)}/stream`;
+}
+
+export function useBookSelection(initialAudiobooks: Audiobook[]) {
+  const audio = useAudio();
+
   const [selectedBook, setSelectedBook] = useState<AudiobookBookSummary | null>(null);
   const [selectedBookAudiobooks, setSelectedBookAudiobooks] = useState<Audiobook[]>([]);
   const [bookLoading, setBookLoading] = useState(false);
@@ -17,28 +23,37 @@ export function useBookSelection() {
     [selectedBookAudiobooks],
   );
 
-  async function handleSelectBook(book: AudiobookBookSummary) {
+  function handleSelectBook(book: AudiobookBookSummary) {
     setSelectedBook(book);
     setBookError("");
     setBookLoading(true);
 
-    try {
-      const response = await fetch(`/api/audiobooks?book=${encodeURIComponent(book.slug)}`);
-      const data = (await response.json()) as ApiEnvelope<Audiobook[]>;
+    const sortedItems = sortAudiobookChapters(
+      initialAudiobooks.filter((item) => item.book.toLowerCase() === book.slug.toLowerCase()),
+    );
 
-      if (!response.ok || data.status !== "success" || !data.data) {
-        setBookError(data.message ?? "Nao foi possivel carregar os capitulos deste livro.");
-        setSelectedBookAudiobooks([]);
-        return;
-      }
+    setSelectedBookAudiobooks(sortedItems);
 
-      setSelectedBookAudiobooks(data.data);
-    } catch {
-      setBookError("Nao foi possivel conectar ao servidor.");
+    if (sortedItems.length === 0) {
+      setBookError("Nenhum capitulo foi encontrado para este livro.");
       setSelectedBookAudiobooks([]);
-    } finally {
       setBookLoading(false);
+      return;
     }
+
+    audio.play(
+      sortedItems.map((chapter, index) => ({
+        id: chapter.id,
+        title: `Capitulo ${chapter.chapter}`,
+        subtitle: `Faixa ${index + 1} do livro ${book.title}`,
+        src: buildStreamUrl(chapter.id),
+        progressContentType: "bible",
+        progressContentId: chapter.id,
+      })),
+      0,
+    );
+
+    setBookLoading(false);
   }
 
   function clearBook() {

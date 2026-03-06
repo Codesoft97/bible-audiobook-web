@@ -9,15 +9,30 @@ interface JourneyGridProps {
   journeys: CharacterJourney[];
   selectedId: string | null;
   onSelect: (journey: CharacterJourney) => void;
+  itemLabel?: string;
+  emptyTitle?: string;
+  emptyDescription?: string;
 }
 
-export function JourneyGrid({ journeys, selectedId, onSelect }: JourneyGridProps) {
+export function JourneyGrid({
+  journeys,
+  selectedId,
+  onSelect,
+  itemLabel = "jornada",
+  emptyTitle,
+  emptyDescription,
+}: JourneyGridProps) {
+  const noItemsTitle = emptyTitle ?? `Nenhuma ${itemLabel} encontrada`;
+  const noItemsDescription =
+    emptyDescription ??
+    `Ajuste a busca para localizar ${itemLabel} disponiveis para este perfil.`;
+
   if (journeys.length === 0) {
     return (
-      <Card className="sm:col-span-2">
-        <p className="text-base font-semibold">Nenhuma jornada encontrada.</p>
+      <Card className="rounded-[20px] bg-background/70 sm:col-span-2 xl:col-span-3">
+        <p className="text-base font-semibold">{noItemsTitle}</p>
         <p className="mt-2 text-sm text-muted-foreground">
-          Ajuste a busca ou verifique se o backend retornou jornadas para este perfil.
+          {noItemsDescription}
         </p>
       </Card>
     );
@@ -31,19 +46,32 @@ export function JourneyGrid({ journeys, selectedId, onSelect }: JourneyGridProps
           type="button"
           onClick={() => onSelect(journey)}
           className={cn(
-            "surface rounded-[28px] p-6 text-left transition hover:-translate-y-1 hover:border-highlight/35",
-            selectedId === journey.id ? "border-highlight/40 bg-accent/65" : "",
+            "group overflow-hidden rounded-[20px] border border-border/70 bg-card/95 text-left shadow-[0_16px_36px_-26px_rgba(12,27,47,0.55)] transition hover:-translate-y-0.5 hover:border-highlight/40",
+            selectedId === journey.id
+              ? "border-highlight/60 bg-highlight/8 ring-1 ring-highlight/45"
+              : "",
           )}
         >
-          <div className="space-y-4">
+          {journey.coverImageUrl ? (
+            <div className="relative aspect-[16/10] w-full overflow-hidden bg-accent/30">
+              <img
+                src={journey.coverImageUrl}
+                alt={journey.titulo}
+                className="size-full object-cover transition duration-300 group-hover:scale-[1.03]"
+              />
+            </div>
+          ) : null}
+          <div className="space-y-3 p-5">
             <div className="flex items-center justify-between gap-3">
-              <div className="flex size-12 items-center justify-center rounded-2xl bg-highlight/12 text-highlight">
-                <UserRound className="size-6" />
-              </div>
+              {!journey.coverImageUrl ? (
+                <div className="flex size-11 items-center justify-center rounded-2xl bg-highlight/12 text-highlight">
+                  <UserRound className="size-5" />
+                </div>
+              ) : null}
               <Badge>{journey.duracaoEstimadaMinutos} min</Badge>
             </div>
             <div>
-              <p className="text-xl font-semibold">{journey.titulo}</p>
+              <p className="text-xl font-semibold leading-tight text-foreground">{journey.titulo}</p>
               <p className="mt-2 text-sm text-muted-foreground">{journey.categoria}</p>
             </div>
           </div>

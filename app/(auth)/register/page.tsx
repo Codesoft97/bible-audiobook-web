@@ -7,7 +7,7 @@ export default function RegisterPage() {
     <AuthShell
       eyebrow="Cadastro"
       title="Crie a conta principal da familia."
-      description="Apos o cadastro, o login acontece automaticamente e a entrada segue para a selecao de perfis."
+      description="Apos o cadastro você vai poder adicionar outros perfis e compartilhar o acesso com quem você ama."
       footer={
         <AuthFooterLink href={APP_ROUTES.login} label="Ja possui conta?" action="Fazer login" />
       }

@@ -19,7 +19,7 @@ export const FUTURE_FEATURES = [
   "Biblioteca",
   "Jornadas",
   "Playlists",
-  "Historico",
+  "Histórico",
   "Downloads",
   "Configuracoes",
 ] as const;
