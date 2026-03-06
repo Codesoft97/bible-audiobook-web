@@ -26,7 +26,7 @@ export async function GET(
   const backendPath = buildProgressPath(segments);
 
   if (!backendPath) {
-    return jsonError("Rota de historico invalida.", 404);
+    return jsonError("Rota de histórico invalida.", 404);
   }
 
   const backendResponse = await fetchBackend(backendPath, {
@@ -50,7 +50,7 @@ export async function DELETE(
   const { segments } = await context.params;
 
   if (segments.length !== 1 || !segments[0]) {
-    return jsonError("Rota de historico invalida.", 404);
+    return jsonError("Rota de histórico invalida.", 404);
   }
 
   const backendResponse = await fetchBackend(`/history/${encodeURIComponent(segments[0])}`, {

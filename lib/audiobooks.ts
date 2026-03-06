@@ -1,6 +1,3 @@
-import { fetchBackend } from "@/lib/backend-api";
-import { parseBackendEnvelope } from "@/lib/server-response";
-
 export interface Audiobook {
   id: string;
   book: string;
@@ -215,37 +212,4 @@ export function groupAudiobooksByBook(items: Audiobook[]) {
 
 export function sortAudiobookChapters(items: Audiobook[]) {
   return [...items].sort((first, second) => first.chapter - second.chapter);
-}
-
-export async function fetchAudiobooks(
-  options: { token?: string; book?: string; cookieHeader?: string } = {},
-) {
-  const headers: Record<string, string> = {};
-
-  if (options.token) {
-    headers.Authorization = `Bearer ${options.token}`;
-  }
-
-  if (options.cookieHeader) {
-    headers.cookie = options.cookieHeader;
-  }
-
-  const response = await fetchBackend("/audiobooks", {
-    method: "GET",
-    headers,
-  });
-
-  const envelope = await parseBackendEnvelope<Audiobook[]>(response);
-
-  if (!response.ok || envelope.status !== "success" || !envelope.data) {
-    return [] as Audiobook[];
-  }
-
-  const activeItems = envelope.data.filter((item) => item.isActive);
-
-  if (!options.book) {
-    return activeItems;
-  }
-
-  return activeItems.filter((item) => item.book.toLowerCase() === options.book?.toLowerCase());
 }

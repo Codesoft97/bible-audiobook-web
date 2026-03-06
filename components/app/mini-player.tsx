@@ -52,7 +52,7 @@ export function PersistentMiniPlayer() {
   }
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 px-0 lg:px-4">
+    <div className="mini-player-shell fixed inset-x-0 bottom-0 z-50 px-0 lg:px-4">
       <div className="mx-auto max-w-[1500px] overflow-hidden border border-primary/40 bg-gradient-to-r from-[#07233e] via-[#0b2f53] to-[#082846] text-primary-foreground shadow-[0_-18px_46px_-24px_rgba(7,16,31,0.95)] lg:rounded-t-[18px]">
         <div
           className="group h-1.5 w-full cursor-pointer bg-highlight/20 transition-[height] hover:h-2.5"

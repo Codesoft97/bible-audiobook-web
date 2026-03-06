@@ -6,6 +6,7 @@ import {
   BookOpenText,
   CheckCircle2,
   Clock3,
+  Sparkles,
   LoaderCircle,
   RefreshCw,
   Trash2,
@@ -60,12 +61,16 @@ function formatLastListenedAt(value: string) {
 interface HistoryPanelProps {
   initialAudiobooks: Audiobook[];
   initialCharacterJourneys: CharacterJourney[];
+  initialParables: CharacterJourney[];
+  initialTeachings: CharacterJourney[];
   onOpenContent?: (contentType: HistoryContentType) => void;
 }
 
 export function HistoryPanel({
   initialAudiobooks,
   initialCharacterJourneys,
+  initialParables,
+  initialTeachings,
   onOpenContent,
 }: HistoryPanelProps) {
   const [items, setItems] = useState<ListeningHistoryEntry[]>([]);
@@ -85,6 +90,16 @@ export function HistoryPanel({
     [initialCharacterJourneys],
   );
 
+  const parableById = useMemo(
+    () => new Map(initialParables.map((item) => [item.id, item])),
+    [initialParables],
+  );
+
+  const teachingById = useMemo(
+    () => new Map(initialTeachings.map((item) => [item.id, item])),
+    [initialTeachings],
+  );
+
   const loadHistory = useCallback(async (offset: number, append: boolean) => {
     if (append) {
       setLoadingMore(true);
@@ -100,7 +115,7 @@ export function HistoryPanel({
       const payload = (await response.json()) as ApiEnvelope<ListeningHistoryListPayload>;
 
       if (!response.ok || payload.status !== "success" || !payload.data) {
-        setError(payload.message ?? "Nao foi possivel carregar o historico.");
+        setError(payload.message ?? "Nao foi possivel carregar o histórico.");
         return;
       }
 
@@ -110,7 +125,7 @@ export function HistoryPanel({
       setTotal(payload.data.total);
       setError("");
     } catch {
-      setError("Nao foi possivel carregar o historico.");
+      setError("Nao foi possivel carregar o histórico.");
     } finally {
       setLoading(false);
       setLoadingMore(false);
@@ -131,14 +146,14 @@ export function HistoryPanel({
 
       if (response.status !== 204) {
         const payload = (await response.json().catch(() => null)) as ApiEnvelope<null> | null;
-        setError(payload?.message ?? "Nao foi possivel remover o item do historico.");
+        setError(payload?.message ?? "Nao foi possivel remover o item do histórico.");
         return;
       }
 
       setItems((current) => current.filter((item) => item.id !== entryId));
       setTotal((currentTotal) => Math.max(0, currentTotal - 1));
     } catch {
-      setError("Nao foi possivel remover o item do historico.");
+      setError("Nao foi possivel remover o item do histórico.");
     } finally {
       setRemovingId("");
     }
@@ -159,6 +174,24 @@ export function HistoryPanel({
       };
     }
 
+    if (item.contentType === "parable") {
+      const parable = parableById.get(item.contentId);
+
+      return {
+        title: parable?.titulo ?? "Parabola",
+        subtitle: parable?.categoria ?? "Parabola",
+      };
+    }
+
+    if (item.contentType === "teaching") {
+      const teaching = teachingById.get(item.contentId);
+
+      return {
+        title: teaching?.titulo ?? "Ensinamento",
+        subtitle: teaching?.categoria ?? "Ensinamento",
+      };
+    }
+
     const journey = journeyById.get(item.contentId);
 
     return {
@@ -174,13 +207,13 @@ export function HistoryPanel({
           <div>
             <p className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-muted-foreground">
               <Clock3 className="size-3.5 text-highlight" />
-              Historico individual
+              Histórico individual
             </p>
             <h2 className="mt-1 text-3xl font-semibold text-foreground md:text-[2.15rem]">
               Continue de onde parou
             </h2>
             <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
-              Cada perfil possui seu proprio historico de audiobooks e jornadas reproduzidos.
+              Cada perfil possui seu proprio histórico de audiobooks e jornadas reproduzidos.
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -202,14 +235,14 @@ export function HistoryPanel({
         <Card className="rounded-[24px] border-border/70 bg-background/70 p-6 text-sm text-muted-foreground">
           <div className="flex items-center gap-3">
             <LoaderCircle className="size-4 animate-spin" />
-            Carregando historico...
+            Carregando histórico...
           </div>
         </Card>
       ) : null}
 
       {!loading && items.length === 0 ? (
         <Card className="rounded-[24px] border-border/70 bg-background/70 p-6">
-          <p className="text-lg font-semibold text-foreground">Nenhum item no historico</p>
+          <p className="text-lg font-semibold text-foreground">Nenhum item no histórico</p>
           <p className="mt-2 text-sm text-muted-foreground">
             Comece a ouvir um audiobook ou jornada para registrar progresso aqui.
           </p>
@@ -232,8 +265,10 @@ export function HistoryPanel({
                     <div className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl bg-highlight/12 text-highlight">
                       {item.contentType === "bible" ? (
                         <BookOpenText className="size-4" />
-                      ) : (
+                      ) : item.contentType === "character-journey" ? (
                         <UserRound className="size-4" />
+                      ) : (
+                        <Sparkles className="size-4" />
                       )}
                     </div>
                     <div className="min-w-0">
@@ -268,7 +303,7 @@ export function HistoryPanel({
                       className="size-9 rounded-full"
                       onClick={() => void handleDelete(item.id)}
                       disabled={removingId === item.id}
-                      aria-label="Remover do historico"
+                      aria-label="Remover do histórico"
                     >
                       {removingId === item.id ? (
                         <LoaderCircle className="size-4 animate-spin" />
@@ -309,7 +344,7 @@ export function HistoryPanel({
               ) : canLoadMore ? (
                 "Carregar mais"
               ) : (
-                "Fim do historico"
+                "Fim do histórico"
               )}
             </Button>
           </div>

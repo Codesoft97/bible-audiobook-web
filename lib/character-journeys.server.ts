@@ -2,7 +2,7 @@ import "server-only";
 
 import { cookies } from "next/headers";
 
-import { fetchCharacterJourneys } from "@/lib/character-journeys";
+import { fetchCharacterJourneys } from "@/lib/character-journeys.fetch";
 import { AUTH_COOKIE_NAME } from "@/lib/constants";
 
 function buildCookieHeader(values: { name: string; value: string }[]) {

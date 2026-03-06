@@ -9,11 +9,6 @@ export const loginSchema = z.object({
 });
 
 export const registerSchema = loginSchema.extend({
-  familyName: z
-    .string()
-    .trim()
-    .min(3, "Informe o nome da familia.")
-    .max(80, "O nome da familia deve ter no maximo 80 caracteres."),
   userName: z
     .string()
     .trim()
@@ -51,5 +46,37 @@ export const profileSchema = z.object({
 
 export const selectProfileSchema = z.object({
   profileId: z.string().trim().min(1, "Perfil invalido."),
+});
+
+const whatsappNumberSchema = z
+  .string()
+  .trim()
+  .regex(/^\d{10,}$/, "Informe um numero de WhatsApp valido com DDI e DDD.");
+
+export const whatsappPromiseSubscribeSchema = z.object({
+  whatsappNumber: whatsappNumberSchema,
+  endDate: z
+    .string()
+    .trim()
+    .min(1, "Informe a data final da assinatura.")
+    .datetime("Informe uma data final valida."),
+});
+
+export const whatsappAudiobookSubscribeSchema = z.object({
+  book: z.string().trim().min(1, "Informe o livro da Biblia."),
+  abbrev: z.string().trim().min(1, "Informe a abreviacao do livro."),
+  whatsappNumber: whatsappNumberSchema,
+  totalChapters: z
+    .number()
+    .int("Total de capitulos invalido.")
+    .min(1, "Total de capitulos invalido."),
+  currentChapter: z
+    .number()
+    .int("Capitulo atual invalido.")
+    .min(1, "Capitulo atual invalido."),
+  nextChapter: z
+    .number()
+    .int("Proximo capitulo invalido.")
+    .min(1, "Proximo capitulo invalido."),
 });
 

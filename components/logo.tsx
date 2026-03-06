@@ -21,7 +21,7 @@ export function Logo({ className, compact = false, priority = false }: LogoProps
     >
       <Image
         src={LOGO_SRC}
-        alt="Voz da Palavra"
+        alt="Evangelho em áudio"
         fill
         priority={priority}
         unoptimized

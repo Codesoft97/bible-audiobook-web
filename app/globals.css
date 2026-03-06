@@ -57,6 +57,16 @@
     padding-bottom: 96px;
   }
 
+  .mini-player-shell {
+    transition: left 300ms ease, padding 300ms ease;
+  }
+
+  @media (min-width: 1024px) {
+    body.app-sidebar-open .mini-player-shell {
+      left: 292px;
+    }
+  }
+
   h1,
   h2,
   h3,

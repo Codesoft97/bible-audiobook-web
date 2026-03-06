@@ -1,4 +1,8 @@
-export type HistoryContentType = "bible" | "character-journey";
+export type HistoryContentType =
+  | "bible"
+  | "character-journey"
+  | "parable"
+  | "teaching";
 
 export interface ListeningHistoryEntry {
   id: string;

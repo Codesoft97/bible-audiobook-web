@@ -18,13 +18,16 @@ export async function parseJsonSafe<T>(response: Response) {
 }
 
 export async function fetchBackend(path: string, init?: RequestInit) {
+  const headers = new Headers(init?.headers);
+
+  if (!headers.has("accept")) {
+    headers.set("Accept", "application/json");
+  }
+
   try {
     return await fetch(`${env.BACKEND_API_URL}${path}`, {
       ...init,
-      headers: {
-        Accept: "application/json",
-        ...(init?.headers ?? {}),
-      },
+      headers,
       cache: "no-store",
     });
   } catch {
@@ -66,21 +69,21 @@ export function resolveBackendToken(response: Response, fallbackToken?: string) 
 }
 
 export function getBackendAuthHeaders(request: NextRequest) {
+  const headers: Record<string, string> = {};
   const token = request.cookies.get(AUTH_COOKIE_NAME)?.value;
 
   if (token) {
-    return {
-      Authorization: `Bearer ${token}`,
-    };
+    headers.Authorization = `Bearer ${token}`;
+    return headers;
   }
 
   const cookieHeader = request.headers.get("cookie") ?? "";
 
-  return cookieHeader
-    ? {
-        cookie: cookieHeader,
-      }
-    : {};
+  if (cookieHeader) {
+    headers.cookie = cookieHeader;
+  }
+
+  return headers;
 }
 
 export function buildTokenCookie(token: string) {

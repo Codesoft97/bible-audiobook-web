@@ -2,7 +2,7 @@ import "server-only";
 
 import { cookies } from "next/headers";
 
-import { fetchAudiobooks } from "@/lib/audiobooks";
+import { fetchAudiobooks } from "@/lib/audiobooks.fetch";
 import { AUTH_COOKIE_NAME } from "@/lib/constants";
 
 function buildCookieHeader(values: { name: string; value: string }[]) {

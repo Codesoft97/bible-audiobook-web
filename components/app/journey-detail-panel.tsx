@@ -1,6 +1,7 @@
 import { LoaderCircle, UserRound } from "lucide-react";
 
 import type { CharacterJourney } from "@/lib/character-journeys";
+import type { HistoryContentType } from "@/lib/history";
 import { AudioPlayer } from "@/components/app/audio-player";
 import { Card } from "@/components/ui/card";
 
@@ -9,6 +10,10 @@ interface JourneyDetailPanelProps {
   audioUrl: string;
   loading: boolean;
   error: string;
+  selectedHeading?: string;
+  emptySelectionTitle?: string;
+  emptySelectionDescription?: string;
+  progressContentType?: HistoryContentType;
 }
 
 export function JourneyDetailPanel({
@@ -16,6 +21,10 @@ export function JourneyDetailPanel({
   audioUrl,
   loading,
   error,
+  selectedHeading = "Jornada selecionada",
+  emptySelectionTitle = "Selecione uma jornada",
+  emptySelectionDescription = "Escolha um personagem para carregar o audio da jornada.",
+  progressContentType = "character-journey",
 }: JourneyDetailPanelProps) {
   if (!selectedJourney) {
     return (
@@ -25,9 +34,9 @@ export function JourneyDetailPanel({
             <UserRound className="size-6" />
           </div>
           <div>
-            <h3 className="text-2xl font-semibold text-foreground">Selecione uma jornada</h3>
+            <h3 className="text-2xl font-semibold text-foreground">{emptySelectionTitle}</h3>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              Escolha um personagem para carregar o audio da jornada.
+              {emptySelectionDescription}
             </p>
           </div>
         </div>
@@ -55,7 +64,7 @@ export function JourneyDetailPanel({
         <div className="min-w-0 flex-1 space-y-2">
           <div className="inline-flex items-center gap-2 rounded-full border border-highlight/25 bg-highlight/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.16em] text-highlight">
             <UserRound className="size-3.5" />
-            Jornada selecionada
+            {selectedHeading}
           </div>
           <h3 className="text-3xl font-semibold leading-tight text-foreground">
             {selectedJourney.titulo}
@@ -86,7 +95,7 @@ export function JourneyDetailPanel({
                 id: selectedJourney.id,
                 title: selectedJourney.titulo,
                 src: audioUrl,
-                progressContentType: "character-journey",
+                progressContentType,
                 progressContentId: selectedJourney.id,
               },
             ]}

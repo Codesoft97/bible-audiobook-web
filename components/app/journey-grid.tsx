@@ -9,15 +9,30 @@ interface JourneyGridProps {
   journeys: CharacterJourney[];
   selectedId: string | null;
   onSelect: (journey: CharacterJourney) => void;
+  itemLabel?: string;
+  emptyTitle?: string;
+  emptyDescription?: string;
 }
 
-export function JourneyGrid({ journeys, selectedId, onSelect }: JourneyGridProps) {
+export function JourneyGrid({
+  journeys,
+  selectedId,
+  onSelect,
+  itemLabel = "jornada",
+  emptyTitle,
+  emptyDescription,
+}: JourneyGridProps) {
+  const noItemsTitle = emptyTitle ?? `Nenhuma ${itemLabel} encontrada`;
+  const noItemsDescription =
+    emptyDescription ??
+    `Ajuste a busca para localizar ${itemLabel} disponiveis para este perfil.`;
+
   if (journeys.length === 0) {
     return (
       <Card className="rounded-[20px] bg-background/70 sm:col-span-2 xl:col-span-3">
-        <p className="text-base font-semibold">Nenhuma jornada encontrada</p>
+        <p className="text-base font-semibold">{noItemsTitle}</p>
         <p className="mt-2 text-sm text-muted-foreground">
-          Ajuste a busca ou verifique se o backend retornou jornadas para este perfil.
+          {noItemsDescription}
         </p>
       </Card>
     );
