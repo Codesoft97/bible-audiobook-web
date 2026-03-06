@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { AudioLines, BookOpenText, LoaderCircle } from "lucide-react";
 
 import type { Audiobook, AudiobookBookSummary } from "@/lib/audiobooks";
@@ -51,9 +52,12 @@ export function BookDetailPanel({ selectedBook, chapters, loading, error }: Book
       <div className="flex flex-col gap-5 md:flex-row">
         {selectedBook.coverImageUrl ? (
           <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[18px] bg-accent/40 md:w-[250px] md:shrink-0">
-            <img
+            <Image
               src={selectedBook.coverImageUrl}
               alt={selectedBook.title}
+              fill
+              unoptimized
+              sizes="(max-width: 768px) 100vw, 250px"
               className="size-full object-cover"
             />
           </div>

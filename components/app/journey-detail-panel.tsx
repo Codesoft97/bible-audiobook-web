@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { LoaderCircle, UserRound } from "lucide-react";
 
 import type { CharacterJourney } from "@/lib/character-journeys";
@@ -49,9 +50,12 @@ export function JourneyDetailPanel({
       <div className="flex flex-col gap-5 md:flex-row">
         {selectedJourney.coverImageUrl ? (
           <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[18px] bg-accent/40 md:w-[250px] md:shrink-0">
-            <img
+            <Image
               src={selectedJourney.coverImageUrl}
               alt={selectedJourney.titulo}
+              fill
+              unoptimized
+              sizes="(max-width: 768px) 100vw, 250px"
               className="size-full object-cover"
             />
           </div>

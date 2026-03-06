@@ -155,7 +155,7 @@ const BOOK_LABELS: Record<string, string> = {
   revelation: "Apocalipse",
 };
 
-const BOOK_ORDER_LOOKUP = new Map(
+const BOOK_ORDER_LOOKUP = new Map<string, number>(
   CANONICAL_BOOKS.map((book, index) => [book, index]),
 );
 
