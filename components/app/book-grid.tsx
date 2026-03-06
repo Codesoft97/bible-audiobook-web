@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { BookOpenText } from "lucide-react";
 
 import type { AudiobookBookSummary } from "@/lib/audiobooks";
@@ -39,9 +40,12 @@ export function BookGrid({ books, selectedSlug, onSelect }: BookGridProps) {
         >
           {book.coverImageUrl ? (
             <div className="relative aspect-[16/10] w-full overflow-hidden bg-accent/30">
-              <img
+              <Image
                 src={book.coverImageUrl}
                 alt={book.title}
+                fill
+                unoptimized
+                sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
                 className="size-full object-cover transition duration-300 group-hover:scale-[1.03]"
               />
             </div>
