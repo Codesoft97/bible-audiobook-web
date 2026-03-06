@@ -32,6 +32,7 @@ export async function POST(request: NextRequest) {
       status: backendResponse.status || 400,
     });
   }
+  const selectedProfile = envelope.data.profile;
 
   const session = parseSession(request.cookies.get(SESSION_COOKIE_NAME)?.value);
   const token = request.cookies.get(AUTH_COOKIE_NAME)?.value;
@@ -41,7 +42,7 @@ export async function POST(request: NextRequest) {
   const response = NextResponse.json({
     status: "success",
     data: {
-      profile: envelope.data.profile,
+      profile: selectedProfile,
     },
   });
 
@@ -50,15 +51,15 @@ export async function POST(request: NextRequest) {
 
   if (sessionWithFamily) {
     const updatedProfiles = sessionWithFamily.profiles.some(
-      (profile) => profile.id === envelope.data.profile.id,
+      (profile) => profile.id === selectedProfile.id,
     )
       ? sessionWithFamily.profiles
-      : [...sessionWithFamily.profiles, envelope.data.profile];
+      : [...sessionWithFamily.profiles, selectedProfile];
 
     persistSession(response, {
       ...sessionWithFamily,
       profiles: updatedProfiles,
-      selectedProfile: envelope.data.profile,
+      selectedProfile,
     });
   }
 

@@ -2,14 +2,14 @@
 
 import { useMemo, useState, useTransition } from "react";
 
-import { CheckCircle2, Lock, Plus, Sparkles } from "lucide-react";
+import { CheckCircle2, Lock, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { CreateProfileModal } from "@/components/profiles/create-profile-modal";
 import { Badge } from "@/components/ui/badge";
 import type { AppSession, Profile, ProfileType } from "@/lib/auth/types";
 import { APP_ROUTES, PROFILE_LIMITS } from "@/lib/constants";
-import { cn, formatPlanLabel, formatProfileTypeLabel } from "@/lib/utils";
+import { cn, formatPlanLabel } from "@/lib/utils";
 
 interface ApiResponse<T = unknown> {
   status: "success" | "error";
