@@ -125,7 +125,7 @@ function FilterTab({
       type="button"
       onClick={onClick}
       className={cn(
-        "rounded-full px-4 py-2 text-sm font-medium transition",
+        "whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition",
         active
           ? "bg-primary text-primary-foreground shadow-sm"
           : "text-accent-foreground hover:bg-background/80",
@@ -267,25 +267,27 @@ export function AudiobookBrowser({
             </div>
           )}
 
-          <div className="inline-flex w-fit items-center rounded-full bg-accent/75 p-1">
-            <FilterTab active={view === "books"} onClick={() => onViewChange("books")}>
-              Livros da Biblia
-            </FilterTab>
-            <FilterTab active={view === "journeys"} onClick={() => onViewChange("journeys")}>
-              Jornadas
-            </FilterTab>
-            <FilterTab active={view === "parables"} onClick={() => onViewChange("parables")}>
-              Parabolas
-            </FilterTab>
-            <FilterTab active={view === "teachings"} onClick={() => onViewChange("teachings")}>
-              Ensinamentos
-            </FilterTab>
-            <FilterTab active={view === "promises"} onClick={() => onViewChange("promises")}>
-              Promessas
-            </FilterTab>
-            <FilterTab active={view === "whatsapp"} onClick={() => onViewChange("whatsapp")}>
-              WhatsApp
-            </FilterTab>
+          <div className="-mx-1 overflow-x-auto px-1">
+            <div className="inline-flex min-w-max items-center rounded-full bg-accent/75 p-1">
+              <FilterTab active={view === "books"} onClick={() => onViewChange("books")}>
+                Livros da Biblia
+              </FilterTab>
+              <FilterTab active={view === "journeys"} onClick={() => onViewChange("journeys")}>
+                Jornadas
+              </FilterTab>
+              <FilterTab active={view === "parables"} onClick={() => onViewChange("parables")}>
+                Parabolas
+              </FilterTab>
+              <FilterTab active={view === "teachings"} onClick={() => onViewChange("teachings")}>
+                Ensinamentos
+              </FilterTab>
+              <FilterTab active={view === "promises"} onClick={() => onViewChange("promises")}>
+                Promessas
+              </FilterTab>
+              <FilterTab active={view === "whatsapp"} onClick={() => onViewChange("whatsapp")}>
+                WhatsApp
+              </FilterTab>
+            </div>
           </div>
         </div>
       </div>

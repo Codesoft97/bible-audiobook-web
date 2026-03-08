@@ -216,7 +216,7 @@ export function HistoryPanel({
               Cada perfil possui seu proprio histórico de audiobooks e jornadas reproduzidos.
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-2">
             <Badge className="bg-highlight/15 text-highlight">{total} itens</Badge>
             <Button
               variant="secondary"
@@ -280,7 +280,7 @@ export function HistoryPanel({
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
                     {item.completed ? (
                       <Badge className="border-success/30 bg-success/10 text-success">
                         <CheckCircle2 className="mr-1 size-3.5" />

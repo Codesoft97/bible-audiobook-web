@@ -19,13 +19,13 @@ export function AuthShell({
   children,
 }: AuthShellProps) {
   return (
-    <Card className="w-full max-w-xl space-y-8 p-8 md:p-10">
+    <Card className="w-full max-w-xl space-y-6 p-5 sm:p-7 md:space-y-8 md:p-10">
       <div className="space-y-4">
         <div className="inline-flex rounded-full border border-highlight/30 bg-highlight/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.22em] text-highlight">
           {eyebrow}
         </div>
         <div className="space-y-3">
-          <h2 className="text-3xl font-semibold">{title}</h2>
+          <h2 className="text-2xl font-semibold sm:text-3xl">{title}</h2>
           <p className="max-w-lg text-sm leading-6 text-muted-foreground">{description}</p>
         </div>
       </div>

@@ -85,66 +85,66 @@ export default function HomePage() {
       <div className="mx-auto w-full max-w-6xl px-4 pb-10 pt-28 md:px-6 md:pt-32">
         <header className="fixed inset-x-0 top-0 z-40 border-b border-border/65 bg-card/85 backdrop-blur-md">
           <div className="mx-auto w-full max-w-6xl px-4 py-3 md:px-6">
-            <div className="grid items-center gap-3 lg:grid-cols-[auto_1fr_auto]">
-            <Logo className="h-12 w-[220px] sm:h-14 sm:w-[260px]" compact={false} priority />
+            <div className="grid items-center gap-3 sm:grid-cols-[auto_1fr] lg:grid-cols-[auto_1fr_auto]">
+              <Logo className="h-11 w-[180px] sm:h-14 sm:w-[260px]" compact={false} priority />
 
-            <nav className="hidden items-center justify-center gap-2 lg:flex">
+              <nav className="hidden items-center justify-center gap-2 lg:flex">
+                <a
+                  href="#funcionalidades"
+                  className="rounded-full px-4 py-2 text-sm font-medium text-muted-foreground transition hover:bg-background/75 hover:text-foreground"
+                >
+                  Funcionalidades
+                </a>
+                <a
+                  href="#planos"
+                  className="rounded-full px-4 py-2 text-sm font-medium text-muted-foreground transition hover:bg-background/75 hover:text-foreground"
+                >
+                  Planos
+                </a>
+                <a
+                  href="#baixar-app"
+                  className="rounded-full px-4 py-2 text-sm font-medium text-muted-foreground transition hover:bg-background/75 hover:text-foreground"
+                >
+                  Baixar app
+                </a>
+              </nav>
+
+              <div className="flex flex-wrap items-center justify-start gap-2 sm:justify-end">
+                <Link
+                  href={APP_ROUTES.login}
+                  className="inline-flex h-9 items-center justify-center rounded-full border border-border/70 bg-background/70 px-3 text-xs font-medium text-foreground transition hover:bg-background sm:h-10 sm:px-4 sm:text-sm"
+                >
+                  Login
+                </Link>
+                <Link
+                  href={APP_ROUTES.register}
+                  className="inline-flex h-9 items-center justify-center rounded-full bg-primary px-3 text-xs font-medium text-primary-foreground transition hover:bg-primary/90 sm:h-10 sm:px-4 sm:text-sm"
+                >
+                  Cadastro
+                </Link>
+                <ThemeToggle />
+              </div>
+            </div>
+
+            <nav className="mt-3 flex items-center gap-2 overflow-x-auto pb-1 lg:hidden">
               <a
                 href="#funcionalidades"
-                className="rounded-full px-4 py-2 text-sm font-medium text-muted-foreground transition hover:bg-background/75 hover:text-foreground"
+                className="shrink-0 rounded-full border border-border/60 bg-background/65 px-3 py-1.5 text-xs font-medium text-foreground"
               >
                 Funcionalidades
               </a>
               <a
                 href="#planos"
-                className="rounded-full px-4 py-2 text-sm font-medium text-muted-foreground transition hover:bg-background/75 hover:text-foreground"
+                className="shrink-0 rounded-full border border-border/60 bg-background/65 px-3 py-1.5 text-xs font-medium text-foreground"
               >
                 Planos
               </a>
               <a
                 href="#baixar-app"
-                className="rounded-full px-4 py-2 text-sm font-medium text-muted-foreground transition hover:bg-background/75 hover:text-foreground"
+                className="shrink-0 rounded-full border border-border/60 bg-background/65 px-3 py-1.5 text-xs font-medium text-foreground"
               >
                 Baixar app
               </a>
-            </nav>
-
-            <div className="flex items-center justify-end gap-2">
-              <Link
-                href={APP_ROUTES.login}
-                className="inline-flex h-10 items-center justify-center rounded-full border border-border/70 bg-background/70 px-4 text-sm font-medium text-foreground transition hover:bg-background"
-              >
-                Login
-              </Link>
-              <Link
-                href={APP_ROUTES.register}
-                className="inline-flex h-10 items-center justify-center rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground transition hover:bg-primary/90"
-              >
-                Cadastro
-              </Link>
-              <ThemeToggle />
-            </div>
-            </div>
-
-            <nav className="mt-3 flex items-center gap-2 overflow-x-auto pb-1 lg:hidden">
-            <a
-              href="#funcionalidades"
-              className="shrink-0 rounded-full border border-border/60 bg-background/65 px-3 py-1.5 text-xs font-medium text-foreground"
-            >
-              Funcionalidades
-            </a>
-            <a
-              href="#planos"
-              className="shrink-0 rounded-full border border-border/60 bg-background/65 px-3 py-1.5 text-xs font-medium text-foreground"
-            >
-              Planos
-            </a>
-            <a
-              href="#baixar-app"
-              className="shrink-0 rounded-full border border-border/60 bg-background/65 px-3 py-1.5 text-xs font-medium text-foreground"
-            >
-              Baixar app
-            </a>
             </nav>
           </div>
         </header>
