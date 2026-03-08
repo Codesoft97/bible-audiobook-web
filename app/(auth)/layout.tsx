@@ -19,10 +19,10 @@ export default async function AuthLayout({ children }: PropsWithChildren) {
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden px-4 py-8">
+    <main className="relative min-h-screen overflow-hidden px-3 py-6 sm:px-4 sm:py-8">
       <div className="auth-atmosphere absolute inset-0" />
-      <div className="relative mx-auto flex w-full max-w-6xl items-start justify-between pb-6">
-        <Logo className="max-w-[300px]" />
+      <div className="relative mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-3 pb-5 sm:pb-6">
+        <Logo className="max-w-[220px] sm:max-w-[300px]" />
         <ThemeToggle />
       </div>
       <div className="relative mx-auto flex min-h-[calc(100vh-8rem)] max-w-6xl items-center justify-center">

@@ -77,7 +77,28 @@ export function AppShell({
   const selectedProfile = session.selectedProfile;
   const [libraryView, setLibraryView] = useState<LibraryView>("books");
   const [activeSidebar, setActiveSidebar] = useState<SidebarKey>("books");
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(min-width: 1024px)");
+    const syncSidebarState = (matches: boolean) => {
+      setSidebarOpen(matches);
+    };
+
+    syncSidebarState(mediaQuery.matches);
+
+    const handleChange = (event: MediaQueryListEvent) => {
+      syncSidebarState(event.matches);
+    };
+
+    if (typeof mediaQuery.addEventListener === "function") {
+      mediaQuery.addEventListener("change", handleChange);
+      return () => mediaQuery.removeEventListener("change", handleChange);
+    }
+
+    mediaQuery.addListener(handleChange);
+    return () => mediaQuery.removeListener(handleChange);
+  }, []);
 
   useEffect(() => {
     document.body.classList.toggle("app-sidebar-open", sidebarOpen);
@@ -117,11 +138,11 @@ export function AppShell({
     <main className="dashboard-atmosphere min-h-screen">
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-[60] w-[292px] border-r border-primary-foreground/15 bg-gradient-to-b from-[#0c3159] via-[#082a4c] to-[#08233f] text-primary-foreground shadow-[0_28px_70px_-30px_rgba(9,24,44,0.92)] transition-transform duration-300",
+          "fixed inset-y-0 left-0 z-[60] w-[86vw] max-w-[292px] border-r border-primary-foreground/15 bg-gradient-to-b from-[#0c3159] via-[#082a4c] to-[#08233f] text-primary-foreground shadow-[0_28px_70px_-30px_rgba(9,24,44,0.92)] transition-transform duration-300 sm:w-[292px]",
           sidebarOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
-        <div className="flex h-full flex-col overflow-y-auto p-5">
+        <div className="flex h-full flex-col overflow-y-auto p-4 sm:p-5">
           <div className="flex items-start justify-between gap-3">
             <div className="space-y-4">
               <Logo className="max-w-[220px]" priority />
@@ -132,7 +153,7 @@ export function AppShell({
             <button
               type="button"
               onClick={() => setSidebarOpen(false)}
-              className="inline-flex size-9 items-center justify-center rounded-xl border border-primary-foreground/25 bg-primary-foreground/12 text-primary-foreground transition hover:bg-primary-foreground/20"
+              className="inline-flex size-9 items-center justify-center rounded-xl border border-primary-foreground/25 bg-primary-foreground/12 text-primary-foreground transition hover:bg-primary-foreground/20 lg:hidden"
               aria-label="Fechar menu lateral"
             >
               <PanelLeftClose className="size-4" />
@@ -249,23 +270,25 @@ export function AppShell({
 
       <div
         className={cn(
-          "mx-auto w-full max-w-[1500px] px-3 py-3 transition-[padding] duration-300 md:px-5 md:py-5",
+          "mx-auto w-full max-w-[1500px] px-2 py-3 transition-[padding] duration-300 sm:px-3 md:px-5 md:py-5",
           sidebarOpen ? "lg:pl-[322px]" : "lg:pl-5",
         )}
       >
-        <section className="min-w-0 px-1 py-2 md:px-2 md:py-3">
-          <div className="mb-5 flex items-center justify-between rounded-2xl border border-border/65 bg-card/80 px-4 py-3 lg:hidden">
-            <button
-              type="button"
-              onClick={() => setSidebarOpen(true)}
-              className="inline-flex size-10 items-center justify-center rounded-xl border border-border/60 bg-background/80 text-foreground"
-              aria-label="Abrir menu lateral"
-            >
-              <PanelLeftOpen className="size-4" />
-            </button>
-            <Logo className="h-10 w-[170px]" compact={false} />
-            <div className="flex items-center gap-2">
+        <section className="min-w-0 px-0.5 py-2 sm:px-1 md:px-2 md:py-3">
+          <div className="mb-5 rounded-2xl border border-border/65 bg-card/80 px-3 py-3 sm:px-4 lg:hidden">
+            <div className="flex items-center justify-between gap-2">
+              <button
+                type="button"
+                onClick={() => setSidebarOpen(true)}
+                className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl border border-border/60 bg-background/80 text-foreground"
+                aria-label="Abrir menu lateral"
+              >
+                <PanelLeftOpen className="size-4" />
+              </button>
+              <Logo className="h-10 w-[140px] sm:w-[170px]" compact={false} />
               <ThemeToggle />
+            </div>
+            <div className="mt-3 flex justify-end border-t border-border/55 pt-3">
               <LogoutButton compact />
             </div>
           </div>
@@ -276,7 +299,7 @@ export function AppShell({
                 <p className="text-sm text-muted-foreground">Bom dia, {selectedProfile.name}</p>
                 <h1 className="text-3xl font-semibold text-foreground md:text-4xl">{pageTitle}</h1>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Badge className="bg-primary/10 text-primary dark:bg-primary-foreground/10 dark:text-primary-foreground">
                   {formatPlanLabel(session.family.plan)}
                 </Badge>
