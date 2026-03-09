@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import {
@@ -24,6 +25,7 @@ import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import type { AppSession } from "@/lib/auth/types";
+import { APP_ROUTES } from "@/lib/constants";
 import { cn, formatPlanLabel } from "@/lib/utils";
 
 type LibraryView = "books" | "journeys" | "parables" | "teachings" | "promises" | "whatsapp";
@@ -53,9 +55,9 @@ const LIBRARY_ITEMS: Array<{
   icon: LucideIcon;
   view: LibraryView;
 }> = [
-  { key: "books", label: "Livros da Biblia", icon: BookOpenText, view: "books" },
+  { key: "books", label: "Livros da Bíblia", icon: BookOpenText, view: "books" },
   { key: "journeys", label: "Jornadas", icon: UserRound, view: "journeys" },
-  { key: "parables", label: "Parabolas", icon: BookOpenText, view: "parables" },
+  { key: "parables", label: "Parábolas", icon: BookOpenText, view: "parables" },
   { key: "teachings", label: "Ensinamentos", icon: Sparkles, view: "teachings" },
   { key: "promises", label: "Promessas", icon: Sparkles, view: "promises" },
   { key: "whatsapp", label: "WhatsApp", icon: MessageCircle, view: "whatsapp" },
@@ -121,7 +123,7 @@ export function AppShell({
         : libraryView === "journeys"
           ? "Jornadas"
           : libraryView === "parables"
-            ? "Parabolas"
+            ? "Parábolas"
             : libraryView === "teachings"
               ? "Ensinamentos"
               : libraryView === "promises"
@@ -153,19 +155,25 @@ export function AppShell({
             <button
               type="button"
               onClick={() => setSidebarOpen(false)}
-              className="inline-flex size-9 items-center justify-center rounded-xl border border-primary-foreground/25 bg-primary-foreground/12 text-primary-foreground transition hover:bg-primary-foreground/20 lg:hidden"
+              className="inline-flex size-9 items-center justify-center rounded-xl border border-primary-foreground/25 bg-primary-foreground/12 text-primary-foreground transition hover:bg-primary-foreground/20"
               aria-label="Fechar menu lateral"
             >
               <PanelLeftClose className="size-4" />
             </button>
           </div>
 
-          <Card className="mt-6 rounded-[22px] border-primary-foreground/10 bg-primary-foreground/10 p-4 text-primary-foreground">
-            <p className="text-xs uppercase tracking-[0.18em] text-primary-foreground/70">
-              Perfil ativo
-            </p>
-            <p className="mt-2 text-xl font-semibold">{selectedProfile.name}</p>
-          </Card>
+          <Link
+            href={APP_ROUTES.profiles}
+            className="mt-6 block rounded-[22px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#082a4c]"
+            aria-label="Alterar perfil ativo"
+          >
+            <Card className="rounded-[22px] border-primary-foreground/10 bg-primary-foreground/10 p-4 text-primary-foreground transition hover:bg-primary-foreground/16">
+              <p className="text-xs uppercase tracking-[0.18em] text-primary-foreground/70">
+                Perfil ativo
+              </p>
+              <p className="mt-2 text-xl font-semibold">{selectedProfile.name}</p>
+            </Card>
+          </Link>
 
           <nav className="mt-5 space-y-1.5">
             <div className="space-y-1.5">
@@ -304,9 +312,13 @@ export function AppShell({
                   {formatPlanLabel(session.family.plan)}
                 </Badge>
                 <Badge className="bg-highlight/15 text-highlight">{session.profiles.length} perfis</Badge>
-                <div className="flex size-11 items-center justify-center rounded-2xl border border-highlight/45 bg-highlight/18 font-semibold text-highlight">
+                <Link
+                  href={APP_ROUTES.profiles}
+                  className="flex size-11 items-center justify-center rounded-2xl border border-highlight/45 bg-highlight/18 font-semibold text-highlight transition hover:bg-highlight/24 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-highlight/70 focus-visible:ring-offset-2"
+                  aria-label="Ir para seleção de perfis"
+                >
                   {profileInitial}
-                </div>
+                </Link>
               </div>
             </div>
           </header>
