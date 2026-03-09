@@ -16,9 +16,9 @@ const fontBody = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Bible Audiobook",
+  title: "Evangelho em áudio",
   description:
-    "Plataforma web para escutar a Biblia em audio, com autenticacao segura, perfis por familia e onboarding semelhante a streamings.",
+    "Plataforma web para escutar a Biblia, Parábolas, Jornadas de personagens bíblicos, tudo em áudio.",
 };
 
 export default function RootLayout({

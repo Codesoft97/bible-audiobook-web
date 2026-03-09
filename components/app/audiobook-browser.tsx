@@ -341,7 +341,7 @@ export function AudiobookBrowser({
               </h2>
               <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
                 {view === "books"
-                  ? "Escolha um livro para carregar os capitulos em audio e comecar a reproducao."
+                  ? "Escolha um livro para carregar os capitulos em áudio e comecar a reprodução."
                   : activeStoryConfig?.subheading}
               </p>
             </div>
