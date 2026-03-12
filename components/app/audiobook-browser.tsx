@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { useDeferredValue, useMemo, useState } from "react";
 
-import { BookOpenText, MessageCircle, Search, Sparkles, UserRound } from "lucide-react";
+import { BookOpenText, Crown, Lock, MessageCircle, Search, Sparkles, UserRound } from "lucide-react";
 
 import type { Audiobook, AudiobookBookSummary } from "@/lib/audiobooks";
 import { groupAudiobooksByBook } from "@/lib/audiobooks";
@@ -29,6 +29,8 @@ interface AudiobookBrowserProps {
   initialParables: CharacterJourney[];
   initialTeachings: CharacterJourney[];
   view: LibraryView;
+  hasPremiumAccess: boolean;
+  onUpgradeRequest: () => void;
   onViewChange: (view: LibraryView) => void;
 }
 
@@ -111,12 +113,18 @@ function selectedIcon(view: JourneyLikeView) {
   return Sparkles;
 }
 
+function isPremiumView(view: LibraryView) {
+  return view !== "books";
+}
+
 function FilterTab({
   active,
+  locked,
   children,
   onClick,
 }: {
   active: boolean;
+  locked?: boolean;
   children: ReactNode;
   onClick: () => void;
 }) {
@@ -128,7 +136,9 @@ function FilterTab({
         "whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition",
         active
           ? "bg-primary text-primary-foreground shadow-sm"
-          : "text-accent-foreground hover:bg-background/80",
+          : locked
+            ? "text-accent-foreground/60"
+            : "text-accent-foreground hover:bg-background/80",
       )}
     >
       {children}
@@ -142,6 +152,8 @@ export function AudiobookBrowser({
   initialParables,
   initialTeachings,
   view,
+  hasPremiumAccess,
+  onUpgradeRequest,
   onViewChange,
 }: AudiobookBrowserProps) {
   const [query, setQuery] = useState("");
@@ -240,6 +252,16 @@ export function AudiobookBrowser({
       ? filteredParables
       : filteredTeachings;
   const ActiveStoryIcon = view === "books" ? BookOpenText : selectedIcon(view as JourneyLikeView);
+  const lockedView = isPremiumView(view) && !hasPremiumAccess;
+
+  function handleTabChange(nextView: LibraryView) {
+    if (isPremiumView(nextView) && !hasPremiumAccess) {
+      onUpgradeRequest();
+      return;
+    }
+
+    onViewChange(nextView);
+  }
 
   return (
     <div className="space-y-6">
@@ -269,30 +291,91 @@ export function AudiobookBrowser({
 
           <div className="-mx-1 overflow-x-auto px-1">
             <div className="inline-flex min-w-max items-center rounded-full bg-accent/75 p-1">
-              <FilterTab active={view === "books"} onClick={() => onViewChange("books")}>
+              <FilterTab active={view === "books"} onClick={() => handleTabChange("books")}>
                 Livros da Biblia
               </FilterTab>
-              <FilterTab active={view === "journeys"} onClick={() => onViewChange("journeys")}>
-                Jornadas
+              <FilterTab
+                active={view === "journeys"}
+                locked={!hasPremiumAccess}
+                onClick={() => handleTabChange("journeys")}
+              >
+                <span className="inline-flex items-center gap-1">
+                  Jornadas
+                  {!hasPremiumAccess ? <Lock className="size-3.5" /> : null}
+                </span>
               </FilterTab>
-              <FilterTab active={view === "parables"} onClick={() => onViewChange("parables")}>
-                Parabolas
+              <FilterTab
+                active={view === "parables"}
+                locked={!hasPremiumAccess}
+                onClick={() => handleTabChange("parables")}
+              >
+                <span className="inline-flex items-center gap-1">
+                  Parabolas
+                  {!hasPremiumAccess ? <Lock className="size-3.5" /> : null}
+                </span>
               </FilterTab>
-              <FilterTab active={view === "teachings"} onClick={() => onViewChange("teachings")}>
-                Ensinamentos
+              <FilterTab
+                active={view === "teachings"}
+                locked={!hasPremiumAccess}
+                onClick={() => handleTabChange("teachings")}
+              >
+                <span className="inline-flex items-center gap-1">
+                  Ensinamentos
+                  {!hasPremiumAccess ? <Lock className="size-3.5" /> : null}
+                </span>
               </FilterTab>
-              <FilterTab active={view === "promises"} onClick={() => onViewChange("promises")}>
-                Promessas
+              <FilterTab
+                active={view === "promises"}
+                locked={!hasPremiumAccess}
+                onClick={() => handleTabChange("promises")}
+              >
+                <span className="inline-flex items-center gap-1">
+                  Promessas
+                  {!hasPremiumAccess ? <Lock className="size-3.5" /> : null}
+                </span>
               </FilterTab>
-              <FilterTab active={view === "whatsapp"} onClick={() => onViewChange("whatsapp")}>
-                WhatsApp
+              <FilterTab
+                active={view === "whatsapp"}
+                locked={!hasPremiumAccess}
+                onClick={() => handleTabChange("whatsapp")}
+              >
+                <span className="inline-flex items-center gap-1">
+                  WhatsApp
+                  {!hasPremiumAccess ? <Lock className="size-3.5" /> : null}
+                </span>
               </FilterTab>
             </div>
           </div>
         </div>
       </div>
 
-      {view === "promises" ? (
+      {lockedView ? (
+        <section className="rounded-2xl border border-highlight/35 bg-highlight/10 p-5 md:p-6">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-highlight">
+                <Lock className="size-3.5" />
+                Conteudo premium
+              </p>
+              <h2 className="mt-2 text-2xl font-semibold text-foreground md:text-3xl">
+                Este recurso esta disponivel no plano pago
+              </h2>
+              <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+                No plano free voce acessa apenas os livros da Biblia. Assine para liberar jornadas,
+                parabolas, ensinamentos, promessas, WhatsApp e historico.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onUpgradeRequest}
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-primary px-5 text-sm font-medium text-primary-foreground transition hover:bg-primary/90"
+            >
+              <Crown className="size-4" />
+              Assinar plano pago
+            </button>
+          </div>
+        </section>
+      ) : view === "promises" ? (
         <section className="space-y-4">
           <div>
             <p className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-muted-foreground">

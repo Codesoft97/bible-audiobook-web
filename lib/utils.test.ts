@@ -13,6 +13,7 @@ describe("lib/utils", () => {
 
   it("retorna o rotulo correto para o plano", () => {
     expect(formatPlanLabel("paid")).toBe("Plano Pago");
+    expect(formatPlanLabel("free_trial")).toBe("Periodo de Teste");
     expect(formatPlanLabel("free")).toBe("Plano Free");
   });
 

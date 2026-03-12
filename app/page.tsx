@@ -18,9 +18,9 @@ import { APP_ROUTES } from "@/lib/constants";
 
 const FEATURES = [
   {
-    title: "Biblioteca em audio",
+    title: "Biblioteca em áudio",
     description:
-      "Explore livros da Biblia em áudio com organização por capitulos para ouvir todos os dias.",
+      "Explore livros da Bíblia em áudio com organização por capítulos para ouvir todos os dias.",
     icon: BookOpenText,
     imageLabel: "Imagem da biblioteca",
     videoLabel: "Video da navegacao",
@@ -56,27 +56,31 @@ const STORE_LINKS = [
     label: "Google Play",
     href: "https://play.google.com/store",
     hint: "Android",
+    available: true,
   },
   {
     label: "App Store",
     href: "https://www.apple.com/app-store/",
     hint: "iOS",
+    available: false,
+    badge: "Em breve",
   },
 ] as const;
 
 const MONTHLY_PLAN_FEATURES = [
-  "Biblioteca dos livros da Biblia em audio",
-  "Jornadas de personagens biblicos em audio",
-  "Caixinha de promessas em audio",
-  "Parabolas da Biblia em audio",
-  "Envios de promessas diarias via WhatsApp",
-  "Envios de capitulos diarios via WhatsApp",
+  "Biblioteca dos livros da Bíblia em áudio",
+  "Jornadas de personagens bíblicos em áudio",
+  "Caixinha de promessas em áudio",
+  "Ensinamentos bíblicos sobre assuntos da vida em áudio",
+  "Parábolas da Bíblia em áudio",
+  "Envios de promessas diárias via WhatsApp",
+  "Envios de capitulos diários via WhatsApp",
 ] as const;
 
 const YEARLY_PLAN_FEATURES = [
-  "Todos os beneficios do plano mensal",
+  "Todos os benefícios do plano mensal",
   "Melhor custo para uso continuo",
-  "Renovacao anual simples",
+  "Renovação anual simples",
 ] as const;
 
 export default function HomePage() {
@@ -153,14 +157,14 @@ export default function HomePage() {
           <div>
             <p className="inline-flex items-center gap-2 rounded-full border border-highlight/30 bg-highlight/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-highlight">
               <PlayCircle className="size-3.5" />
-              Evangelho em audio
+              Evangelho em áudio
             </p>
             <h1 className="mt-5 text-4xl font-semibold leading-tight text-foreground md:text-6xl">
               Ouça, aprenda e viva a Palavra de Deus todos os dias.
             </h1>
             <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground md:text-lg">
               Biblia em áudio, jornadas, promessas, parábolas e envio no WhatsApp em uma experiência unica
-              para toda a familia.
+              para toda a família.
             </p>
 
             <div className="mt-7 flex flex-wrap items-center gap-3">
@@ -265,10 +269,10 @@ export default function HomePage() {
             <div>
               <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Planos</p>
               <h2 className="mt-1 text-3xl font-semibold text-foreground md:text-4xl">
-                Escolha o melhor plano para sua familia
+                Escolha o melhor plano para sua família
               </h2>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground md:text-base">
-                Todos os planos incluem periodo gratuito para testar a plataforma sem compromisso.
+                Ao realizar seu cadastro você já começa no período gratuito para testar a plataforma sem compromisso e sem assinatura.
               </p>
             </div>
 
@@ -276,14 +280,14 @@ export default function HomePage() {
               <span className="inline-flex items-center rounded-full border border-success/35 bg-success/10 px-4 py-2 text-sm font-semibold text-success">
                 7 dias grátis para testar
               </span>
-              <p className="text-sm font-medium text-muted-foreground">Cancelamento a qualquer momento.</p>
+              <p className="text-sm font-medium text-muted-foreground">Cancele a qualquer momento.</p>
             </div>
           </div>
 
           <div className="mt-6 grid gap-4 md:grid-cols-2">
             <article className="rounded-2xl border border-border/65 bg-background/65 p-5">
               <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Mensal</p>
-              <p className="mt-3 text-4xl font-semibold text-foreground">R$ 19,90</p>
+              <p className="mt-3 text-4xl font-semibold text-foreground">R$ 12,90</p>
               <p className="mt-1 text-sm text-muted-foreground">por mês</p>
               <ul className="mt-4 grid gap-2 text-sm">
                 {MONTHLY_PLAN_FEATURES.map((feature) => (
@@ -302,7 +306,7 @@ export default function HomePage() {
 
             <article className="rounded-2xl border border-highlight/35 bg-gradient-to-br from-highlight/12 to-background p-5">
               <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Anual</p>
-              <p className="mt-3 text-4xl font-semibold text-foreground">R$ 119,99</p>
+              <p className="mt-3 text-4xl font-semibold text-foreground">R$ 118,80</p>
               <p className="mt-1 text-sm text-muted-foreground">por ano</p>
               <p className="mt-3 inline-flex rounded-full border border-highlight/40 bg-highlight/12 px-3 py-1 text-xs font-semibold uppercase tracking-[0.08em] text-highlight">
                 Economia em relação ao mensal
@@ -344,23 +348,42 @@ export default function HomePage() {
               </div>
 
               <div className="flex flex-wrap gap-3">
-                {STORE_LINKS.map((store) => (
-                  <a
-                    key={store.label}
-                    href={store.href}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex min-w-[170px] items-center justify-between rounded-2xl border border-border/65 bg-background/70 px-4 py-3 text-left transition hover:border-highlight/40 hover:bg-background"
-                  >
-                    <span>
-                      <span className="block text-xs uppercase tracking-[0.12em] text-muted-foreground">
-                        {store.hint}
+                {STORE_LINKS.map((store) =>
+                  store.available ? (
+                    <a
+                      key={store.label}
+                      href={store.href}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex min-w-[170px] items-center justify-between rounded-2xl border border-border/65 bg-background/70 px-4 py-3 text-left transition hover:border-highlight/40 hover:bg-background"
+                    >
+                      <span>
+                        <span className="block text-xs uppercase tracking-[0.12em] text-muted-foreground">
+                          {store.hint}
+                        </span>
+                        <span className="block text-sm font-semibold text-foreground">{store.label}</span>
                       </span>
-                      <span className="block text-sm font-semibold text-foreground">{store.label}</span>
-                    </span>
-                    <PlayCircle className="size-4 text-highlight" />
-                  </a>
-                ))}
+                      <PlayCircle className="size-4 text-highlight" />
+                    </a>
+                  ) : (
+                    <div
+                      key={store.label}
+                      aria-disabled="true"
+                      className="inline-flex min-w-[170px] items-center justify-between rounded-2xl border border-border/60 bg-background/45 px-4 py-3 text-left opacity-80"
+                    >
+                      <span>
+                        <span className="block text-xs uppercase tracking-[0.12em] text-muted-foreground">
+                          {store.hint}
+                        </span>
+                        <span className="block text-sm font-semibold text-foreground">{store.label}</span>
+                        <span className="mt-1 inline-flex rounded-full border border-highlight/35 bg-highlight/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-highlight">
+                          {store.badge}
+                        </span>
+                      </span>
+                      <PlayCircle className="size-4 text-muted-foreground/60" />
+                    </div>
+                  ),
+                )}
               </div>
             </div>
           </div>
@@ -394,17 +417,26 @@ export default function HomePage() {
           <div>
             <p className="text-sm font-semibold text-foreground">Aplicativos</p>
             <div className="mt-3 flex flex-col gap-2 text-sm text-muted-foreground">
-              {STORE_LINKS.map((store) => (
-                <a
-                  key={store.label}
-                  href={store.href}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="transition hover:text-foreground"
-                >
-                  {store.label} ({store.hint})
-                </a>
-              ))}
+              {STORE_LINKS.map((store) =>
+                store.available ? (
+                  <a
+                    key={store.label}
+                    href={store.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="transition hover:text-foreground"
+                  >
+                    {store.label} ({store.hint})
+                  </a>
+                ) : (
+                  <span key={store.label} className="inline-flex items-center gap-2 text-muted-foreground/85">
+                    {store.label} ({store.hint})
+                    <span className="rounded-full border border-highlight/35 bg-highlight/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-highlight">
+                      {store.badge}
+                    </span>
+                  </span>
+                ),
+              )}
             </div>
           </div>
         </div>

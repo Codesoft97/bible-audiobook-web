@@ -6,6 +6,10 @@ export const APP_ROUTES = {
   forgotPassword: "/forgot-password",
   profiles: "/profiles",
   app: "/app",
+  redirectApp: "/redirect/app",
+  subscription: "/subscription",
+  subscriptionSuccess: "/subscription/success",
+  subscriptionCancel: "/subscription/cancel",
 } as const;
 
 export const SESSION_COOKIE_NAME = "ba_session";

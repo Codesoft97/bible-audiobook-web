@@ -19,20 +19,24 @@ interface ApiResponse {
 export function LoginForm() {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [form, setForm] = useState({
     email: "",
     password: "",
   });
+  const isLoading = submitting || pending;
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
+    setSubmitting(true);
 
     const validation = loginSchema.safeParse(form);
 
     if (!validation.success) {
       setError(validation.error.issues[0]?.message ?? "Revise os dados informados.");
+      setSubmitting(false);
       return;
     }
 
@@ -49,10 +53,12 @@ export function LoginForm() {
 
       if (!response.ok || data.status !== "success") {
         setError(data.message ?? "Nao foi possivel entrar.");
+        setSubmitting(false);
         return;
       }
     } catch {
       setError("Nao foi possivel conectar ao servidor.");
+      setSubmitting(false);
       return;
     }
 
@@ -112,8 +118,8 @@ export function LoginForm() {
           />
         </div>
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
-        <Button className="w-full" type="submit" disabled={pending}>
-          {pending ? "Entrando..." : "Entrar"}
+        <Button className="w-full" type="submit" disabled={isLoading}>
+          {isLoading ? "Entrando..." : "Entrar"}
         </Button>
       </form>
     </div>

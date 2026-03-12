@@ -4,6 +4,8 @@ import {
   loginSchema,
   profileSchema,
   selectProfileSchema,
+  subscriptionCheckoutSchema,
+  subscriptionPixCheckoutSchema,
   verifyResetCodeSchema,
   whatsappPromiseSubscribeSchema,
 } from "@/lib/validation";
@@ -64,6 +66,32 @@ describe("lib/validation", () => {
   it("aceita apenas tipos de perfil validos", () => {
     const valid = profileSchema.safeParse({ name: "Joao", type: "adult" });
     const invalid = profileSchema.safeParse({ name: "Joao", type: "unknown" });
+
+    expect(valid.success).toBe(true);
+    expect(invalid.success).toBe(false);
+  });
+
+  it("valida o ciclo de cobranca da assinatura", () => {
+    const valid = subscriptionCheckoutSchema.safeParse({
+      billingCycle: "monthly",
+      platform: "web",
+    });
+    const invalid = subscriptionCheckoutSchema.safeParse({
+      billingCycle: "weekly",
+      platform: "mobile",
+    });
+
+    expect(valid.success).toBe(true);
+    expect(invalid.success).toBe(false);
+  });
+
+  it("valida o CPF no checkout PIX", () => {
+    const valid = subscriptionPixCheckoutSchema.safeParse({
+      taxId: "04711686029",
+    });
+    const invalid = subscriptionPixCheckoutSchema.safeParse({
+      taxId: "0471168602",
+    });
 
     expect(valid.success).toBe(true);
     expect(invalid.success).toBe(false);

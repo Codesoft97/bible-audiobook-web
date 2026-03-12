@@ -1,30 +1,36 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import {
+  AlertCircle,
   BookOpenText,
+  CheckCircle2,
   Clock3,
   Crown,
+  Info,
+  Lock,
   MessageCircle,
   PanelLeftClose,
   PanelLeftOpen,
   Sparkles,
   UserRound,
+  X,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-import type { Audiobook } from "@/lib/audiobooks";
-import type { CharacterJourney } from "@/lib/character-journeys";
 import { AudiobookBrowser } from "@/components/app/audiobook-browser";
 import { HistoryPanel } from "@/components/app/history-panel";
-import { Logo } from "@/components/logo";
 import { LogoutButton } from "@/components/app/logout-button";
+import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import type { AppSession } from "@/lib/auth/types";
+import type { Audiobook } from "@/lib/audiobooks";
+import type { CharacterJourney } from "@/lib/character-journeys";
 import { APP_ROUTES } from "@/lib/constants";
 import { cn, formatPlanLabel } from "@/lib/utils";
 
@@ -43,10 +49,11 @@ const SIDEBAR_ITEMS: Array<{
   key: Exclude<SidebarKey, "books" | "journeys" | "promises" | "whatsapp">;
   label: string;
   icon: LucideIcon;
-  soon?: boolean;
+  premium?: boolean;
+  route?: string;
 }> = [
-  { key: "history", label: "Histórico", icon: Clock3 },
-  { key: "plans", label: "Meus planos", icon: Crown, soon: true },
+  { key: "history", label: "Historico", icon: Clock3, premium: true },
+  { key: "plans", label: "Assinatura", icon: Crown, route: APP_ROUTES.subscription },
 ];
 
 const LIBRARY_ITEMS: Array<{
@@ -54,14 +61,62 @@ const LIBRARY_ITEMS: Array<{
   label: string;
   icon: LucideIcon;
   view: LibraryView;
+  premium?: boolean;
 }> = [
-  { key: "books", label: "Livros da Bíblia", icon: BookOpenText, view: "books" },
-  { key: "journeys", label: "Jornadas", icon: UserRound, view: "journeys" },
-  { key: "parables", label: "Parábolas", icon: BookOpenText, view: "parables" },
-  { key: "teachings", label: "Ensinamentos", icon: Sparkles, view: "teachings" },
-  { key: "promises", label: "Promessas", icon: Sparkles, view: "promises" },
-  { key: "whatsapp", label: "WhatsApp", icon: MessageCircle, view: "whatsapp" },
+  { key: "books", label: "Livros da Biblia", icon: BookOpenText, view: "books" },
+  { key: "journeys", label: "Jornadas", icon: UserRound, view: "journeys", premium: true },
+  { key: "parables", label: "Parabolas", icon: BookOpenText, view: "parables", premium: true },
+  { key: "teachings", label: "Ensinamentos", icon: Sparkles, view: "teachings", premium: true },
+  { key: "promises", label: "Promessas", icon: Sparkles, view: "promises", premium: true },
+  { key: "whatsapp", label: "WhatsApp", icon: MessageCircle, view: "whatsapp", premium: true },
 ];
+
+function isPremiumLibraryView(view: LibraryView) {
+  return view !== "books";
+}
+
+type RedirectStatus = "success" | "cancel" | "portal";
+
+const APP_STATUS_FEEDBACK: Record<
+  RedirectStatus,
+  {
+    title: string;
+    description: string;
+    icon: LucideIcon;
+    containerClassName: string;
+    iconClassName: string;
+  }
+> = {
+  success: {
+    title: "Assinatura concluida",
+    description: "Pagamento confirmado. Seu acesso premium foi atualizado.",
+    icon: CheckCircle2,
+    containerClassName: "border-success/35 bg-success/10",
+    iconClassName: "text-success",
+  },
+  cancel: {
+    title: "Checkout cancelado",
+    description: "A compra nao foi concluida. Voce pode tentar novamente quando quiser.",
+    icon: AlertCircle,
+    containerClassName: "border-destructive/30 bg-destructive/10",
+    iconClassName: "text-destructive",
+  },
+  portal: {
+    title: "Portal acessado",
+    description: "Retorno do portal de assinatura realizado com sucesso.",
+    icon: Info,
+    containerClassName: "border-primary/35 bg-primary/10",
+    iconClassName: "text-primary",
+  },
+};
+
+function parseRedirectStatus(value: string | null): RedirectStatus | null {
+  if (value === "success" || value === "cancel" || value === "portal") {
+    return value;
+  }
+
+  return null;
+}
 
 export function AppShell({
   session,
@@ -76,7 +131,13 @@ export function AppShell({
   initialParables: CharacterJourney[];
   initialTeachings: CharacterJourney[];
 }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const selectedProfile = session.selectedProfile;
+  const hasPremiumAccess = session.family.plan !== "free";
+  const hasActiveSubscription = session.family.plan === "paid";
+  const isTrial = session.family.plan === "free_trial";
+  const [statusFeedback, setStatusFeedback] = useState<RedirectStatus | null>(null);
   const [libraryView, setLibraryView] = useState<LibraryView>("books");
   const [activeSidebar, setActiveSidebar] = useState<SidebarKey>("books");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -110,30 +171,70 @@ export function AppShell({
     };
   }, [sidebarOpen]);
 
+  useEffect(() => {
+    const nextStatus = parseRedirectStatus(searchParams.get("status"));
+
+    if (!nextStatus) {
+      return;
+    }
+
+    setStatusFeedback(nextStatus);
+    router.replace(APP_ROUTES.app, { scroll: false });
+  }, [router, searchParams]);
+
+  useEffect(() => {
+    if (hasPremiumAccess) {
+      return;
+    }
+
+    const hasLockedSidebar =
+      activeSidebar === "history" ||
+      activeSidebar === "journeys" ||
+      activeSidebar === "parables" ||
+      activeSidebar === "teachings" ||
+      activeSidebar === "promises" ||
+      activeSidebar === "whatsapp";
+
+    if (libraryView !== "books") {
+      setLibraryView("books");
+    }
+
+    if (hasLockedSidebar) {
+      setActiveSidebar("books");
+    }
+  }, [activeSidebar, hasPremiumAccess, libraryView]);
+
   if (!selectedProfile) {
     return null;
   }
 
+  const feedback = statusFeedback ? APP_STATUS_FEEDBACK[statusFeedback] : null;
+  const FeedbackIcon = feedback?.icon;
+
   const profileInitial = selectedProfile.name.trim().charAt(0).toUpperCase() || "P";
-  const showingHistory = activeSidebar === "history";
+  const showingHistory = activeSidebar === "history" && hasPremiumAccess;
   const pageTitle = showingHistory
-    ? "Histórico de escuta"
+    ? "Historico de escuta"
     : libraryView === "books"
       ? "Biblioteca"
-        : libraryView === "journeys"
-          ? "Jornadas"
-          : libraryView === "parables"
-            ? "Parábolas"
-            : libraryView === "teachings"
-              ? "Ensinamentos"
-              : libraryView === "promises"
-                ? "Promessas"
-          : "Evangelho em áudio no WhatsApp";
+      : libraryView === "journeys"
+        ? "Jornadas"
+        : libraryView === "parables"
+          ? "Parabolas"
+          : libraryView === "teachings"
+            ? "Ensinamentos"
+            : libraryView === "promises"
+              ? "Promessas"
+              : "Evangelho em audio no WhatsApp";
 
   function closeSidebarOnMobile() {
     if (window.matchMedia("(max-width: 1023px)").matches) {
       setSidebarOpen(false);
     }
+  }
+
+  function openSubscription() {
+    router.push(APP_ROUTES.subscription);
   }
 
   return (
@@ -177,55 +278,113 @@ export function AppShell({
 
           <nav className="mt-5 space-y-1.5">
             <div className="space-y-1.5">
-              {LIBRARY_ITEMS.map((item) => (
+              {LIBRARY_ITEMS.map((item) => {
+                const locked = Boolean(item.premium && !hasPremiumAccess);
+
+                return (
+                  <button
+                    key={item.key}
+                    type="button"
+                    onClick={() => {
+                      if (locked) {
+                        openSubscription();
+                        closeSidebarOnMobile();
+                        return;
+                      }
+
+                      setLibraryView(item.view);
+                      setActiveSidebar(item.key);
+                      closeSidebarOnMobile();
+                    }}
+                    className={cn(
+                      "flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm transition",
+                      locked
+                        ? "bg-primary-foreground/5 text-primary-foreground/65"
+                        : activeSidebar === item.key
+                          ? "bg-highlight text-highlight-foreground"
+                          : "bg-primary-foreground/8 text-primary-foreground hover:bg-primary-foreground/14",
+                    )}
+                  >
+                    <item.icon className="size-4" />
+                    <span>{item.label}</span>
+                    {locked ? (
+                      <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-primary-foreground/16 px-2 py-0.5 text-[10px] uppercase tracking-[0.12em]">
+                        <Lock className="size-3" />
+                        Premium
+                      </span>
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="mt-4 border-t border-primary-foreground/15 pt-4" />
+
+            {SIDEBAR_ITEMS.map((item) => {
+              const locked = Boolean(item.premium && !hasPremiumAccess);
+
+              return (
                 <button
                   key={item.key}
                   type="button"
                   onClick={() => {
-                    setLibraryView(item.view);
+                    if (item.route) {
+                      setActiveSidebar(item.key);
+                      router.push(item.route);
+                      closeSidebarOnMobile();
+                      return;
+                    }
+
+                    if (locked) {
+                      openSubscription();
+                      closeSidebarOnMobile();
+                      return;
+                    }
+
                     setActiveSidebar(item.key);
                     closeSidebarOnMobile();
                   }}
                   className={cn(
                     "flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm transition",
-                    activeSidebar === item.key
-                      ? "bg-highlight text-highlight-foreground"
-                      : "bg-primary-foreground/8 text-primary-foreground hover:bg-primary-foreground/14",
+                    locked
+                      ? "bg-primary-foreground/5 text-primary-foreground/65"
+                      : activeSidebar === item.key
+                        ? "bg-highlight text-highlight-foreground"
+                        : "bg-primary-foreground/8 text-primary-foreground hover:bg-primary-foreground/14",
                   )}
                 >
                   <item.icon className="size-4" />
                   <span>{item.label}</span>
+                  {locked ? (
+                    <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-primary-foreground/16 px-2 py-0.5 text-[10px] uppercase tracking-[0.12em]">
+                      <Lock className="size-3" />
+                      Premium
+                    </span>
+                  ) : null}
                 </button>
-              ))}
-            </div>
-
-            <div className="mt-4 border-t border-primary-foreground/15 pt-4" />
-
-            {SIDEBAR_ITEMS.map((item) => (
-              <button
-                key={item.key}
-                type="button"
-                onClick={() => {
-                  setActiveSidebar(item.key);
-                  closeSidebarOnMobile();
-                }}
-                className={cn(
-                  "flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm transition",
-                  activeSidebar === item.key
-                    ? "bg-highlight text-highlight-foreground"
-                    : "bg-primary-foreground/8 text-primary-foreground hover:bg-primary-foreground/14",
-                )}
-              >
-                <item.icon className="size-4" />
-                <span>{item.label}</span>
-                {item.soon ? (
-                  <span className="ml-auto rounded-full bg-primary-foreground/16 px-2 py-0.5 text-[10px] uppercase tracking-[0.12em]">
-                    Em breve
-                  </span>
-                ) : null}
-              </button>
-            ))}
+              );
+            })}
           </nav>
+
+          <Link
+            href={APP_ROUTES.subscription}
+            onClick={closeSidebarOnMobile}
+            className="mt-4 mb-4 block rounded-[20px] border border-highlight/35 bg-highlight/12 p-4 text-primary-foreground transition hover:bg-highlight/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground/55"
+          >
+            <p className="text-xs uppercase tracking-[0.16em] text-primary-foreground/75">Plano premium</p>
+            <p className="mt-2 text-sm font-semibold">
+              {hasActiveSubscription
+                ? "Gerenciar assinatura ativa"
+                : isTrial
+                  ? "Assine antes do fim do teste"
+                  : "Desbloqueie todos os recursos do app"}
+            </p>
+            <p className="mt-1 text-xs text-primary-foreground/75">
+              {hasActiveSubscription
+                ? "Acesse seus dados de faturamento"
+                : "Assine via PIX em poucos minutos"}
+            </p>
+          </Link>
 
           <div className="mt-auto space-y-3">
             <Card className="rounded-[20px] border-primary-foreground/10 bg-primary-foreground/10 p-4 text-primary-foreground">
@@ -315,7 +474,7 @@ export function AppShell({
                 <Link
                   href={APP_ROUTES.profiles}
                   className="flex size-11 items-center justify-center rounded-2xl border border-highlight/45 bg-highlight/18 font-semibold text-highlight transition hover:bg-highlight/24 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-highlight/70 focus-visible:ring-offset-2"
-                  aria-label="Ir para seleção de perfis"
+                  aria-label="Ir para selecao de perfis"
                 >
                   {profileInitial}
                 </Link>
@@ -335,6 +494,26 @@ export function AppShell({
             </div>
           </div>
 
+          {feedback && FeedbackIcon ? (
+            <div className={cn("mb-5 rounded-2xl border p-4", feedback.containerClassName)}>
+              <div className="flex items-start gap-3">
+                <FeedbackIcon className={cn("mt-0.5 size-5 shrink-0", feedback.iconClassName)} />
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-foreground">{feedback.title}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{feedback.description}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setStatusFeedback(null)}
+                  className="ml-auto inline-flex size-8 shrink-0 items-center justify-center rounded-lg border border-border/60 bg-background/65 text-muted-foreground transition hover:bg-background hover:text-foreground"
+                  aria-label="Fechar aviso de status"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
+            </div>
+          ) : null}
+
           {showingHistory ? (
             <HistoryPanel
               initialAudiobooks={initialAudiobooks}
@@ -350,6 +529,12 @@ export function AppShell({
                       : contentType === "parable"
                         ? "parables"
                         : "teachings";
+
+                if (!hasPremiumAccess && isPremiumLibraryView(nextView)) {
+                  openSubscription();
+                  return;
+                }
+
                 setLibraryView(nextView);
                 setActiveSidebar(nextView);
               }}
@@ -361,7 +546,14 @@ export function AppShell({
               initialParables={initialParables}
               initialTeachings={initialTeachings}
               view={libraryView}
+              hasPremiumAccess={hasPremiumAccess}
+              onUpgradeRequest={openSubscription}
               onViewChange={(view) => {
+                if (!hasPremiumAccess && isPremiumLibraryView(view)) {
+                  openSubscription();
+                  return;
+                }
+
                 setLibraryView(view);
                 setActiveSidebar(view);
               }}

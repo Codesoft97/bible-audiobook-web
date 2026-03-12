@@ -34,15 +34,15 @@ export function ForgotPasswordFlow() {
   async function handleRequest() {
     setError("");
     setSuccess("");
+    setSubmitting(true);
 
     const validation = forgotPasswordSchema.safeParse({ email });
 
     if (!validation.success) {
       setError(validation.error.issues[0]?.message ?? "Informe um email valido.");
+      setSubmitting(false);
       return;
     }
-
-    setSubmitting(true);
 
     try {
       const response = await fetch("/api/auth/forgot-password", {
@@ -71,15 +71,15 @@ export function ForgotPasswordFlow() {
   async function handleVerify() {
     setError("");
     setSuccess("");
+    setSubmitting(true);
 
     const validation = verifyResetCodeSchema.safeParse({ email, code });
 
     if (!validation.success) {
       setError(validation.error.issues[0]?.message ?? "Revise o codigo informado.");
+      setSubmitting(false);
       return;
     }
-
-    setSubmitting(true);
 
     try {
       const response = await fetch("/api/auth/verify-reset-code", {
@@ -108,15 +108,15 @@ export function ForgotPasswordFlow() {
   async function handleReset() {
     setError("");
     setSuccess("");
+    setSubmitting(true);
 
     const validation = resetPasswordSchema.safeParse({ token, newPassword });
 
     if (!validation.success) {
       setError(validation.error.issues[0]?.message ?? "Revise sua nova senha.");
+      setSubmitting(false);
       return;
     }
-
-    setSubmitting(true);
 
     try {
       const response = await fetch("/api/auth/reset-password", {

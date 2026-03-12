@@ -48,7 +48,12 @@ export function middleware(request: NextRequest) {
     );
   }
 
-  if (!isAuthenticated && (pathname.startsWith(APP_ROUTES.profiles) || pathname.startsWith(APP_ROUTES.app))) {
+  if (
+    !isAuthenticated &&
+    (pathname.startsWith(APP_ROUTES.profiles) ||
+      pathname.startsWith(APP_ROUTES.app) ||
+      pathname.startsWith(APP_ROUTES.subscription))
+  ) {
     return applySecurityHeaders(NextResponse.redirect(new URL(APP_ROUTES.login, request.url)));
   }
 
