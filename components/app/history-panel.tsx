@@ -275,7 +275,7 @@ export function HistoryPanel({
                       <p className="truncate text-lg font-semibold text-foreground">{metadata.title}</p>
                       <p className="truncate text-sm text-muted-foreground">{metadata.subtitle}</p>
                       <p className="mt-1 text-xs text-muted-foreground">
-                        Ultima reproducao: {formatLastListenedAt(item.lastListenedAt)}
+                        Última reprodução: {formatLastListenedAt(item.lastListenedAt)}
                       </p>
                     </div>
                   </div>

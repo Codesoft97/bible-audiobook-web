@@ -1,5 +1,5 @@
 export type AuthProvider = "local" | "google";
-export type PlanType = "free" | "paid";
+export type PlanType = "free" | "free_trial" | "paid";
 export type ProfileType = "adult" | "child";
 
 export interface Family {

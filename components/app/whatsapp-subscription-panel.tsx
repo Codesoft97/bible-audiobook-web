@@ -21,6 +21,30 @@ function normalizeWhatsappNumber(value: string) {
   return value.replace(/\D/g, "");
 }
 
+function formatWhatsappNumber(value: string) {
+  const digits = normalizeWhatsappNumber(value).slice(0, 11);
+  const ddd = digits.slice(0, 2);
+  const number = digits.slice(2);
+
+  if (!ddd) {
+    return "";
+  }
+
+  if (number.length === 0) {
+    return `(${ddd}`;
+  }
+
+  if (number.length <= 4) {
+    return `(${ddd}) ${number}`;
+  }
+
+  if (number.length <= 8) {
+    return `(${ddd}) ${number.slice(0, 4)}-${number.slice(4)}`;
+  }
+
+  return `(${ddd}) ${number.slice(0, 5)}-${number.slice(5, 9)}`;
+}
+
 function formatDateInputValue(value: Date) {
   const year = value.getFullYear();
   const month = String(value.getMonth() + 1).padStart(2, "0");
@@ -566,12 +590,12 @@ export function WhatsAppSubscriptionPanel() {
                 type="tel"
                 inputMode="numeric"
                 autoComplete="tel"
-                placeholder="5511999999999"
+                placeholder="(51) 99999-9999"
                 value={whatsappNumber}
-                onChange={(event) => setWhatsappNumber(event.target.value)}
+                onChange={(event) => setWhatsappNumber(formatWhatsappNumber(event.target.value))}
               />
               <p className="text-xs text-muted-foreground">
-                Informe no formato internacional (exemplo: 5511999999999).
+                Informe no formato (51) 99999-9999.
               </p>
             </div>
 

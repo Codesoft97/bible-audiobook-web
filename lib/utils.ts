@@ -6,7 +6,15 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatPlanLabel(plan: string) {
-  return plan === "paid" ? "Plano Pago" : "Plano Free";
+  if (plan === "paid") {
+    return "Plano Pago";
+  }
+
+  if (plan === "free_trial") {
+    return "Periodo de Teste";
+  }
+
+  return "Plano Free";
 }
 
 export function formatProfileTypeLabel(type: string) {

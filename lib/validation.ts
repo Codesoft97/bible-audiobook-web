@@ -73,10 +73,21 @@ export const whatsappAudiobookSubscribeSchema = z.object({
   currentChapter: z
     .number()
     .int("Capitulo atual invalido.")
-    .min(1, "Capitulo atual invalido."),
+    .min(0, "Capitulo atual invalido."),
   nextChapter: z
     .number()
     .int("Proximo capitulo invalido.")
     .min(1, "Proximo capitulo invalido."),
 });
 
+export const subscriptionCheckoutSchema = z.object({
+  billingCycle: z.enum(["monthly", "annual"]),
+  platform: z.literal("web"),
+});
+
+export const subscriptionPixCheckoutSchema = z.object({
+  taxId: z
+    .string()
+    .trim()
+    .regex(/^\d{11}$/, "Informe um CPF valido com 11 digitos."),
+});
