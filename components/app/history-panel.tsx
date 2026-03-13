@@ -1,17 +1,19 @@
 "use client";
 
+import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
   BookOpenText,
   CheckCircle2,
   Clock3,
+  NotebookIcon,
+  PersonSimpleHike,
   Sparkles,
   LoaderCircle,
   RefreshCw,
   Trash2,
-  UserRound,
-} from "lucide-react";
+} from "@/components/icons";
 
 import type { ApiEnvelope } from "@/lib/auth/types";
 import type { Audiobook } from "@/lib/audiobooks";
@@ -171,6 +173,7 @@ export function HistoryPanel({
       return {
         title,
         subtitle: "Audiobook biblico",
+        coverImageUrl: audiobook?.coverImageUrl ?? "",
       };
     }
 
@@ -180,6 +183,7 @@ export function HistoryPanel({
       return {
         title: parable?.titulo ?? "Parabola",
         subtitle: parable?.categoria ?? "Parabola",
+        coverImageUrl: parable?.coverImageUrl ?? "",
       };
     }
 
@@ -189,6 +193,7 @@ export function HistoryPanel({
       return {
         title: teaching?.titulo ?? "Ensinamento",
         subtitle: teaching?.categoria ?? "Ensinamento",
+        coverImageUrl: teaching?.coverImageUrl ?? "",
       };
     }
 
@@ -197,6 +202,7 @@ export function HistoryPanel({
     return {
       title: journey?.titulo ?? "Jornada de personagem",
       subtitle: journey?.categoria ?? "Jornada de personagem",
+      coverImageUrl: journey?.coverImageUrl ?? "",
     };
   }
 
@@ -213,7 +219,7 @@ export function HistoryPanel({
               Continue de onde parou
             </h2>
             <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
-              Cada perfil possui seu proprio histórico de audiobooks e jornadas reproduzidos.
+              Cada perfil possui seu próprio histórico de conteúdos reproduzidos.
             </p>
           </div>
           <div className="flex flex-wrap items-center justify-end gap-2">
@@ -262,14 +268,42 @@ export function HistoryPanel({
               <Card key={item.id} className="rounded-[20px] border-border/70 bg-background/70 p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="flex min-w-0 items-start gap-3">
-                    <div className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl bg-highlight/12 text-highlight">
-                      {item.contentType === "bible" ? (
-                        <BookOpenText className="size-4" />
-                      ) : item.contentType === "character-journey" ? (
-                        <UserRound className="size-4" />
+                    <div className="relative mt-0.5 size-14 shrink-0 overflow-hidden rounded-xl border border-border/70 bg-accent/45">
+                      {metadata.coverImageUrl ? (
+                        <Image
+                          src={metadata.coverImageUrl}
+                          alt={metadata.title}
+                          fill
+                          unoptimized
+                          sizes="56px"
+                          className="size-full object-cover"
+                        />
                       ) : (
-                        <Sparkles className="size-4" />
+                        <div className="flex size-full items-center justify-center text-highlight">
+                          {item.contentType === "bible" ? (
+                            <BookOpenText className="size-5" />
+                          ) : item.contentType === "character-journey" ? (
+                            <PersonSimpleHike className="size-5" />
+                          ) : item.contentType === "teaching" ? (
+                            <NotebookIcon className="size-5" />
+                          ) : (
+                            <Sparkles className="size-5" />
+                          )}
+                        </div>
                       )}
+                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/45 to-transparent p-1.5">
+                        <div className="ml-auto flex size-5 items-center justify-center rounded-full bg-background/85 text-highlight shadow-sm">
+                          {item.contentType === "bible" ? (
+                            <BookOpenText className="size-3" />
+                          ) : item.contentType === "character-journey" ? (
+                            <PersonSimpleHike className="size-3" />
+                          ) : item.contentType === "teaching" ? (
+                            <NotebookIcon className="size-3" />
+                          ) : (
+                            <Sparkles className="size-3" />
+                          )}
+                        </div>
+                      </div>
                     </div>
                     <div className="min-w-0">
                       <p className="truncate text-lg font-semibold text-foreground">{metadata.title}</p>

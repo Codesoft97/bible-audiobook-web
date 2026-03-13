@@ -10,11 +10,13 @@ import {
   useState,
 } from "react";
 import type { ReactNode } from "react";
+import { Howl } from "howler";
 
 import type { ApiEnvelope } from "@/lib/auth/types";
 import type { HistoryContentType, PlaybackProgressSnapshot } from "@/lib/history";
 
 const PROGRESS_SYNC_INTERVAL_SECONDS = 12;
+const PLAYBACK_SAMPLE_INTERVAL_MS = 500;
 
 export interface AudioTrack {
   id: string;
@@ -64,6 +66,16 @@ function resolveTrackProgressTarget(track: AudioTrack | null) {
   };
 }
 
+function readHowlCurrentTime(howl: Howl) {
+  const value = howl.seek();
+  return typeof value === "number" && Number.isFinite(value) ? value : 0;
+}
+
+function readHowlDuration(howl: Howl) {
+  const value = howl.duration();
+  return Number.isFinite(value) ? value : 0;
+}
+
 export function useAudio(): AudioContextValue {
   const ctx = useContext(AudioContext);
 
@@ -75,11 +87,16 @@ export function useAudio(): AudioContextValue {
 }
 
 export function AudioProvider({ children }: { children: ReactNode }) {
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const howlRef = useRef<Howl | null>(null);
+  const shouldAutoplayRef = useRef(false);
   const currentTrackRef = useRef<AudioTrack | null>(null);
+  const playlistRef = useRef<AudioTrack[]>([]);
+  const trackIndexRef = useRef(0);
+  const mutedRef = useRef(false);
   const pendingResumeRef = useRef<{ trackId: string; seconds: number } | null>(null);
   const resumeRequestRef = useRef(0);
   const progressMarkerRef = useRef<{ trackId: string; second: number } | null>(null);
+  const progressTimerRef = useRef<number | null>(null);
 
   const [playlist, setPlaylist] = useState<AudioTrack[]>([]);
   const [trackIndex, setTrackIndex] = useState(0);
@@ -96,6 +113,15 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     currentTrackRef.current = currentTrack;
   }, [currentTrack]);
+
+  useEffect(() => {
+    playlistRef.current = playlist;
+    trackIndexRef.current = trackIndex;
+  }, [playlist, trackIndex]);
+
+  useEffect(() => {
+    mutedRef.current = muted;
+  }, [muted]);
 
   const syncProgress = useCallback((track: AudioTrack | null, position: number, total: number) => {
     const target = resolveTrackProgressTarget(track);
@@ -121,177 +147,131 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const persistCurrentTrackProgress = useCallback(() => {
-    const audio = audioRef.current;
+  const stopProgressTimer = useCallback(() => {
+    if (progressTimerRef.current !== null) {
+      window.clearInterval(progressTimerRef.current);
+      progressTimerRef.current = null;
+    }
+  }, []);
 
-    if (!audio || !currentTrack) {
+  const clearPlaybackError = useCallback(() => {
+    setError((currentError) => (currentError ? "" : currentError));
+  }, []);
+
+  const persistCurrentTrackProgress = useCallback(() => {
+    const howl = howlRef.current;
+    const track = currentTrackRef.current;
+
+    if (!howl || !track) {
       return;
     }
 
-    syncProgress(currentTrack, audio.currentTime, audio.duration);
+    const position = readHowlCurrentTime(howl);
+    const total = readHowlDuration(howl);
+
+    syncProgress(track, position, total);
     progressMarkerRef.current = {
-      trackId: currentTrack.id,
-      second: Math.floor(audio.currentTime),
+      trackId: track.id,
+      second: Math.floor(position),
     };
-  }, [currentTrack, syncProgress]);
+  }, [syncProgress]);
 
-  const playAudio = useCallback(() => {
-    const audio = audioRef.current;
+  const sampleAndSyncProgress = useCallback(() => {
+    const howl = howlRef.current;
+    const track = currentTrackRef.current;
 
-    if (!audio) return;
+    if (!howl || !track) {
+      return;
+    }
 
-    setError("");
-    setIsBuffering(true);
+    const nextTime = readHowlCurrentTime(howl);
+    const total = readHowlDuration(howl);
 
-    void audio.play().catch(() => {
-      setError("Nao foi possivel reproduzir o audio.");
-      setIsPlaying(false);
-      setIsBuffering(false);
-    });
-  }, []);
+    if (nextTime > 0 || howl.playing()) {
+      clearPlaybackError();
+    }
 
-  const reloadAndPlay = useCallback(() => {
-    setTimeout(() => {
-      const audio = audioRef.current;
+    setCurrentTime(nextTime);
 
-      if (!audio) return;
+    if (!Number.isFinite(total) || total <= 0) {
+      return;
+    }
 
-      audio.load();
-      playAudio();
-    }, 0);
-  }, [playAudio]);
+    const nextSecond = Math.floor(nextTime);
+    const marker = progressMarkerRef.current;
 
-  const play = useCallback(
-    (tracks: AudioTrack[], startIndex = 0) => {
-      if (tracks.length === 0) {
-        return;
-      }
-
-      persistCurrentTrackProgress();
-
-      const safeIndex = Math.min(Math.max(startIndex, 0), tracks.length - 1);
-      setPlaylist(tracks);
-      setTrackIndex(safeIndex);
-      setCurrentTime(0);
-      setDuration(0);
-      setError("");
-      setIsBuffering(true);
-      reloadAndPlay();
-    },
-    [persistCurrentTrackProgress, reloadAndPlay],
-  );
-
-  const pause = useCallback(() => {
-    persistCurrentTrackProgress();
-    audioRef.current?.pause();
-  }, [persistCurrentTrackProgress]);
-
-  const resume = useCallback(() => {
-    playAudio();
-  }, [playAudio]);
-
-  const next = useCallback(() => {
-    if (!hasNext) return;
-
-    persistCurrentTrackProgress();
-    setTrackIndex((prev) => prev + 1);
-    setCurrentTime(0);
-    setDuration(0);
-    setError("");
-    setIsBuffering(true);
-    reloadAndPlay();
-  }, [hasNext, persistCurrentTrackProgress, reloadAndPlay]);
-
-  const prev = useCallback(() => {
-    if (trackIndex <= 0) return;
-
-    persistCurrentTrackProgress();
-    setTrackIndex((prevIndex) => prevIndex - 1);
-    setCurrentTime(0);
-    setDuration(0);
-    setError("");
-    setIsBuffering(true);
-    reloadAndPlay();
-  }, [persistCurrentTrackProgress, reloadAndPlay, trackIndex]);
-
-  const seek = useCallback(
-    (time: number) => {
-      const audio = audioRef.current;
-
-      if (!audio) return;
-
-      audio.currentTime = time;
-      setCurrentTime(time);
+    if (!marker || marker.trackId !== track.id) {
       progressMarkerRef.current = {
-        trackId: currentTrack?.id ?? "",
-        second: Math.floor(time),
+        trackId: track.id,
+        second: nextSecond,
       };
+      return;
+    }
 
-      if (currentTrack) {
-        syncProgress(currentTrack, time, audio.duration);
-      }
-    },
-    [currentTrack, syncProgress],
-  );
+    if (nextSecond < marker.second) {
+      progressMarkerRef.current = {
+        trackId: track.id,
+        second: nextSecond,
+      };
+      return;
+    }
 
-  const toggleMute = useCallback(() => {
-    setMuted((currentMuted) => {
-      const nextMuted = !currentMuted;
-      const audio = audioRef.current;
+    if (nextSecond - marker.second >= PROGRESS_SYNC_INTERVAL_SECONDS) {
+      syncProgress(track, nextTime, total);
+      progressMarkerRef.current = {
+        trackId: track.id,
+        second: nextSecond,
+      };
+    }
+  }, [clearPlaybackError, syncProgress]);
 
-      if (audio) {
-        audio.muted = nextMuted;
-      }
+  const startProgressTimer = useCallback(() => {
+    stopProgressTimer();
+    progressTimerRef.current = window.setInterval(() => {
+      sampleAndSyncProgress();
+    }, PLAYBACK_SAMPLE_INTERVAL_MS);
+  }, [sampleAndSyncProgress, stopProgressTimer]);
 
-      return nextMuted;
-    });
-  }, []);
+  const clearHowl = useCallback(() => {
+    stopProgressTimer();
 
-  const stop = useCallback(() => {
-    persistCurrentTrackProgress();
+    const howl = howlRef.current;
 
-    const audio = audioRef.current;
+    if (howl) {
+      howl.off();
+      howl.unload();
+    }
 
-    if (audio) {
-      audio.pause();
-      audio.removeAttribute("src");
-      audio.load();
+    howlRef.current = null;
+  }, [stopProgressTimer]);
+
+  const applyPendingResume = useCallback((track: AudioTrack, howl: Howl) => {
+    const pendingResume = pendingResumeRef.current;
+
+    if (!pendingResume || pendingResume.trackId !== track.id) {
+      return;
+    }
+
+    const total = readHowlDuration(howl);
+
+    if (total <= 0) {
+      return;
+    }
+
+    const maxSeek = Math.max(0, total - 1);
+    const safeSeek = Math.min(Math.max(0, pendingResume.seconds), maxSeek);
+
+    if (safeSeek > 0) {
+      howl.seek(safeSeek);
+      setCurrentTime(safeSeek);
+      progressMarkerRef.current = {
+        trackId: track.id,
+        second: Math.floor(safeSeek),
+      };
     }
 
     pendingResumeRef.current = null;
-    progressMarkerRef.current = null;
-    setPlaylist([]);
-    setTrackIndex(0);
-    setIsPlaying(false);
-    setIsBuffering(false);
-    setCurrentTime(0);
-    setDuration(0);
-    setError("");
-  }, [persistCurrentTrackProgress]);
-
-  const selectTrack = useCallback(
-    (index: number) => {
-      if (index < 0 || index >= playlist.length) return;
-
-      if (index === trackIndex) {
-        if (isPlaying) {
-          pause();
-        } else {
-          resume();
-        }
-        return;
-      }
-
-      persistCurrentTrackProgress();
-      setTrackIndex(index);
-      setCurrentTime(0);
-      setDuration(0);
-      setError("");
-      setIsBuffering(true);
-      reloadAndPlay();
-    },
-    [isPlaying, pause, persistCurrentTrackProgress, playlist.length, reloadAndPlay, resume, trackIndex],
-  );
+  }, []);
 
   const loadSavedProgress = useCallback(async (track: AudioTrack | null) => {
     pendingResumeRef.current = null;
@@ -321,28 +301,27 @@ export function AudioProvider({ children }: { children: ReactNode }) {
 
       if (savedSeconds > 0) {
         const activeTrack = currentTrackRef.current;
-        const audio = audioRef.current;
+        const howl = howlRef.current;
 
-        if (
-          activeTrack?.id === track.id &&
-          audio &&
-          Number.isFinite(audio.duration) &&
-          audio.duration > 0
-        ) {
-          const maxSeek = Math.max(0, audio.duration - 1);
-          const safeSeek = Math.min(Math.max(0, savedSeconds), maxSeek);
+        if (activeTrack?.id === track.id && howl && howl.state() === "loaded") {
+          const total = readHowlDuration(howl);
 
-          if (safeSeek > 0) {
-            audio.currentTime = safeSeek;
-            setCurrentTime(safeSeek);
-            progressMarkerRef.current = {
-              trackId: track.id,
-              second: Math.floor(safeSeek),
-            };
+          if (total > 0) {
+            const maxSeek = Math.max(0, total - 1);
+            const safeSeek = Math.min(Math.max(0, savedSeconds), maxSeek);
+
+            if (safeSeek > 0) {
+              howl.seek(safeSeek);
+              setCurrentTime(safeSeek);
+              progressMarkerRef.current = {
+                trackId: track.id,
+                second: Math.floor(safeSeek),
+              };
+            }
+
+            pendingResumeRef.current = null;
+            return;
           }
-
-          pendingResumeRef.current = null;
-          return;
         }
 
         pendingResumeRef.current = {
@@ -355,10 +334,163 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const play = useCallback(
+    (tracks: AudioTrack[], startIndex = 0) => {
+      if (tracks.length === 0) {
+        return;
+      }
+
+      persistCurrentTrackProgress();
+
+      const safeIndex = Math.min(Math.max(startIndex, 0), tracks.length - 1);
+      shouldAutoplayRef.current = true;
+      setPlaylist(tracks);
+      setTrackIndex(safeIndex);
+      setCurrentTime(0);
+      setDuration(0);
+      setError("");
+      setIsBuffering(true);
+    },
+    [persistCurrentTrackProgress],
+  );
+
+  const pause = useCallback(() => {
+    persistCurrentTrackProgress();
+    howlRef.current?.pause();
+  }, [persistCurrentTrackProgress]);
+
+  const resume = useCallback(() => {
+    const howl = howlRef.current;
+
+    if (!howl) {
+      return;
+    }
+
+    setError("");
+    setIsBuffering(true);
+    howl.play();
+  }, []);
+
+  const next = useCallback(() => {
+    if (!hasNext) {
+      return;
+    }
+
+    persistCurrentTrackProgress();
+    shouldAutoplayRef.current = true;
+    setTrackIndex((prev) => prev + 1);
+    setCurrentTime(0);
+    setDuration(0);
+    setError("");
+    setIsBuffering(true);
+  }, [hasNext, persistCurrentTrackProgress]);
+
+  const prev = useCallback(() => {
+    if (trackIndex <= 0) {
+      return;
+    }
+
+    persistCurrentTrackProgress();
+    shouldAutoplayRef.current = true;
+    setTrackIndex((prevIndex) => prevIndex - 1);
+    setCurrentTime(0);
+    setDuration(0);
+    setError("");
+    setIsBuffering(true);
+  }, [persistCurrentTrackProgress, trackIndex]);
+
+  const seek = useCallback(
+    (time: number) => {
+      const howl = howlRef.current;
+
+      if (!howl) {
+        return;
+      }
+
+      const safeTime = Math.max(0, time);
+
+      howl.seek(safeTime);
+      setCurrentTime(safeTime);
+
+      const activeTrack = currentTrackRef.current;
+
+      progressMarkerRef.current = {
+        trackId: activeTrack?.id ?? "",
+        second: Math.floor(safeTime),
+      };
+
+      if (activeTrack) {
+        syncProgress(activeTrack, safeTime, readHowlDuration(howl));
+      }
+    },
+    [syncProgress],
+  );
+
+  const toggleMute = useCallback(() => {
+    setMuted((currentMuted) => {
+      const nextMuted = !currentMuted;
+      const howl = howlRef.current;
+
+      if (howl) {
+        howl.mute(nextMuted);
+      }
+
+      return nextMuted;
+    });
+  }, []);
+
+  const stop = useCallback(() => {
+    persistCurrentTrackProgress();
+    shouldAutoplayRef.current = false;
+    clearHowl();
+
+    pendingResumeRef.current = null;
+    progressMarkerRef.current = null;
+    setPlaylist([]);
+    setTrackIndex(0);
+    setIsPlaying(false);
+    setIsBuffering(false);
+    setCurrentTime(0);
+    setDuration(0);
+    setError("");
+  }, [clearHowl, persistCurrentTrackProgress]);
+
+  const selectTrack = useCallback(
+    (index: number) => {
+      if (index < 0 || index >= playlist.length) {
+        return;
+      }
+
+      if (index === trackIndex) {
+        if (isPlaying) {
+          pause();
+        } else {
+          resume();
+        }
+        return;
+      }
+
+      persistCurrentTrackProgress();
+      shouldAutoplayRef.current = true;
+      setTrackIndex(index);
+      setCurrentTime(0);
+      setDuration(0);
+      setError("");
+      setIsBuffering(true);
+    },
+    [isPlaying, pause, persistCurrentTrackProgress, playlist.length, resume, trackIndex],
+  );
+
   useEffect(() => {
+    clearHowl();
+
     if (!currentTrack) {
       pendingResumeRef.current = null;
       progressMarkerRef.current = null;
+      setIsPlaying(false);
+      setIsBuffering(false);
+      setCurrentTime(0);
+      setDuration(0);
       return;
     }
 
@@ -367,8 +499,164 @@ export function AudioProvider({ children }: { children: ReactNode }) {
       second: 0,
     };
 
+    setCurrentTime(0);
+    setDuration(0);
+    setError("");
+
     void loadSavedProgress(currentTrack);
-  }, [currentTrack, loadSavedProgress]);
+
+    const trackId = currentTrack.id;
+
+    const howl = new Howl({
+      src: [currentTrack.src],
+      html5: true,
+      preload: true,
+      mute: mutedRef.current,
+      onload: () => {
+        if (currentTrackRef.current?.id !== trackId || howlRef.current !== howl) {
+          return;
+        }
+
+        clearPlaybackError();
+        setDuration(readHowlDuration(howl));
+
+        const activeTrack = currentTrackRef.current;
+
+        if (activeTrack) {
+          applyPendingResume(activeTrack, howl);
+        }
+      },
+      onplay: () => {
+        if (currentTrackRef.current?.id !== trackId || howlRef.current !== howl) {
+          return;
+        }
+
+        clearPlaybackError();
+        setIsPlaying(true);
+        setIsBuffering(false);
+        setDuration(readHowlDuration(howl));
+        startProgressTimer();
+        sampleAndSyncProgress();
+
+        const activeTrack = currentTrackRef.current;
+
+        if (activeTrack) {
+          applyPendingResume(activeTrack, howl);
+        }
+      },
+      onpause: () => {
+        if (currentTrackRef.current?.id !== trackId || howlRef.current !== howl) {
+          return;
+        }
+
+        setIsPlaying(false);
+        setIsBuffering(false);
+        stopProgressTimer();
+        sampleAndSyncProgress();
+      },
+      onstop: () => {
+        if (currentTrackRef.current?.id !== trackId || howlRef.current !== howl) {
+          return;
+        }
+
+        setIsPlaying(false);
+        setIsBuffering(false);
+        stopProgressTimer();
+      },
+      onend: () => {
+        if (currentTrackRef.current?.id !== trackId || howlRef.current !== howl) {
+          return;
+        }
+
+        stopProgressTimer();
+
+        const activeTrack = currentTrackRef.current;
+        const total = readHowlDuration(howl);
+
+        if (activeTrack) {
+          syncProgress(activeTrack, total, total);
+          progressMarkerRef.current = {
+            trackId: activeTrack.id,
+            second: Math.floor(total),
+          };
+        }
+
+        const canAdvance = trackIndexRef.current < playlistRef.current.length - 1;
+
+        if (canAdvance) {
+          shouldAutoplayRef.current = true;
+          setTrackIndex((prev) => prev + 1);
+          setCurrentTime(0);
+          setDuration(0);
+          setError("");
+          setIsBuffering(true);
+          return;
+        }
+
+        setIsPlaying(false);
+        setIsBuffering(false);
+        setCurrentTime(total);
+      },
+      onloaderror: () => {
+        if (currentTrackRef.current?.id !== trackId || howlRef.current !== howl) {
+          return;
+        }
+
+        setError("Nao foi possivel reproduzir o audio. Tente novamente.");
+        setIsPlaying(false);
+        setIsBuffering(false);
+        stopProgressTimer();
+      },
+      onplayerror: () => {
+        if (currentTrackRef.current?.id !== trackId || howlRef.current !== howl) {
+          return;
+        }
+
+        setError("Nao foi possivel reproduzir o audio.");
+        setIsPlaying(false);
+        setIsBuffering(false);
+        stopProgressTimer();
+      },
+    });
+
+    howlRef.current = howl;
+    setIsBuffering(true);
+
+    if (shouldAutoplayRef.current) {
+      shouldAutoplayRef.current = false;
+      howl.play();
+    } else {
+      setIsPlaying(false);
+      setIsBuffering(false);
+    }
+
+    return () => {
+      if (howlRef.current === howl) {
+        clearHowl();
+        return;
+      }
+
+      howl.off();
+      howl.unload();
+    };
+  }, [
+    applyPendingResume,
+    clearHowl,
+    clearPlaybackError,
+    currentTrack,
+    loadSavedProgress,
+    sampleAndSyncProgress,
+    startProgressTimer,
+    stopProgressTimer,
+    syncProgress,
+  ]);
+
+  useEffect(() => {
+    return () => {
+      persistCurrentTrackProgress();
+      clearHowl();
+    };
+  }, [clearHowl, persistCurrentTrackProgress]);
 
   const value = useMemo<AudioContextValue>(
     () => ({
@@ -413,105 +701,5 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     ],
   );
 
-  return (
-    <AudioContext.Provider value={value}>
-      {children}
-      <audio
-        ref={audioRef}
-        preload="metadata"
-        src={currentTrack?.src}
-        muted={muted}
-        onCanPlay={() => setIsBuffering(false)}
-        onWaiting={() => setIsBuffering(true)}
-        onPlay={() => {
-          setIsPlaying(true);
-          setIsBuffering(false);
-        }}
-        onPause={() => setIsPlaying(false)}
-        onTimeUpdate={(e) => {
-          const nextTime = e.currentTarget.currentTime;
-          const total = e.currentTarget.duration;
-
-          setCurrentTime(nextTime);
-
-          if (!currentTrack || !Number.isFinite(total) || total <= 0) {
-            return;
-          }
-
-          const nextSecond = Math.floor(nextTime);
-          const marker = progressMarkerRef.current;
-
-          if (!marker || marker.trackId !== currentTrack.id) {
-            progressMarkerRef.current = {
-              trackId: currentTrack.id,
-              second: nextSecond,
-            };
-            return;
-          }
-
-          if (nextSecond < marker.second) {
-            progressMarkerRef.current = {
-              trackId: currentTrack.id,
-              second: nextSecond,
-            };
-            return;
-          }
-
-          if (nextSecond - marker.second >= PROGRESS_SYNC_INTERVAL_SECONDS) {
-            syncProgress(currentTrack, nextTime, total);
-            progressMarkerRef.current = {
-              trackId: currentTrack.id,
-              second: nextSecond,
-            };
-          }
-        }}
-        onLoadedMetadata={(e) => {
-          const total = e.currentTarget.duration;
-          const safeDuration = Number.isFinite(total) ? total : 0;
-
-          setDuration(safeDuration);
-
-          const pendingResume = pendingResumeRef.current;
-
-          if (!pendingResume || !currentTrack || pendingResume.trackId !== currentTrack.id || safeDuration <= 0) {
-            return;
-          }
-
-          const maxSeek = Math.max(0, safeDuration - 1);
-          const safeSeek = Math.min(Math.max(0, pendingResume.seconds), maxSeek);
-
-          if (safeSeek > 0) {
-            e.currentTarget.currentTime = safeSeek;
-            setCurrentTime(safeSeek);
-            progressMarkerRef.current = {
-              trackId: currentTrack.id,
-              second: Math.floor(safeSeek),
-            };
-          }
-
-          pendingResumeRef.current = null;
-        }}
-        onEnded={() => {
-          const audio = audioRef.current;
-
-          if (audio && currentTrack) {
-            syncProgress(currentTrack, audio.duration, audio.duration);
-          }
-
-          if (hasNext) {
-            next();
-            return;
-          }
-
-          setIsPlaying(false);
-          setIsBuffering(false);
-        }}
-        onError={() => {
-          setError("Nao foi possivel reproduzir o audio. Tente novamente.");
-          setIsPlaying(false);
-          setIsBuffering(false);
-        }}
-      />
-    </AudioContext.Provider>
-  );
+  return <AudioContext.Provider value={value}>{children}</AudioContext.Provider>;
 }

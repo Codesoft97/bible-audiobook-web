@@ -11,15 +11,16 @@ import {
   Clock3,
   Crown,
   Info,
+  HandsPraying,
   Lock,
   MessageCircle,
+  NotebookIcon,
   PanelLeftClose,
   PanelLeftOpen,
-  Sparkles,
-  UserRound,
+  PersonSimpleHike,
   X,
-} from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+} from "@/components/icons";
+import type { LucideIcon } from "@/components/icons";
 
 import { AudiobookBrowser } from "@/components/app/audiobook-browser";
 import { HistoryPanel } from "@/components/app/history-panel";
@@ -64,10 +65,10 @@ const LIBRARY_ITEMS: Array<{
   premium?: boolean;
 }> = [
   { key: "books", label: "Livros da Biblia", icon: BookOpenText, view: "books" },
-  { key: "journeys", label: "Jornadas", icon: UserRound, view: "journeys", premium: true },
+  { key: "journeys", label: "Jornadas", icon: PersonSimpleHike, view: "journeys", premium: true },
   { key: "parables", label: "Parabolas", icon: BookOpenText, view: "parables", premium: true },
-  { key: "teachings", label: "Ensinamentos", icon: Sparkles, view: "teachings", premium: true },
-  { key: "promises", label: "Promessas", icon: Sparkles, view: "promises", premium: true },
+  { key: "teachings", label: "Ensinamentos", icon: NotebookIcon, view: "teachings", premium: true },
+  { key: "promises", label: "Promessas", icon: HandsPraying, view: "promises", premium: true },
   { key: "whatsapp", label: "WhatsApp", icon: MessageCircle, view: "whatsapp", premium: true },
 ];
 
@@ -213,19 +214,6 @@ export function AppShell({
 
   const profileInitial = selectedProfile.name.trim().charAt(0).toUpperCase() || "P";
   const showingHistory = activeSidebar === "history" && hasPremiumAccess;
-  const pageTitle = showingHistory
-    ? "Historico de escuta"
-    : libraryView === "books"
-      ? "Biblioteca"
-      : libraryView === "journeys"
-        ? "Jornadas"
-        : libraryView === "parables"
-          ? "Parabolas"
-          : libraryView === "teachings"
-            ? "Ensinamentos"
-            : libraryView === "promises"
-              ? "Promessas"
-              : "Evangelho em audio no WhatsApp";
 
   function closeSidebarOnMobile() {
     if (window.matchMedia("(max-width: 1023px)").matches) {
@@ -247,10 +235,10 @@ export function AppShell({
       >
         <div className="flex h-full flex-col overflow-y-auto p-4 sm:p-5">
           <div className="flex items-start justify-between gap-3">
-            <div className="space-y-4">
+            <div className="space-y-1">
               <Logo className="max-w-[220px]" priority />
               <p className="text-xs uppercase tracking-[0.24em] text-primary-foreground/70">
-                Evangelho em audio
+                Evangelho em áudio
               </p>
             </div>
             <button
@@ -463,8 +451,6 @@ export function AppShell({
           <header className="mb-5 border-b border-border/60 pb-5">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
-                <p className="text-sm text-muted-foreground">Bom dia, {selectedProfile.name}</p>
-                <h1 className="text-3xl font-semibold text-foreground md:text-4xl">{pageTitle}</h1>
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <Badge className="bg-primary/10 text-primary dark:bg-primary-foreground/10 dark:text-primary-foreground">
@@ -474,25 +460,13 @@ export function AppShell({
                 <Link
                   href={APP_ROUTES.profiles}
                   className="flex size-11 items-center justify-center rounded-2xl border border-highlight/45 bg-highlight/18 font-semibold text-highlight transition hover:bg-highlight/24 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-highlight/70 focus-visible:ring-offset-2"
-                  aria-label="Ir para selecao de perfis"
+                  aria-label="Ir para seleção de perfis"
                 >
                   {profileInitial}
                 </Link>
               </div>
             </div>
           </header>
-
-          <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:hidden">
-            <div className="rounded-2xl border border-border/60 bg-card/70 p-4">
-              <p className="text-sm text-muted-foreground">Perfil ativo</p>
-              <p className="mt-1 text-lg font-semibold">{selectedProfile.name}</p>
-            </div>
-            <div className="rounded-2xl border border-border/60 bg-card/70 p-4">
-              <p className="text-sm text-muted-foreground">Familia</p>
-              <p className="mt-1 text-lg font-semibold">{session.family.familyName}</p>
-              <p className="mt-2 text-sm text-muted-foreground">{session.profiles.length} perfis cadastrados</p>
-            </div>
-          </div>
 
           {feedback && FeedbackIcon ? (
             <div className={cn("mb-5 rounded-2xl border p-4", feedback.containerClassName)}>

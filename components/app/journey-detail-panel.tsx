@@ -1,10 +1,11 @@
 import Image from "next/image";
-import { LoaderCircle, UserRound } from "lucide-react";
+import { LoaderCircle, PersonSimpleHike } from "@/components/icons";
+import type { LucideIcon } from "@/components/icons";
 
-import type { CharacterJourney } from "@/lib/character-journeys";
-import type { HistoryContentType } from "@/lib/history";
 import { AudioPlayer } from "@/components/app/audio-player";
 import { Card } from "@/components/ui/card";
+import type { CharacterJourney } from "@/lib/character-journeys";
+import type { HistoryContentType } from "@/lib/history";
 
 interface JourneyDetailPanelProps {
   selectedJourney: CharacterJourney | null;
@@ -15,6 +16,7 @@ interface JourneyDetailPanelProps {
   emptySelectionTitle?: string;
   emptySelectionDescription?: string;
   progressContentType?: HistoryContentType;
+  icon?: LucideIcon;
 }
 
 export function JourneyDetailPanel({
@@ -26,27 +28,26 @@ export function JourneyDetailPanel({
   emptySelectionTitle = "Selecione uma jornada",
   emptySelectionDescription = "Escolha um personagem para carregar o audio da jornada.",
   progressContentType = "character-journey",
+  icon: Icon = PersonSimpleHike,
 }: JourneyDetailPanelProps) {
   if (!selectedJourney) {
     return (
-      <Card className="rounded-[22px] border-border/70 bg-background/70 p-5 md:p-6">
-        <div className="space-y-3">
-          <div className="flex size-12 items-center justify-center rounded-2xl bg-highlight/14 text-highlight">
-            <UserRound className="size-6" />
+      <Card className="rounded-[22px] border-border/70 bg-background/70 p-4 sm:p-5 md:p-6">
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <div className="flex size-12 items-center justify-center rounded-2xl bg-highlight/14 text-highlight">
+              <Icon className="size-6" />
+            </div>
+            <h3 className="text-xl font-semibold text-foreground sm:text-2xl">{emptySelectionTitle}</h3>
           </div>
-          <div>
-            <h3 className="text-2xl font-semibold text-foreground">{emptySelectionTitle}</h3>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              {emptySelectionDescription}
-            </p>
-          </div>
+          <p className="text-sm leading-6 text-muted-foreground">{emptySelectionDescription}</p>
         </div>
       </Card>
     );
   }
 
   return (
-    <Card className="rounded-[22px] border-border/70 bg-background/80 p-5 md:p-6">
+    <Card className="rounded-[22px] border-border/70 bg-background/80 p-4 sm:p-5 md:p-6">
       <div className="flex flex-col gap-5 md:flex-row">
         {selectedJourney.coverImageUrl ? (
           <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[18px] bg-accent/40 md:w-[250px] md:shrink-0">
@@ -61,16 +62,16 @@ export function JourneyDetailPanel({
           </div>
         ) : (
           <div className="flex aspect-[4/3] w-full items-center justify-center rounded-[18px] bg-accent/55 md:w-[250px] md:shrink-0">
-            <UserRound className="size-8 text-highlight" />
+            <Icon className="size-8 text-highlight" />
           </div>
         )}
 
         <div className="min-w-0 flex-1 space-y-2">
           <div className="inline-flex items-center gap-2 rounded-full border border-highlight/25 bg-highlight/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.16em] text-highlight">
-            <UserRound className="size-3.5" />
+            <Icon className="size-3.5" />
             {selectedHeading}
           </div>
-          <h3 className="text-3xl font-semibold leading-tight text-foreground">
+          <h3 className="text-2xl font-semibold leading-tight text-foreground sm:text-3xl">
             {selectedJourney.titulo}
           </h3>
           <p className="text-sm leading-6 text-muted-foreground">

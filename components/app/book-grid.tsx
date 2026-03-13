@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { BookOpenText } from "lucide-react";
+import { BookOpenText } from "@/components/icons";
 
 import type { AudiobookBookSummary } from "@/lib/audiobooks";
 import { Badge } from "@/components/ui/badge";
@@ -10,17 +10,76 @@ interface BookGridProps {
   books: AudiobookBookSummary[];
   selectedSlug: string | null;
   onSelect: (book: AudiobookBookSummary) => void;
+  layout?: "grid" | "rail";
 }
 
-export function BookGrid({ books, selectedSlug, onSelect }: BookGridProps) {
+export function BookGrid({
+  books,
+  selectedSlug,
+  onSelect,
+  layout = "grid",
+}: BookGridProps) {
+  const isRail = layout === "rail";
+
   if (books.length === 0) {
     return (
-      <Card className="rounded-[20px] bg-background/70 sm:col-span-2 xl:col-span-3">
+      <Card className={cn("rounded-[20px] bg-background/70", !isRail && "sm:col-span-2 xl:col-span-3")}>
         <p className="text-base font-semibold">Nenhum livro encontrado</p>
         <p className="mt-2 text-sm text-muted-foreground">
           Ajuste a busca para localizar livros com audio disponivel.
         </p>
       </Card>
+    );
+  }
+
+  if (isRail) {
+    return (
+      <div className="space-y-3">
+        {books.map((book) => (
+          <button
+            key={book.slug}
+            type="button"
+            onClick={() => onSelect(book)}
+            className={cn(
+              "group flex w-full flex-col gap-2.5 rounded-[22px] border border-border/70 bg-card/92 p-3 text-left shadow-[0_14px_32px_-28px_rgba(12,27,47,0.55)] transition hover:border-highlight/35 hover:bg-card sm:flex-row sm:items-start sm:gap-3",
+              selectedSlug === book.slug && "border-highlight/55 bg-highlight/8 ring-1 ring-highlight/35",
+            )}
+          >
+            <div className="relative aspect-[16/9] w-full shrink-0 overflow-hidden rounded-[18px] bg-accent/35 sm:aspect-[16/10] sm:w-[122px]">
+              {book.coverImageUrl ? (
+                <Image
+                  src={book.coverImageUrl}
+                  alt={book.title}
+                  fill
+                  unoptimized
+                  sizes="(max-width: 640px) 100vw, 122px"
+                  className="size-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                />
+              ) : (
+                <div className="flex size-full items-center justify-center text-highlight">
+                  <BookOpenText className="size-6" />
+                </div>
+              )}
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold leading-5 text-foreground">{book.title}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Ultimo capitulo: {book.latestChapter}
+                  </p>
+                </div>
+                <Badge className="shrink-0">{book.totalChapters} caps</Badge>
+              </div>
+
+              <p className="mt-2 text-[11px] uppercase tracking-[0.16em] text-muted-foreground sm:mt-3">
+                {selectedSlug === book.slug ? "Selecionado" : "Abrir no player"}
+              </p>
+            </div>
+          </button>
+        ))}
+      </div>
     );
   }
 

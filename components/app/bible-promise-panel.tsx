@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 
-import { LoaderCircle, Sparkles, Volume2 } from "lucide-react";
+import { HandsPraying, LoaderCircle, Volume2 } from "@/components/icons";
 
 import { AudioPlayer } from "@/components/app/audio-player";
 import type { AudioTrack } from "@/components/app/audio-player";
@@ -150,7 +150,7 @@ export function BiblePromisePanel() {
 
           <div className="space-y-4">
             <div className="inline-flex items-center gap-2 rounded-full border border-highlight/30 bg-highlight/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.2em] text-highlight">
-              <Sparkles className="size-3.5" />
+              <HandsPraying className="size-3.5" />
               Promessas
             </div>
 

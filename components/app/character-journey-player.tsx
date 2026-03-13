@@ -1,6 +1,6 @@
 "use client";
 
-import { Headphones, Sparkles, UserRound } from "lucide-react";
+import { Headphones, PersonSimpleHike, Sparkles } from "@/components/icons";
 
 import type { CharacterJourney } from "@/lib/character-journeys";
 import { Badge } from "@/components/ui/badge";
@@ -34,7 +34,7 @@ export function CharacterJourneyPlayer({
                 {journey.categoria}
               </span>
               <span className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/70 px-3 py-1">
-                <UserRound className="size-3.5 text-highlight" />
+                <PersonSimpleHike className="size-3.5 text-highlight" />
                 Perfil alvo: {journey.perfilAlvo}
               </span>
             </div>
@@ -48,10 +48,6 @@ export function CharacterJourneyPlayer({
             src={audioUrl}
             className="w-full"
           />
-
-          <div className="rounded-2xl border border-highlight/20 bg-highlight/10 px-4 py-3 text-sm text-foreground">
-            O audio desta jornada foi solicitado ao backend e carregado a partir da URL temporaria retornada.
-          </div>
         </div>
       </div>
     </div>

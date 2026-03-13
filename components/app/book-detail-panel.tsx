@@ -1,23 +1,23 @@
 import Image from "next/image";
-import { AudioLines, BookOpenText, LoaderCircle } from "lucide-react";
+import { AudioLines, BookOpenText, LoaderCircle } from "@/components/icons";
 
-import type { Audiobook, AudiobookBookSummary } from "@/lib/audiobooks";
 import { AudioPlayer } from "@/components/app/audio-player";
 import type { AudioTrack } from "@/components/app/audio-player";
 import { Card } from "@/components/ui/card";
+import type { Audiobook, AudiobookBookSummary } from "@/lib/audiobooks";
 
 function buildStreamUrl(trackId: string) {
   return `/api/audiobooks/${encodeURIComponent(trackId)}/stream`;
 }
 
 function chaptersToTracks(bookTitle: string, chapters: Audiobook[]): AudioTrack[] {
-  return chapters.map((ch, i) => ({
-    id: ch.id,
-    title: `Capitulo ${ch.chapter}`,
-    subtitle: `Faixa ${i + 1} do livro ${bookTitle}`,
-    src: buildStreamUrl(ch.id),
+  return chapters.map((chapter, index) => ({
+    id: chapter.id,
+    title: `Capitulo ${chapter.chapter}`,
+    subtitle: `Faixa ${index + 1} do livro ${bookTitle}`,
+    src: buildStreamUrl(chapter.id),
     progressContentType: "bible",
-    progressContentId: ch.id,
+    progressContentId: chapter.id,
   }));
 }
 
@@ -31,24 +31,24 @@ interface BookDetailPanelProps {
 export function BookDetailPanel({ selectedBook, chapters, loading, error }: BookDetailPanelProps) {
   if (!selectedBook) {
     return (
-      <Card className="rounded-[22px] border-border/70 bg-background/70 p-5 md:p-6">
-        <div className="space-y-3">
-          <div className="flex size-12 items-center justify-center rounded-2xl bg-highlight/14 text-highlight">
-            <BookOpenText className="size-6" />
+      <Card className="rounded-[22px] border-border/70 bg-background/70 p-4 sm:p-5 md:p-6">
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <div className="flex size-12 items-center justify-center rounded-2xl bg-highlight/14 text-highlight">
+              <BookOpenText className="size-6" />
+            </div>
+            <h3 className="text-xl font-semibold text-foreground sm:text-2xl">Livros da Biblia</h3>
           </div>
-          <div>
-            <h3 className="text-2xl font-semibold text-foreground">Selecione um livro</h3>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              Escolha um card acima para liberar os capitulos disponiveis no player.
-            </p>
-          </div>
+          <p className="text-sm leading-6 text-muted-foreground">
+            Escolha um item da lista para liberar os capitulos disponiveis no player.
+          </p>
         </div>
       </Card>
     );
   }
 
   return (
-    <Card className="rounded-[22px] border-border/70 bg-background/80 p-5 md:p-6">
+    <Card className="rounded-[22px] border-border/70 bg-background/80 p-4 sm:p-5 md:p-6">
       <div className="flex flex-col gap-5 md:flex-row">
         {selectedBook.coverImageUrl ? (
           <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[18px] bg-accent/40 md:w-[250px] md:shrink-0">
@@ -72,7 +72,7 @@ export function BookDetailPanel({ selectedBook, chapters, loading, error }: Book
             <AudioLines className="size-3.5" />
             Livro selecionado
           </div>
-          <h3 className="text-3xl font-semibold leading-tight text-foreground">{selectedBook.title}</h3>
+          <h3 className="text-2xl font-semibold leading-tight text-foreground sm:text-3xl">{selectedBook.title}</h3>
           <p className="text-sm leading-6 text-muted-foreground">
             {loading
               ? "Consultando capitulos no backend..."

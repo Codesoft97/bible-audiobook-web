@@ -10,7 +10,7 @@ import {
   Play,
   SkipBack,
   SkipForward,
-} from "lucide-react";
+} from "@/components/icons";
 
 import type { Audiobook } from "@/lib/audiobooks";
 import { Badge } from "@/components/ui/badge";
@@ -194,7 +194,7 @@ export function AudiobookPlayer({ bookTitle, tracks }: AudiobookPlayerProps) {
               {currentTrack ? `${bookTitle} ${currentTrack.chapter}` : bookTitle}
             </h4>
             <p className="text-sm leading-6 text-muted-foreground">
-              Use os controles abaixo ou escolha um capitulo da lista para iniciar a reproducao.
+              Use os controles abaixo ou escolha um capitulo da lista para iniciar a reprodução.
             </p>
           </div>
 

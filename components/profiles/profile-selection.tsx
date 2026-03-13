@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 
-import { CheckCircle2, Lock, Plus } from "lucide-react";
+import { CheckCircle2, Lock, Plus } from "@/components/icons";
 import { useRouter } from "next/navigation";
 
 import { CreateProfileModal } from "@/components/profiles/create-profile-modal";

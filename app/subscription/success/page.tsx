@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { CheckCircle2, Crown } from "lucide-react";
+import { CheckCircle2, Crown } from "@/components/icons";
 
 import { APP_ROUTES } from "@/lib/constants";
 import { getServerSessionWithFamily } from "@/lib/family";
