@@ -166,7 +166,6 @@ function normalizeBookKey(value: string) {
 function titleizeSlug(value: string) {
   return value
     .replace(/[_-]+/g, " ")
-    .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
 function sortBooks(first: AudiobookBookSummary, second: AudiobookBookSummary) {
