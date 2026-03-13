@@ -38,9 +38,8 @@ import {
   WarningCircle,
   Waveform,
   X,
-  type Icon,
-  type IconProps,
-} from "@phosphor-icons/react";
+} from "@phosphor-icons/react/ssr";
+import type { Icon, IconProps } from "@phosphor-icons/react/lib";
 
 export type LucideIcon = Icon;
 
