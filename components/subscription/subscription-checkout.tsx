@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-import { CheckCircle2, CreditCard, Crown, Loader2 } from "lucide-react";
+import { CheckCircle2, CreditCard, Crown, Loader2 } from "@/components/icons";
 
 import { Button } from "@/components/ui/button";
 import type { ApiEnvelope, AppSession } from "@/lib/auth/types";

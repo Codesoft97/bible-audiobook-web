@@ -6,11 +6,11 @@ import {
   Headphones,
   Image as ImageIcon,
   MessageCircleHeart,
+  HandsPraying,
+  PersonSimpleHike,
   PlayCircle,
-  Sparkles,
-  UsersRound,
   Video,
-} from "lucide-react";
+} from "@/components/icons";
 
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
@@ -29,7 +29,7 @@ const FEATURES = [
     title: "Jornadas de personagens",
     description:
       "Tenha trilhas especiais com narrações guiadas por personagens biblicos e temas da fé.",
-    icon: UsersRound,
+    icon: PersonSimpleHike,
     imageLabel: "Imagem das jornadas",
     videoLabel: "Video das jornadas",
   },
@@ -37,7 +37,7 @@ const FEATURES = [
     title: "Promessas para o dia",
     description:
       "Receba promessas biblicas em áudio para fortalecer sua rotina e tempo de devocional.",
-    icon: Sparkles,
+    icon: HandsPraying,
     imageLabel: "Imagem das promessas",
     videoLabel: "Video das promessas",
   },

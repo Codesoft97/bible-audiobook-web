@@ -54,7 +54,13 @@
   }
 
   body.mini-player-visible {
-    padding-bottom: 96px;
+    padding-bottom: 164px;
+  }
+
+  @media (min-width: 768px) {
+    body.mini-player-visible {
+      padding-bottom: 96px;
+    }
   }
 
   .mini-player-shell {

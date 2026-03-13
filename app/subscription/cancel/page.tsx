@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { AlertCircle, RefreshCw } from "lucide-react";
+import { AlertCircle, RefreshCw } from "@/components/icons";
 
 import { APP_ROUTES } from "@/lib/constants";
 import { getServerSessionWithFamily } from "@/lib/family";

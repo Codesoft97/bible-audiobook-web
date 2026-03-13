@@ -2,6 +2,8 @@
 
 import {
   AudioLines,
+  RotateCcw,
+  RotateCw,
   Headphones,
   LoaderCircle,
   Pause,
@@ -10,7 +12,7 @@ import {
   SkipForward,
   Volume2,
   VolumeX,
-} from "lucide-react";
+} from "@/components/icons";
 
 import { useAudio } from "@/components/providers/audio-context";
 import type { AudioTrack } from "@/components/providers/audio-context";
@@ -50,6 +52,7 @@ interface AudioPlayerProps {
   description?: string;
   tracks: AudioTrack[];
   badgeLabel?: string;
+  variant?: "default" | "dock";
 }
 
 /* ------------------------------------------------------------------ */
@@ -61,8 +64,10 @@ export function AudioPlayer({
   description,
   tracks,
   badgeLabel,
+  variant = "default",
 }: AudioPlayerProps) {
   const audio = useAudio();
+  const isDock = variant === "dock";
 
   // Check if THIS player's playlist is the active one in the global context
   const isActivePlaylist = isSamePlaylist(audio.playlist, tracks);
@@ -77,6 +82,7 @@ export function AudioPlayer({
   const multiTrack = tracks.length > 1;
   const hasPrev = activeTrackIndex > 0;
   const hasNext = activeTrackIndex < tracks.length - 1;
+  const canSeek = isActivePlaylist && duration > 0;
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   function handlePlay() {
@@ -106,6 +112,12 @@ export function AudioPlayer({
     audio.seek(ratio * duration);
   }
 
+  function handleSkipBy(seconds: number) {
+    if (!canSeek) return;
+    const target = Math.max(0, Math.min(duration, currentTime + seconds));
+    audio.seek(target);
+  }
+
   const statusLabel = isBuffering
     ? "Carregando"
     : isPlaying
@@ -115,9 +127,16 @@ export function AudioPlayer({
         : "Pronto";
 
   return (
-    <div className="space-y-4">
+    <div className={cn("space-y-4", isDock && "text-primary-foreground")}>
       {/* ---- Main player card ---- */}
-      <div className="rounded-[28px] border border-highlight/25 bg-gradient-to-br from-background via-background to-accent/70 p-5 shadow-glow">
+      <div
+        className={cn(
+          "rounded-[28px] border p-4 shadow-glow sm:p-5",
+          isDock
+            ? "border-primary-foreground/12 bg-gradient-to-r from-[#07233e] via-[#0b2f53] to-[#082846] text-primary-foreground"
+            : "border-highlight/25 bg-gradient-to-br from-background via-background to-accent",
+        )}
+      >
         <div className="space-y-5">
           {/* Header */}
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -129,30 +148,59 @@ export function AudioPlayer({
               {badgeLabel && (
                 <Badge className="bg-highlight/10 text-highlight">{badgeLabel}</Badge>
               )}
-              <Badge className="bg-accent/85 text-accent-foreground">{statusLabel}</Badge>
+              <Badge
+                className={cn(
+                  isDock
+                    ? "border border-primary-foreground/15 bg-primary-foreground/10 text-primary-foreground"
+                    : "bg-accent/85 text-accent-foreground",
+                )}
+              >
+                {statusLabel}
+              </Badge>
             </div>
           </div>
 
           {/* Now playing info */}
           <div className="space-y-1.5">
-            <p className="text-[11px] font-medium uppercase tracking-[0.24em] text-muted-foreground">
+            <p
+              className={cn(
+                "text-[11px] font-medium uppercase tracking-[0.24em]",
+                isDock ? "text-primary-foreground/65" : "text-muted-foreground",
+              )}
+            >
               Agora ouvindo
             </p>
-            <h4 className="text-xl font-semibold leading-tight sm:text-2xl">
+            <h4
+              className={cn(
+                "text-lg font-semibold leading-tight sm:text-xl md:text-2xl",
+                isDock ? "text-primary-foreground" : "text-foreground",
+              )}
+            >
               {currentTrack ? currentTrack.title : title}
             </h4>
             {description && (
-              <p className="text-sm leading-6 text-muted-foreground">{description}</p>
+              <p
+                className={cn(
+                  "text-sm leading-5 sm:leading-6",
+                  isDock ? "text-primary-foreground/78" : "text-muted-foreground",
+                )}
+              >
+                {description}
+              </p>
             )}
           </div>
 
           {/* Controls */}
-          <div className="flex items-center justify-center gap-3">
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
             {multiTrack && (
               <Button
-                variant="secondary"
+                variant={isDock ? "ghost" : "secondary"}
                 size="icon"
-                className="size-10 rounded-full"
+                className={cn(
+                  "size-9 rounded-full sm:size-10",
+                  isDock &&
+                    "border border-primary-foreground/15 bg-primary-foreground/8 text-primary-foreground hover:bg-primary-foreground/14 hover:text-primary-foreground",
+                )}
                 onClick={() => isActivePlaylist && audio.prev()}
                 disabled={!hasPrev}
                 aria-label="Faixa anterior"
@@ -162,8 +210,26 @@ export function AudioPlayer({
             )}
 
             <Button
+              variant={isDock ? "ghost" : "secondary"}
               size="icon"
-              className="size-14 rounded-full shadow-md transition-transform hover:scale-105 active:scale-95"
+              className={cn(
+                "size-9 rounded-full sm:size-10",
+                isDock &&
+                  "border border-primary-foreground/15 bg-primary-foreground/8 text-primary-foreground hover:bg-primary-foreground/14 hover:text-primary-foreground",
+              )}
+              onClick={() => handleSkipBy(-10)}
+              disabled={!canSeek || currentTime <= 0}
+              aria-label="Voltar 10 segundos"
+            >
+              <RotateCcw className="size-4" />
+            </Button>
+
+            <Button
+              size="icon"
+              className={cn(
+                "size-12 rounded-full shadow-md transition-transform hover:scale-105 active:scale-95 sm:size-14",
+                isDock && "border border-highlight/45 bg-highlight text-highlight-foreground",
+              )}
               onClick={handlePlay}
               disabled={tracks.length === 0}
               aria-label={isPlaying ? "Pausar" : "Reproduzir"}
@@ -177,11 +243,30 @@ export function AudioPlayer({
               )}
             </Button>
 
+            <Button
+              variant={isDock ? "ghost" : "secondary"}
+              size="icon"
+              className={cn(
+                "size-9 rounded-full sm:size-10",
+                isDock &&
+                  "border border-primary-foreground/15 bg-primary-foreground/8 text-primary-foreground hover:bg-primary-foreground/14 hover:text-primary-foreground",
+              )}
+              onClick={() => handleSkipBy(10)}
+              disabled={!canSeek || currentTime >= duration}
+              aria-label="Avancar 10 segundos"
+            >
+              <RotateCw className="size-4" />
+            </Button>
+
             {multiTrack && (
               <Button
-                variant="secondary"
+                variant={isDock ? "ghost" : "secondary"}
                 size="icon"
-                className="size-10 rounded-full"
+                className={cn(
+                  "size-9 rounded-full sm:size-10",
+                  isDock &&
+                    "border border-primary-foreground/15 bg-primary-foreground/8 text-primary-foreground hover:bg-primary-foreground/14 hover:text-primary-foreground",
+                )}
                 onClick={() => isActivePlaylist && audio.next()}
                 disabled={!hasNext}
                 aria-label="Proxima faixa"
@@ -193,7 +278,12 @@ export function AudioPlayer({
             <Button
               variant="ghost"
               size="icon"
-              className="ml-2 size-9 rounded-full text-muted-foreground hover:text-foreground"
+              className={cn(
+                "size-8 rounded-full sm:ml-2 sm:size-9",
+                isDock
+                  ? "text-primary-foreground/75 hover:bg-primary-foreground/14 hover:text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
               onClick={audio.toggleMute}
               aria-label={audio.muted ? "Ativar som" : "Silenciar"}
             >
@@ -211,21 +301,33 @@ export function AudioPlayer({
               aria-valuemax={duration}
               aria-valuenow={currentTime}
               className={cn(
-                "group relative h-2 w-full cursor-pointer overflow-hidden rounded-full bg-highlight/15",
+                "group relative h-2 w-full cursor-pointer overflow-hidden rounded-full",
+                isDock ? "bg-primary-foreground/12" : "bg-highlight/15",
                 (!isActivePlaylist || duration <= 0) && "cursor-not-allowed opacity-50",
               )}
               onClick={handleProgressClick}
             >
               <div
-                className="absolute inset-y-0 left-0 rounded-full bg-primary transition-[width] duration-150"
+                className={cn(
+                  "absolute inset-y-0 left-0 rounded-full transition-[width] duration-150",
+                  isDock ? "bg-highlight" : "bg-primary",
+                )}
                 style={{ width: `${progress}%` }}
               />
               <div
-                className="absolute top-1/2 -translate-y-1/2 size-3.5 rounded-full border-2 border-primary bg-background opacity-0 shadow-sm transition-opacity group-hover:opacity-100"
+                className={cn(
+                  "absolute top-1/2 -translate-y-1/2 size-3.5 rounded-full border-2 opacity-0 shadow-sm transition-opacity group-hover:opacity-100",
+                  isDock ? "border-highlight bg-[#0a2745]" : "border-primary bg-background",
+                )}
                 style={{ left: `calc(${progress}% - 7px)` }}
               />
             </div>
-            <div className="flex items-center justify-between text-[11px] tabular-nums text-muted-foreground">
+            <div
+              className={cn(
+                "flex items-center justify-between text-[10px] tabular-nums sm:text-[11px]",
+                isDock ? "text-primary-foreground/68" : "text-muted-foreground",
+              )}
+            >
               <span>{formatTime(currentTime)}</span>
               <span>{formatTime(duration)}</span>
             </div>
@@ -253,13 +355,17 @@ export function AudioPlayer({
                 type="button"
                 onClick={() => handleSelectTrack(i)}
                 className={cn(
-                  "flex w-full items-center justify-between gap-4 rounded-2xl border px-4 py-3 text-left transition",
-                  isCurrent
-                    ? "border-highlight/40 bg-accent/75"
-                    : "border-border/70 bg-background/60 hover:border-highlight/25 hover:bg-background/90",
+                  "flex w-full flex-col items-start justify-between gap-3 rounded-2xl border px-4 py-3 text-left transition sm:flex-row sm:items-center sm:gap-4",
+                  isDock
+                    ? isCurrent
+                      ? "border-highlight/40 bg-primary-foreground/10"
+                      : "border-primary-foreground/12 bg-[#082846] hover:border-highlight/25 hover:bg-primary-foreground/10"
+                    : isCurrent
+                      ? "border-highlight/40 bg-accent"
+                      : "border-border/70 bg-background hover:border-highlight/25 hover:bg-background",
                 )}
               >
-                <div className="flex min-w-0 items-center gap-4">
+                <div className="flex min-w-0 items-center gap-3 sm:gap-4">
                   <div
                     className={cn(
                       "flex size-10 shrink-0 items-center justify-center rounded-xl",
@@ -275,18 +381,31 @@ export function AudioPlayer({
                     )}
                   </div>
                   <div className="min-w-0">
-                    <p className="truncate font-medium">{t.title}</p>
+                    <p className={cn("truncate font-medium", isDock && "text-primary-foreground")}>
+                      {t.title}
+                    </p>
                     {t.subtitle && (
-                      <p className="truncate text-sm text-muted-foreground">{t.subtitle}</p>
+                      <p
+                        className={cn(
+                          "truncate text-sm",
+                          isDock ? "text-primary-foreground/68" : "text-muted-foreground",
+                        )}
+                      >
+                        {t.subtitle}
+                      </p>
                     )}
                   </div>
                 </div>
                 <Badge
                   className={cn(
-                    "shrink-0",
-                    isCurrent
-                      ? "border-primary/20 bg-primary/10 text-primary"
-                      : "bg-highlight/10 text-highlight",
+                    "shrink-0 self-start sm:self-center",
+                    isDock
+                      ? isCurrent
+                        ? "border-highlight/20 bg-highlight/15 text-highlight"
+                        : "border-primary-foreground/10 bg-primary-foreground/8 text-primary-foreground"
+                      : isCurrent
+                        ? "border-primary/20 bg-primary/10 text-primary"
+                        : "bg-highlight/10 text-highlight",
                   )}
                 >
                   {isCurrentPlaying ? "Tocando" : isCurrent ? "Pausado" : "Ouvir"}

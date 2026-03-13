@@ -2,7 +2,13 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 
-import { BookOpenText, CheckCircle2, LoaderCircle, MessageCircle, Sparkles } from "lucide-react";
+import {
+  BookOpenText,
+  CheckCircle2,
+  HandsPraying,
+  LoaderCircle,
+  MessageCircle,
+} from "@/components/icons";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +20,7 @@ import type {
   WhatsAppPromiseSubscription,
 } from "@/lib/whatsapp";
 import { cn } from "@/lib/utils";
+import { ChatCircleIcon } from "@phosphor-icons/react";
 
 type SubscriptionMode = "audiobooks" | "promises";
 
@@ -405,17 +412,20 @@ export function WhatsAppSubscriptionPanel() {
   return (
     <div className="rounded-[24px] border border-border/60 bg-card/82">
       <div className="border-b border-border/60 px-4 py-5 md:px-6">
-        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Canal WhatsApp</p>
+        <div className="inline-flex items-center gap-2 rounded-full border border-highlight/30 bg-highlight/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.2em] text-highlight">
+          <ChatCircleIcon className="size-3.5" />
+          Envios no WhatsApp
+        </div>
         <h3 className="mt-1 text-2xl font-semibold text-foreground md:text-3xl">
           Escolha o que deseja receber
         </h3>
         <p className="mt-2 text-sm text-muted-foreground">
-          Selecione abaixo entre livros da Biblia (1 capitulo por dia) ou promessas diarias.
+          Um capitulo por dia até terminar o livro escolhido ou promessas diarias até a data que escolher.
         </p>
         {exclusiveActiveMode ? (
           <p className="mt-2 text-xs text-muted-foreground">
             Enquanto o envio de{" "}
-            {exclusiveActiveMode === "audiobooks" ? "livros da Biblia" : "promessas"} estiver ativo, a outra opcao
+            {exclusiveActiveMode === "audiobooks" ? "livros da Biblia" : "promessas"} estiver ativo, a outra opção
             fica bloqueada.
           </p>
         ) : null}
@@ -479,7 +489,7 @@ export function WhatsAppSubscriptionPanel() {
           >
             <div className="flex items-center justify-between gap-2">
               <p className="inline-flex items-center gap-2 text-sm font-medium text-foreground">
-                <Sparkles className="size-4 text-highlight" />
+                <HandsPraying className="size-4 text-highlight" />
                 Promessas
               </p>
               <div className="flex items-center gap-1.5">
