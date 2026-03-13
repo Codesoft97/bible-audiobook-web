@@ -382,7 +382,7 @@ export function AppShell({
             <p className="mt-1 text-xs text-primary-foreground/75">
               {hasActiveSubscription
                 ? "Acesse seus dados de faturamento"
-                : "Assine via PIX em poucos minutos"}
+                : "Assine com cartao de credito em poucos minutos"}
             </p>
           </Link>
 

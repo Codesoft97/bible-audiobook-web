@@ -27,8 +27,7 @@ export default async function SubscriptionSuccessPage() {
           </h1>
 
           <p className="mt-3 text-sm leading-6 text-muted-foreground md:text-base">
-            Seu pagamento foi aprovado. O backend atualiza o plano automaticamente apos a confirmacao
-            do Stripe.
+            Seu pagamento foi aprovado, você já pode continuar aproveitando os conteúdos.
           </p>
 
           <div className="mt-6 flex flex-wrap gap-3">
@@ -50,10 +49,10 @@ export default async function SubscriptionSuccessPage() {
         <section className="mt-4 rounded-2xl border border-border/65 bg-card/75 p-5">
           <p className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.14em] text-muted-foreground">
             <Crown className="size-3.5 text-highlight" />
-            Proximo passo
+            Próximo passo
           </p>
           <p className="mt-2 text-sm text-muted-foreground">
-            Se o plano ainda nao tiver mudado na interface, aguarde alguns segundos e atualize a pagina.
+            Se o plano ainda não tiver mudado na interface, aguarde alguns segundos e atualize a página.
           </p>
         </section>
       </div>

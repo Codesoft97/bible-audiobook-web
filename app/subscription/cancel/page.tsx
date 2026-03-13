@@ -23,7 +23,7 @@ export default async function SubscriptionCancelPage() {
           </p>
 
           <h1 className="mt-4 text-3xl font-semibold text-foreground md:text-4xl">
-            Nao foi possivel concluir a assinatura
+            Não foi possivel concluir a assinatura
           </h1>
 
           <p className="mt-3 text-sm leading-6 text-muted-foreground md:text-base">

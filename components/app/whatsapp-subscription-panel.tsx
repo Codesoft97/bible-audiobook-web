@@ -106,6 +106,15 @@ export function WhatsAppSubscriptionPanel() {
 
   const hasActiveAudiobooks = activeAudiobookSubscriptions.length > 0;
   const hasActivePromises = activePromiseSubscriptions.length > 0;
+  const exclusiveActiveMode: SubscriptionMode | null =
+    hasActiveAudiobooks && !hasActivePromises
+      ? "audiobooks"
+      : hasActivePromises && !hasActiveAudiobooks
+        ? "promises"
+        : null;
+  const isAudiobooksBlocked = exclusiveActiveMode === "promises";
+  const isPromisesBlocked = exclusiveActiveMode === "audiobooks";
+  const isCurrentModeBlocked = mode === "audiobooks" ? isAudiobooksBlocked : isPromisesBlocked;
   const hasActiveForMode = mode === "audiobooks" ? hasActiveAudiobooks : hasActivePromises;
 
   const loadActiveSubscriptions = useCallback(async () => {
@@ -213,7 +222,19 @@ export function WhatsAppSubscriptionPanel() {
     };
   }, [booksLoaded, mode]);
 
+  useEffect(() => {
+    if (!exclusiveActiveMode || mode === exclusiveActiveMode) {
+      return;
+    }
+
+    setMode(exclusiveActiveMode);
+  }, [exclusiveActiveMode, mode]);
+
   function handleModeChange(nextMode: SubscriptionMode) {
+    if ((nextMode === "audiobooks" && isAudiobooksBlocked) || (nextMode === "promises" && isPromisesBlocked)) {
+      return;
+    }
+
     setMode(nextMode);
     setSubmitError("");
     setSuccessMessage("");
@@ -228,6 +249,15 @@ export function WhatsAppSubscriptionPanel() {
     event.preventDefault();
 
     if (submitting || activeLoading || hasActiveForMode) {
+      return;
+    }
+
+    if (isCurrentModeBlocked) {
+      setSubmitError(
+        mode === "audiobooks"
+          ? "Cancele o envio de promessas para ativar livros."
+          : "Cancele o envio de livros para ativar promessas.",
+      );
       return;
     }
 
@@ -382,17 +412,27 @@ export function WhatsAppSubscriptionPanel() {
         <p className="mt-2 text-sm text-muted-foreground">
           Selecione abaixo entre livros da Biblia (1 capitulo por dia) ou promessas diarias.
         </p>
+        {exclusiveActiveMode ? (
+          <p className="mt-2 text-xs text-muted-foreground">
+            Enquanto o envio de{" "}
+            {exclusiveActiveMode === "audiobooks" ? "livros da Biblia" : "promessas"} estiver ativo, a outra opcao
+            fica bloqueada.
+          </p>
+        ) : null}
 
         <div className="mt-5 grid gap-3 md:grid-cols-2">
           <button
             type="button"
             onClick={() => handleModeChange("audiobooks")}
             aria-pressed={mode === "audiobooks"}
+            disabled={isAudiobooksBlocked}
             className={cn(
               "rounded-2xl border px-4 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-highlight/35",
-              mode === "audiobooks"
-                ? "border-highlight/55 bg-highlight/12"
-                : "border-border/60 bg-background/60 hover:border-highlight/30",
+              isAudiobooksBlocked
+                ? "cursor-not-allowed border-border/50 bg-background/40 opacity-65"
+                : mode === "audiobooks"
+                  ? "border-highlight/55 bg-highlight/12"
+                  : "border-border/60 bg-background/60 hover:border-highlight/30",
             )}
           >
             <div className="flex items-center justify-between gap-2">
@@ -401,6 +441,11 @@ export function WhatsAppSubscriptionPanel() {
                 Livros da Biblia
               </p>
               <div className="flex items-center gap-1.5">
+                {isAudiobooksBlocked ? (
+                  <span className="rounded-full border border-border/50 bg-background/60 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                    Bloqueado
+                  </span>
+                ) : null}
                 {mode === "audiobooks" ? (
                   <span className="rounded-full border border-highlight/45 bg-highlight/12 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-highlight">
                     Selecionado
@@ -422,11 +467,14 @@ export function WhatsAppSubscriptionPanel() {
             type="button"
             onClick={() => handleModeChange("promises")}
             aria-pressed={mode === "promises"}
+            disabled={isPromisesBlocked}
             className={cn(
               "rounded-2xl border px-4 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-highlight/35",
-              mode === "promises"
-                ? "border-highlight/55 bg-highlight/12"
-                : "border-border/60 bg-background/60 hover:border-highlight/30",
+              isPromisesBlocked
+                ? "cursor-not-allowed border-border/50 bg-background/40 opacity-65"
+                : mode === "promises"
+                  ? "border-highlight/55 bg-highlight/12"
+                  : "border-border/60 bg-background/60 hover:border-highlight/30",
             )}
           >
             <div className="flex items-center justify-between gap-2">
@@ -435,6 +483,11 @@ export function WhatsAppSubscriptionPanel() {
                 Promessas
               </p>
               <div className="flex items-center gap-1.5">
+                {isPromisesBlocked ? (
+                  <span className="rounded-full border border-border/50 bg-background/60 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                    Bloqueado
+                  </span>
+                ) : null}
                 {mode === "promises" ? (
                   <span className="rounded-full border border-highlight/45 bg-highlight/12 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-highlight">
                     Selecionado
@@ -602,7 +655,9 @@ export function WhatsAppSubscriptionPanel() {
             <Button
               type="submit"
               className="h-12 rounded-full px-6"
-              disabled={submitting || activeLoading || (mode === "promises" && !promiseEndDate)}
+              disabled={
+                submitting || activeLoading || isCurrentModeBlocked || (mode === "promises" && !promiseEndDate)
+              }
             >
               {submitting ? (
                 <>
