@@ -51,7 +51,7 @@ export const selectProfileSchema = z.object({
 const whatsappNumberSchema = z
   .string()
   .trim()
-  .regex(/^\d{10,}$/, "Informe um numero de WhatsApp valido com DDI e DDD.");
+  .regex(/^\d{13}$/, "Informe um numero de WhatsApp valido com DDI e DDD.");
 
 export const whatsappPromiseSubscribeSchema = z.object({
   whatsappNumber: whatsappNumberSchema,

@@ -70,7 +70,7 @@ export function LoginForm() {
 
   return (
     <div className="space-y-6">
-      <GoogleLoginButton />
+      <GoogleLoginButton flow="login" />
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
           <span className="w-full border-t border-border/70" />

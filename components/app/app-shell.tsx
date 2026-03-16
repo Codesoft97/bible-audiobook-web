@@ -369,7 +369,7 @@ export function AppShell({
             </p>
             <p className="mt-1 text-xs text-primary-foreground/75">
               {hasActiveSubscription
-                ? "Acesse seus dados de faturamento"
+                ? "Veja o canal correto para gerenciar sua assinatura"
                 : "Assine com cartao de credito em poucos minutos"}
             </p>
           </Link>
