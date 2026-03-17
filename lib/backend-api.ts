@@ -1,7 +1,10 @@
 import type { NextRequest } from "next/server";
 
-import { AUTH_COOKIE_NAME } from "@/lib/constants";
+import type { SessionTokens } from "@/lib/auth/types";
+import { AUTH_COOKIE_NAME, REFRESH_COOKIE_NAME } from "@/lib/constants";
 import { env } from "@/lib/env";
+
+const AUTH_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
 
 export async function parseJsonSafe<T>(response: Response) {
   const text = await response.text();
@@ -65,19 +68,37 @@ export function resolveBackendToken(response: Response, fallbackToken?: string) 
     return fallbackToken;
   }
 
-  return extractCookieValue(getBackendSetCookie(response), AUTH_COOKIE_NAME);
+  return extractCookieValue(getBackendSetCookie(response), AUTH_COOKIE_NAME) ?? undefined;
+}
+
+export function resolveBackendRefreshToken(response: Response, fallbackRefreshToken?: string) {
+  if (fallbackRefreshToken) {
+    return fallbackRefreshToken;
+  }
+
+  return (
+    extractCookieValue(getBackendSetCookie(response), REFRESH_COOKIE_NAME) ?? undefined
+  );
+}
+
+export function resolveBackendTokens(
+  response: Response,
+  fallbackTokens: Partial<SessionTokens> = {},
+) {
+  return {
+    token: resolveBackendToken(response, fallbackTokens.token),
+    refreshToken: resolveBackendRefreshToken(response, fallbackTokens.refreshToken),
+  };
 }
 
 export function getBackendAuthHeaders(request: NextRequest) {
   const headers: Record<string, string> = {};
   const token = request.cookies.get(AUTH_COOKIE_NAME)?.value;
+  const cookieHeader = request.headers.get("cookie") ?? "";
 
   if (token) {
     headers.Authorization = `Bearer ${token}`;
-    return headers;
   }
-
-  const cookieHeader = request.headers.get("cookie") ?? "";
 
   if (cookieHeader) {
     headers.cookie = cookieHeader;
@@ -86,26 +107,34 @@ export function getBackendAuthHeaders(request: NextRequest) {
   return headers;
 }
 
-export function buildTokenCookie(token: string) {
+function buildHttpOnlyCookie(name: string, value: string, maxAge: number) {
   return {
-    name: AUTH_COOKIE_NAME,
-    value: token,
+    name,
+    value,
     httpOnly: true,
     sameSite: "lax" as const,
     secure: env.IS_PRODUCTION,
     path: "/",
-    maxAge: 60 * 60 * 24 * 7,
+    maxAge,
   };
 }
 
+export function buildTokenCookie(token: string) {
+  return buildHttpOnlyCookie(AUTH_COOKIE_NAME, token, AUTH_COOKIE_MAX_AGE_SECONDS);
+}
+
+export function buildRefreshTokenCookie(refreshToken: string) {
+  return buildHttpOnlyCookie(
+    REFRESH_COOKIE_NAME,
+    refreshToken,
+    AUTH_COOKIE_MAX_AGE_SECONDS,
+  );
+}
+
 export function buildClearedTokenCookie() {
-  return {
-    name: AUTH_COOKIE_NAME,
-    value: "",
-    httpOnly: true,
-    sameSite: "lax" as const,
-    secure: env.IS_PRODUCTION,
-    path: "/",
-    maxAge: 0,
-  };
+  return buildHttpOnlyCookie(AUTH_COOKIE_NAME, "", 0);
+}
+
+export function buildClearedRefreshTokenCookie() {
+  return buildHttpOnlyCookie(REFRESH_COOKIE_NAME, "", 0);
 }

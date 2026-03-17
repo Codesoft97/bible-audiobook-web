@@ -2,6 +2,7 @@ import Image from "next/image";
 import { PersonSimpleHike } from "@/components/icons";
 import type { LucideIcon } from "@/components/icons";
 
+import { CompletionBadge } from "@/components/app/completion-badge";
 import type { CharacterJourney } from "@/lib/character-journeys";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -16,6 +17,7 @@ interface JourneyGridProps {
   emptyDescription?: string;
   layout?: "grid" | "rail";
   icon?: LucideIcon;
+  getCompletionStatus?: (journey: CharacterJourney) => boolean | null;
 }
 
 export function JourneyGrid({
@@ -27,6 +29,7 @@ export function JourneyGrid({
   emptyDescription,
   layout = "grid",
   icon: Icon = PersonSimpleHike,
+  getCompletionStatus,
 }: JourneyGridProps) {
   const isRail = layout === "rail";
   const noItemsTitle = emptyTitle ?? `Nenhuma ${itemLabel} encontrada`;
@@ -48,7 +51,10 @@ export function JourneyGrid({
   if (isRail) {
     return (
       <div className="space-y-3">
-        {journeys.map((journey) => (
+        {journeys.map((journey) => {
+          const completionStatus = getCompletionStatus?.(journey) ?? null;
+
+          return (
           <button
             key={journey.id}
             type="button"
@@ -81,7 +87,10 @@ export function JourneyGrid({
                   <p className="text-sm font-semibold leading-5 text-foreground">{journey.titulo}</p>
                   <p className="mt-1 text-xs text-muted-foreground">{journey.categoria}</p>
                 </div>
-                <Badge className="shrink-0">{journey.duracaoEstimadaMinutos} min</Badge>
+                <div className="flex shrink-0 flex-wrap items-center gap-2">
+                  <CompletionBadge completed={completionStatus} />
+                  <Badge>{journey.duracaoEstimadaMinutos} min</Badge>
+                </div>
               </div>
 
               <p className="mt-2 text-[11px] uppercase tracking-[0.16em] text-muted-foreground sm:mt-3">
@@ -89,53 +98,61 @@ export function JourneyGrid({
               </p>
             </div>
           </button>
-        ))}
+          );
+        })}
       </div>
     );
   }
 
   return (
     <>
-      {journeys.map((journey) => (
-        <button
-          key={journey.id}
-          type="button"
-          onClick={() => onSelect(journey)}
-          className={cn(
-            "group overflow-hidden rounded-[20px] border border-border/70 bg-card/95 text-left shadow-[0_16px_36px_-26px_rgba(12,27,47,0.55)] transition hover:-translate-y-0.5 hover:border-highlight/40",
-            selectedId === journey.id
-              ? "border-highlight/60 bg-highlight/8 ring-1 ring-highlight/45"
-              : "",
-          )}
-        >
-          {journey.coverImageUrl ? (
-            <div className="relative aspect-[16/10] w-full overflow-hidden bg-accent/30">
-              <Image
-                src={journey.coverImageUrl}
-                alt={journey.titulo}
-                fill
-                unoptimized
-                sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
-                className="size-full object-cover transition duration-300 group-hover:scale-[1.03]"
-              />
-            </div>
-          ) : null}
-          <div className="space-y-3 p-5">
-            <div className="flex items-center justify-between gap-3">
-              {!journey.coverImageUrl ? (
-                <div className="flex size-11 items-center justify-center rounded-2xl bg-highlight/12 text-highlight">
-                  <Icon className="size-5" />
+      {journeys.map((journey) => {
+        const completionStatus = getCompletionStatus?.(journey) ?? null;
+
+        return (
+          <button
+            key={journey.id}
+            type="button"
+            onClick={() => onSelect(journey)}
+            className={cn(
+              "group overflow-hidden rounded-[20px] border border-border/70 bg-card/95 text-left shadow-[0_16px_36px_-26px_rgba(12,27,47,0.55)] transition hover:-translate-y-0.5 hover:border-highlight/40",
+              selectedId === journey.id
+                ? "border-highlight/60 bg-highlight/8 ring-1 ring-highlight/45"
+                : "",
+            )}
+          >
+            {journey.coverImageUrl ? (
+              <div className="relative aspect-[16/10] w-full overflow-hidden bg-accent/30">
+                <Image
+                  src={journey.coverImageUrl}
+                  alt={journey.titulo}
+                  fill
+                  unoptimized
+                  sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                  className="size-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                />
+              </div>
+            ) : null}
+            <div className="space-y-3 p-5">
+              <div className="flex items-center justify-between gap-3">
+                {!journey.coverImageUrl ? (
+                  <div className="flex size-11 items-center justify-center rounded-2xl bg-highlight/12 text-highlight">
+                    <Icon className="size-5" />
+                  </div>
+                ) : null}
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                  <CompletionBadge completed={completionStatus} />
+                  <Badge>{journey.duracaoEstimadaMinutos} min</Badge>
                 </div>
-              ) : null}
-              <Badge>{journey.duracaoEstimadaMinutos} min</Badge>
+              </div>
+              <div>
+                <p className="text-xl font-semibold leading-tight text-foreground">{journey.titulo}</p>
+                <p className="mt-2 text-sm text-muted-foreground">{journey.categoria}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-xl font-semibold leading-tight text-foreground">{journey.titulo}</p>
-              <p className="mt-2 text-sm text-muted-foreground">{journey.categoria}</p>
-            </div>
-          </div>
-        </button>
-      ))}
+          </button>
+        );
+      })}
     </>
   );
 }

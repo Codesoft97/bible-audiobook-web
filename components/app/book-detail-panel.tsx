@@ -3,6 +3,8 @@ import { AudioLines, BookOpenText, LoaderCircle } from "@/components/icons";
 
 import { AudioPlayer } from "@/components/app/audio-player";
 import type { AudioTrack } from "@/components/app/audio-player";
+import { CompletionBadge } from "@/components/app/completion-badge";
+import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import type { Audiobook, AudiobookBookSummary } from "@/lib/audiobooks";
 
@@ -26,9 +28,20 @@ interface BookDetailPanelProps {
   chapters: Audiobook[];
   loading: boolean;
   error: string;
+  historyLoaded: boolean;
+  completedChaptersCount: number;
+  getTrackCompletionStatus?: (track: AudioTrack) => boolean | null;
 }
 
-export function BookDetailPanel({ selectedBook, chapters, loading, error }: BookDetailPanelProps) {
+export function BookDetailPanel({
+  selectedBook,
+  chapters,
+  loading,
+  error,
+  historyLoaded,
+  completedChaptersCount,
+  getTrackCompletionStatus,
+}: BookDetailPanelProps) {
   if (!selectedBook) {
     return (
       <Card className="rounded-[22px] border-border/70 bg-background/70 p-4 sm:p-5 md:p-6">
@@ -46,6 +59,8 @@ export function BookDetailPanel({ selectedBook, chapters, loading, error }: Book
       </Card>
     );
   }
+
+  const allChaptersCompleted = chapters.length > 0 && completedChaptersCount === chapters.length;
 
   return (
     <Card className="rounded-[22px] border-border/70 bg-background/80 p-4 sm:p-5 md:p-6">
@@ -68,15 +83,32 @@ export function BookDetailPanel({ selectedBook, chapters, loading, error }: Book
         )}
 
         <div className="min-w-0 flex-1 space-y-2">
-          <div className="inline-flex items-center gap-2 rounded-full border border-highlight/25 bg-highlight/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.16em] text-highlight">
-            <AudioLines className="size-3.5" />
-            Livro selecionado
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="inline-flex items-center gap-2 rounded-full border border-highlight/25 bg-highlight/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.16em] text-highlight">
+              <AudioLines className="size-3.5" />
+              Livro selecionado
+            </div>
+            {historyLoaded ? (
+              allChaptersCompleted ? (
+                <Badge className="border-success/30 bg-success/10 text-success">
+                  Livro concluido
+                </Badge>
+              ) : completedChaptersCount > 0 ? (
+                <Badge className="border-highlight/30 bg-highlight/10 text-highlight">
+                  {completedChaptersCount}/{chapters.length} concluidos
+                </Badge>
+              ) : (
+                <CompletionBadge completed={false} />
+              )
+            ) : null}
           </div>
           <h3 className="text-2xl font-semibold leading-tight text-foreground sm:text-3xl">{selectedBook.title}</h3>
           <p className="text-sm leading-6 text-muted-foreground">
             {loading
               ? "Consultando capitulos no backend..."
-              : `${chapters.length} capitulos prontos para reproducao.`}
+              : historyLoaded
+                ? `${chapters.length} capitulos prontos para reproducao. ${completedChaptersCount} concluido(s) ate agora.`
+                : `${chapters.length} capitulos prontos para reproducao.`}
           </p>
         </div>
       </div>
@@ -95,6 +127,7 @@ export function BookDetailPanel({ selectedBook, chapters, loading, error }: Book
           <AudioPlayer
             title={selectedBook.title}
             tracks={chaptersToTracks(selectedBook.title, chapters)}
+            getTrackCompletionStatus={getTrackCompletionStatus}
           />
         ) : (
           <div className="rounded-2xl border border-border/70 bg-background/60 p-4 text-sm text-muted-foreground">

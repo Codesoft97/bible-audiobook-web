@@ -16,6 +16,7 @@ import { BiblePromisePanel } from "@/components/app/bible-promise-panel";
 import { BookDetailPanel } from "@/components/app/book-detail-panel";
 import { BookGrid } from "@/components/app/book-grid";
 import { useBookSelection } from "@/components/app/hooks/use-book-selection";
+import { useContentCompletionStatus } from "@/components/app/hooks/use-content-completion-status";
 import { useJourneySelection } from "@/components/app/hooks/use-journey-selection";
 import { JourneyDetailPanel } from "@/components/app/journey-detail-panel";
 import { JourneyGrid } from "@/components/app/journey-grid";
@@ -163,6 +164,7 @@ export function AudiobookBrowser({
   const deferredQuery = useDeferredValue(query);
 
   const book = useBookSelection(initialAudiobooks);
+  const { historyLoaded, getContentCompletion } = useContentCompletionStatus();
   const journey = useJourneySelection();
   const parable = useJourneySelection({
     audioBasePath: "parables",
@@ -174,6 +176,17 @@ export function AudiobookBrowser({
   });
 
   const bookSummaries = useMemo(() => groupAudiobooksByBook(initialAudiobooks), [initialAudiobooks]);
+  const audiobookIdsByBook = useMemo(() => {
+    const next = new Map<string, string[]>();
+
+    for (const item of initialAudiobooks) {
+      const current = next.get(item.book) ?? [];
+      current.push(item.id);
+      next.set(item.book, current);
+    }
+
+    return next;
+  }, [initialAudiobooks]);
 
   const filteredBooks = useMemo(
     () =>
@@ -260,6 +273,33 @@ export function AudiobookBrowser({
   const listDescription = view === "books"
     ? "Selecione um livro para atualizar o player e a fila de capitulos."
     : "Selecione um item para atualizar o player principal.";
+  const selectedJourneyCompletionStatus =
+    activeStoryConfig && activeJourneySelection.selectedJourney
+      ? getContentCompletion(
+          activeStoryConfig.progressContentType,
+          activeJourneySelection.selectedJourney.id,
+        )
+      : null;
+  const completedBookChaptersCount = historyLoaded
+    ? book.sortedChapters.filter((chapter) => getContentCompletion("bible", chapter.id) === true).length
+    : 0;
+
+  function getBookCompletionSummary(bookSummary: AudiobookBookSummary) {
+    if (!historyLoaded) {
+      return null;
+    }
+
+    const chapterIds = audiobookIdsByBook.get(bookSummary.slug) ?? [];
+    const completedCount = chapterIds.filter(
+      (chapterId) => getContentCompletion("bible", chapterId) === true,
+    ).length;
+
+    return {
+      completedCount,
+      totalCount: chapterIds.length,
+      allCompleted: chapterIds.length > 0 && completedCount === chapterIds.length,
+    };
+  }
 
   function handleTabChange(nextView: LibraryView) {
     if (isPremiumView(nextView) && !hasPremiumAccess) {
@@ -406,6 +446,15 @@ export function AudiobookBrowser({
                   chapters={book.sortedChapters}
                   loading={book.bookLoading}
                   error={book.bookError}
+                  historyLoaded={historyLoaded}
+                  completedChaptersCount={completedBookChaptersCount}
+                  getTrackCompletionStatus={(track) => {
+                    if (!track.progressContentType || !track.progressContentId) {
+                      return null;
+                    }
+
+                    return getContentCompletion(track.progressContentType, track.progressContentId);
+                  }}
                 />
               ) : (
                 <JourneyDetailPanel
@@ -418,6 +467,7 @@ export function AudiobookBrowser({
                   emptySelectionDescription={activeStoryConfig?.emptySelectionDescription}
                   progressContentType={activeStoryConfig?.progressContentType}
                   icon={ActiveStoryIcon}
+                  completionStatus={selectedJourneyCompletionStatus}
                 />
               )}
             </div>
@@ -446,6 +496,7 @@ export function AudiobookBrowser({
                     selectedSlug={book.selectedBook?.slug ?? null}
                     onSelect={handleSelectBook}
                     layout="rail"
+                    getCompletionSummary={getBookCompletionSummary}
                   />
                 ) : (
                   <JourneyGrid
@@ -459,6 +510,9 @@ export function AudiobookBrowser({
                     emptyDescription={activeStoryConfig?.gridEmptyDescription}
                     layout="rail"
                     icon={ActiveStoryIcon}
+                    getCompletionStatus={(item) =>
+                      getContentCompletion(activeStoryConfig!.progressContentType, item.id)
+                    }
                   />
                 )}
               </div>

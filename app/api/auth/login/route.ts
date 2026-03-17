@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { fetchBackend, resolveBackendToken } from "@/lib/backend-api";
+import { fetchBackend, resolveBackendTokens } from "@/lib/backend-api";
 import type { AuthResponse } from "@/lib/auth/types";
 import { fetchCurrentFamily } from "@/lib/family";
 import { loginSchema } from "@/lib/validation";
-import { jsonError, mirrorBackendCookie, parseBackendEnvelope, persistSession } from "@/lib/server-response";
+import {
+  jsonError,
+  mirrorBackendAuthCookies,
+  parseBackendEnvelope,
+  persistSession,
+} from "@/lib/server-response";
 
 export async function POST(request: NextRequest) {
   const payload = await request.json().catch(() => null);
@@ -30,7 +35,7 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  const token = resolveBackendToken(backendResponse, envelope.data.token);
+  const { token } = resolveBackendTokens(backendResponse, envelope.data);
 
   if (!token) {
     return jsonError("Autenticacao concluida sem token valido.", 502);
@@ -47,7 +52,7 @@ export async function POST(request: NextRequest) {
     },
   });
 
-  mirrorBackendCookie(response, backendResponse, envelope.data.token);
+  mirrorBackendAuthCookies(response, backendResponse, envelope.data);
   persistSession(response, {
     family,
     profiles: envelope.data.profiles,

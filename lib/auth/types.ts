@@ -28,6 +28,11 @@ export interface AppSession {
   selectedProfile: Profile | null;
 }
 
+export interface SessionTokens {
+  token: string;
+  refreshToken: string;
+}
+
 export interface ApiEnvelope<T> {
   status: "success" | "error";
   data?: T;
@@ -38,6 +43,7 @@ export interface AuthResponse {
   family: Family;
   profiles: Profile[];
   token?: string;
+  refreshToken?: string;
   isNewFamily?: boolean;
 }
 

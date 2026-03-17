@@ -14,6 +14,7 @@ export const APP_ROUTES = {
 
 export const SESSION_COOKIE_NAME = "ba_session";
 export const AUTH_COOKIE_NAME = "token";
+export const REFRESH_COOKIE_NAME = "refreshToken";
 export const PROFILE_LIMITS: Record<ProfileType, number> = {
   adult: 2,
   child: 1,

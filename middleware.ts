@@ -1,7 +1,13 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-import { APP_ROUTES, SESSION_COOKIE_NAME } from "@/lib/constants";
+import { hasSessionTokens, requestSessionRefresh } from "@/lib/auth/refresh";
+import { isTokenExpiredOrNearExpiry } from "@/lib/auth/jwt";
+import type { SessionTokens } from "@/lib/auth/types";
+import { APP_ROUTES, AUTH_COOKIE_NAME, REFRESH_COOKIE_NAME, SESSION_COOKIE_NAME } from "@/lib/constants";
+import { clearAuthState, persistAuthTokens } from "@/lib/server-response";
+
+const ACCESS_TOKEN_REFRESH_BUFFER_SECONDS = 60;
 
 function buildCsp() {
   return [
@@ -32,32 +38,150 @@ function applySecurityHeaders(response: NextResponse) {
   return response;
 }
 
-export function middleware(request: NextRequest) {
+function isPublicAuthPage(pathname: string) {
+  return (
+    pathname === APP_ROUTES.login ||
+    pathname === APP_ROUTES.register ||
+    pathname === APP_ROUTES.forgotPassword
+  );
+}
+
+function isProtectedPage(pathname: string) {
+  return (
+    pathname.startsWith(APP_ROUTES.profiles) ||
+    pathname.startsWith(APP_ROUTES.app) ||
+    pathname.startsWith(APP_ROUTES.subscription)
+  );
+}
+
+function shouldSkipAutomaticRefresh(pathname: string) {
+  return pathname.startsWith("/api/auth/");
+}
+
+function buildCookieHeader(entries: Iterable<[string, string]>) {
+  return Array.from(entries, ([name, value]) => `${name}=${value}`).join("; ");
+}
+
+function applyCookieOverridesToRequestHeaders(
+  request: NextRequest,
+  overrides: Map<string, string | null>,
+) {
+  const headers = new Headers(request.headers);
+  const cookies = new Map(
+    request.cookies.getAll().map(({ name, value }) => [name, value] as const),
+  );
+
+  overrides.forEach((value, name) => {
+    if (value === null) {
+      cookies.delete(name);
+      return;
+    }
+
+    cookies.set(name, value);
+  });
+
+  if (cookies.size === 0) {
+    headers.delete("cookie");
+    return headers;
+  }
+
+  headers.set("cookie", buildCookieHeader(cookies.entries()));
+  return headers;
+}
+
+function buildRequestContinuationResponse(requestHeaders?: Headers) {
+  if (!requestHeaders) {
+    return NextResponse.next();
+  }
+
+  return NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
+}
+
+export async function middleware(request: NextRequest) {
   const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME)?.value;
-  const isAuthenticated = Boolean(sessionCookie);
+  const accessToken = request.cookies.get(AUTH_COOKIE_NAME)?.value;
+  const refreshToken = request.cookies.get(REFRESH_COOKIE_NAME)?.value;
+  let isAuthenticated = Boolean(sessionCookie);
   const { pathname } = request.nextUrl;
+  let requestHeaders: Headers | undefined;
+  let refreshedTokens: SessionTokens | null = null;
+  let shouldClearSession = false;
 
-  if (
-    isAuthenticated &&
-    (pathname === APP_ROUTES.login ||
-      pathname === APP_ROUTES.register ||
-      pathname === APP_ROUTES.forgotPassword)
-  ) {
-    return applySecurityHeaders(
-      NextResponse.redirect(new URL(APP_ROUTES.profiles, request.url)),
-    );
+  if (sessionCookie && !shouldSkipAutomaticRefresh(pathname)) {
+    const accessTokenExpired =
+      !accessToken ||
+      isTokenExpiredOrNearExpiry(accessToken, {
+        bufferSeconds: 0,
+      });
+    const accessTokenNeedsRefresh =
+      !accessToken ||
+      isTokenExpiredOrNearExpiry(accessToken, {
+        bufferSeconds: ACCESS_TOKEN_REFRESH_BUFFER_SECONDS,
+      });
+
+    if (refreshToken && accessTokenNeedsRefresh) {
+      const { backendResponse, envelope } = await requestSessionRefresh({
+        cookieHeader: request.headers.get("cookie") ?? "",
+      });
+
+      if (backendResponse.ok && envelope.status === "success" && hasSessionTokens(envelope.data)) {
+        refreshedTokens = envelope.data;
+        requestHeaders = applyCookieOverridesToRequestHeaders(
+          request,
+          new Map([
+            [AUTH_COOKIE_NAME, envelope.data.token],
+            [REFRESH_COOKIE_NAME, envelope.data.refreshToken],
+          ]),
+        );
+      } else if (backendResponse.status === 401) {
+        shouldClearSession = true;
+        isAuthenticated = false;
+        requestHeaders = applyCookieOverridesToRequestHeaders(
+          request,
+          new Map([
+            [AUTH_COOKIE_NAME, null],
+            [REFRESH_COOKIE_NAME, null],
+            [SESSION_COOKIE_NAME, null],
+          ]),
+        );
+      }
+    } else if (!refreshToken && accessTokenExpired) {
+      shouldClearSession = true;
+      isAuthenticated = false;
+      requestHeaders = applyCookieOverridesToRequestHeaders(
+        request,
+        new Map([
+          [AUTH_COOKIE_NAME, null],
+          [REFRESH_COOKIE_NAME, null],
+          [SESSION_COOKIE_NAME, null],
+        ]),
+      );
+    }
   }
 
-  if (
-    !isAuthenticated &&
-    (pathname.startsWith(APP_ROUTES.profiles) ||
-      pathname.startsWith(APP_ROUTES.app) ||
-      pathname.startsWith(APP_ROUTES.subscription))
-  ) {
-    return applySecurityHeaders(NextResponse.redirect(new URL(APP_ROUTES.login, request.url)));
+  let response: NextResponse;
+
+  if (isAuthenticated && isPublicAuthPage(pathname)) {
+    response = NextResponse.redirect(new URL(APP_ROUTES.profiles, request.url));
+  } else if (!isAuthenticated && isProtectedPage(pathname)) {
+    response = NextResponse.redirect(new URL(APP_ROUTES.login, request.url));
+  } else {
+    response = buildRequestContinuationResponse(requestHeaders);
   }
 
-  return applySecurityHeaders(NextResponse.next());
+  if (refreshedTokens) {
+    persistAuthTokens(response, refreshedTokens);
+  }
+
+  if (shouldClearSession) {
+    clearAuthState(response);
+  }
+
+  return applySecurityHeaders(response);
 }
 
 export const config = {

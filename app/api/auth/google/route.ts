@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { fetchBackend, resolveBackendToken } from "@/lib/backend-api";
+import { fetchBackend, resolveBackendTokens } from "@/lib/backend-api";
 import type { AuthResponse } from "@/lib/auth/types";
 import { fetchCurrentFamily } from "@/lib/family";
-import { jsonError, mirrorBackendCookie, parseBackendEnvelope, persistSession } from "@/lib/server-response";
+import {
+  jsonError,
+  mirrorBackendAuthCookies,
+  parseBackendEnvelope,
+  persistSession,
+} from "@/lib/server-response";
 
 const schema = z.object({
   idToken: z.string().min(1, "Token do Google ausente."),
@@ -34,7 +39,7 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  const token = resolveBackendToken(backendResponse, envelope.data.token);
+  const { token } = resolveBackendTokens(backendResponse, envelope.data);
 
   if (!token) {
     return jsonError("Autenticacao Google concluida sem token valido.", 502);
@@ -51,7 +56,7 @@ export async function POST(request: NextRequest) {
     },
   });
 
-  mirrorBackendCookie(response, backendResponse, envelope.data.token);
+  mirrorBackendAuthCookies(response, backendResponse, envelope.data);
   persistSession(response, {
     family,
     profiles: envelope.data.profiles,

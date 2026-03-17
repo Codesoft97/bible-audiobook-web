@@ -2,6 +2,7 @@ export interface CharacterJourney {
   id: string;
   titulo: string;
   categoria: string;
+  referencia?: string;
   perfilAlvo: string;
   duracaoEstimadaMinutos: number;
   isActive: boolean;

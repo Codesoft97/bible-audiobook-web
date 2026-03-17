@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
 
 import {
+  buildClearedRefreshTokenCookie,
   buildClearedTokenCookie,
+  buildRefreshTokenCookie,
   buildTokenCookie,
   parseJsonSafe,
-  resolveBackendToken,
+  resolveBackendTokens,
 } from "@/lib/backend-api";
 import { buildClearedSessionCookie, buildSessionCookie } from "@/lib/auth/session";
-import type { ApiEnvelope, AppSession } from "@/lib/auth/types";
+import type { ApiEnvelope, AppSession, SessionTokens } from "@/lib/auth/types";
 
 export function jsonError(message: string, status = 400) {
   return NextResponse.json(
@@ -32,16 +34,27 @@ export async function parseBackendEnvelope<T>(response: Response) {
   } satisfies ApiEnvelope<T>;
 }
 
-export function mirrorBackendCookie(
+export function persistAuthTokens(
+  response: NextResponse,
+  tokens: Partial<SessionTokens>,
+) {
+  if (tokens.token) {
+    response.cookies.set(buildTokenCookie(tokens.token));
+  }
+
+  if (tokens.refreshToken) {
+    response.cookies.set(buildRefreshTokenCookie(tokens.refreshToken));
+  }
+
+  return response;
+}
+
+export function mirrorBackendAuthCookies(
   response: NextResponse,
   backendResponse: Response,
-  fallbackToken?: string,
+  fallbackTokens: Partial<SessionTokens> = {},
 ) {
-  const token = resolveBackendToken(backendResponse, fallbackToken);
-
-  if (token) {
-    response.cookies.set(buildTokenCookie(token));
-  }
+  return persistAuthTokens(response, resolveBackendTokens(backendResponse, fallbackTokens));
 }
 
 export function persistSession(response: NextResponse, session: AppSession) {
@@ -52,5 +65,6 @@ export function persistSession(response: NextResponse, session: AppSession) {
 export function clearAuthState(response: NextResponse) {
   response.cookies.set(buildClearedSessionCookie());
   response.cookies.set(buildClearedTokenCookie());
+  response.cookies.set(buildClearedRefreshTokenCookie());
   return response;
 }
