@@ -128,7 +128,7 @@ export function RegisterForm() {
       <div className="relative flex justify-center text-xs uppercase tracking-[0.2em] text-muted-foreground">
         <span className="bg-card px-3">ou entre com o Google</span>
       </div>
-      <GoogleLoginButton />
+      <GoogleLoginButton flow="register" />
     </div>
   );
 }

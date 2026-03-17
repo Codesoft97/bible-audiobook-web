@@ -306,7 +306,7 @@ export default function HomePage() {
 
             <article className="rounded-2xl border border-highlight/35 bg-gradient-to-br from-highlight/12 to-background p-5">
               <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Anual</p>
-              <p className="mt-3 text-4xl font-semibold text-foreground">R$ 118,80</p>
+              <p className="mt-3 text-4xl font-semibold text-foreground">R$ 119,99</p>
               <p className="mt-1 text-sm text-muted-foreground">por ano</p>
               <p className="mt-3 inline-flex rounded-full border border-highlight/40 bg-highlight/12 px-3 py-1 text-xs font-semibold uppercase tracking-[0.08em] text-highlight">
                 Economia em relação ao mensal

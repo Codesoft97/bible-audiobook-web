@@ -29,27 +29,28 @@ function normalizeWhatsappNumber(value: string) {
 }
 
 function formatWhatsappNumber(value: string) {
-  const digits = normalizeWhatsappNumber(value).slice(0, 11);
-  const ddd = digits.slice(0, 2);
-  const number = digits.slice(2);
+  const digits = normalizeWhatsappNumber(value).slice(0, 13);
+  const ddi = digits.slice(0, 2);
+  const ddd = digits.slice(2, 4);
+  const number = digits.slice(4);
 
-  if (!ddd) {
+  if (!ddi) {
     return "";
   }
 
-  if (number.length === 0) {
-    return `(${ddd}`;
+  if (digits.length <= 2) {
+    return ddi;
   }
 
-  if (number.length <= 4) {
-    return `(${ddd}) ${number}`;
+  if (digits.length <= 4) {
+    return `${ddi} ${ddd}`;
   }
 
-  if (number.length <= 8) {
-    return `(${ddd}) ${number.slice(0, 4)}-${number.slice(4)}`;
+  if (number.length <= 5) {
+    return `${ddi} ${ddd} ${number}`;
   }
 
-  return `(${ddd}) ${number.slice(0, 5)}-${number.slice(5, 9)}`;
+  return `${ddi} ${ddd} ${number.slice(0, 5)}-${number.slice(5, 9)}`;
 }
 
 function formatDateInputValue(value: Date) {
@@ -273,7 +274,7 @@ export function WhatsAppSubscriptionPanel() {
 
     const normalizedWhatsapp = normalizeWhatsappNumber(whatsappNumber);
 
-    if (normalizedWhatsapp.length < 10) {
+    if (normalizedWhatsapp.length !== 13) {
       setSubmitError("Informe um numero de WhatsApp valido com DDI e DDD.");
       return;
     }
@@ -542,7 +543,7 @@ export function WhatsAppSubscriptionPanel() {
                   <div key={subscription.id} className="rounded-xl border border-border/60 bg-background/65 px-4 py-3">
                     <p className="text-base font-semibold text-foreground">{subscription.book}</p>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      WhatsApp: {subscription.whatsappNumber}
+                      WhatsApp: {formatWhatsappNumber(subscription.whatsappNumber)}
                     </p>
                     <p className="mt-1 text-sm text-muted-foreground">
                       Ativado em: {formatDateTimeLabel(subscription.createdAt)}
@@ -556,7 +557,7 @@ export function WhatsAppSubscriptionPanel() {
                   <div key={subscription.id} className="rounded-xl border border-border/60 bg-background/65 px-4 py-3">
                     <p className="text-base font-semibold text-foreground">Promessas biblicas</p>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      WhatsApp: {subscription.whatsappNumber}
+                      WhatsApp: {formatWhatsappNumber(subscription.whatsappNumber)}
                     </p>
                     <p className="mt-1 text-sm text-muted-foreground">
                       Ativado em: {formatDateTimeLabel(subscription.createdAt)}
@@ -653,12 +654,12 @@ export function WhatsAppSubscriptionPanel() {
                 type="tel"
                 inputMode="numeric"
                 autoComplete="tel"
-                placeholder="(51) 99999-9999"
+                placeholder="55 51 99999-9999"
                 value={whatsappNumber}
                 onChange={(event) => setWhatsappNumber(formatWhatsappNumber(event.target.value))}
               />
               <p className="text-xs text-muted-foreground">
-                Informe no formato (51) 99999-9999.
+                Informe no formato 55 51 99999-9999.
               </p>
             </div>
 

@@ -1,5 +1,11 @@
+import type { PlanType } from "@/lib/auth/types";
+
 export type BillingCycle = "monthly" | "annual";
 export type SubscriptionCheckoutPlatform = "web";
+export type SubscriptionBillingSource = "trial" | "stripe" | "google_play" | "apple_app_store" | "none";
+export type SubscriptionBillingType = "trial" | "recurring" | "one_time" | "none";
+export type SubscriptionManagementChannel = "none" | "stripe" | "google_play" | "apple_app_store";
+export type SubscriptionInAppPlatform = "android" | "ios";
 
 export interface SubscriptionCheckoutPayload {
   billingCycle: BillingCycle;
@@ -36,4 +42,29 @@ export interface SubscriptionPlansResponse {
   freeTrialDays: number;
   monthlyPrice: number;
   annualPrice: number;
+}
+
+export interface SubscriptionStatusResponse {
+  plan: PlanType;
+  hasActiveSubscription: boolean;
+  hasActiveStripeSubscription: boolean;
+  paidUntil: string | null;
+  lastPaymentAt: string | null;
+  lastPaymentProvider: string | null;
+  billingSource: SubscriptionBillingSource | null;
+  billingType: SubscriptionBillingType | null;
+  managementChannel: SubscriptionManagementChannel;
+  managementMessage: string | null;
+  canManage: boolean;
+  canCancel: boolean;
+  canPurchaseOnWeb: boolean;
+  canPurchaseOnMobile: boolean;
+  purchaseBlocked: boolean;
+  purchaseBlockedReason: string | null;
+  activeInAppPlatform: SubscriptionInAppPlatform | null;
+  activeInAppProductId: string | null;
+  hasMultipleActiveRecurringSubscriptions: boolean;
+  freeTrialStartedAt: string | null;
+  freeTrialEndsAt: string | null;
+  freeTrialDaysRemaining: number | null;
 }

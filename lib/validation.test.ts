@@ -49,6 +49,15 @@ describe("lib/validation", () => {
     expect(result.success).toBe(true);
   });
 
+  it("rejeita numero de WhatsApp incompleto", () => {
+    const result = whatsappPromiseSubscribeSchema.safeParse({
+      whatsappNumber: "551199999999",
+      endDate: "2026-12-31T10:00:00.000Z",
+    });
+
+    expect(result.success).toBe(false);
+  });
+
   it("valida codigo de reset com 6 digitos", () => {
     const successResult = verifyResetCodeSchema.safeParse({
       email: "joao@email.com",
