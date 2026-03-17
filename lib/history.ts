@@ -4,6 +4,12 @@ export type HistoryContentType =
   | "parable"
   | "teaching";
 
+export const HISTORY_PROGRESS_UPDATED_EVENT = "history-progress-updated";
+
+export function buildHistoryContentKey(contentType: HistoryContentType, contentId: string) {
+  return `${contentType}:${contentId}`;
+}
+
 export interface ListeningHistoryEntry {
   id: string;
   contentType: HistoryContentType;
@@ -33,4 +39,9 @@ export interface PlaybackProgressPayload {
 export interface PlaybackProgressSnapshot extends PlaybackProgressPayload {
   completed: boolean;
   lastListenedAt: string;
+}
+
+export interface HistoryProgressUpdatedDetail extends PlaybackProgressSnapshot {
+  contentType: HistoryContentType;
+  contentId: string;
 }

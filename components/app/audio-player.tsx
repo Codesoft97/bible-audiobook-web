@@ -14,6 +14,7 @@ import {
   VolumeX,
 } from "@/components/icons";
 
+import { CompletionBadge } from "@/components/app/completion-badge";
 import { useAudio } from "@/components/providers/audio-context";
 import type { AudioTrack } from "@/components/providers/audio-context";
 import { Badge } from "@/components/ui/badge";
@@ -53,6 +54,7 @@ interface AudioPlayerProps {
   tracks: AudioTrack[];
   badgeLabel?: string;
   variant?: "default" | "dock";
+  getTrackCompletionStatus?: (track: AudioTrack) => boolean | null;
 }
 
 /* ------------------------------------------------------------------ */
@@ -65,6 +67,7 @@ export function AudioPlayer({
   tracks,
   badgeLabel,
   variant = "default",
+  getTrackCompletionStatus,
 }: AudioPlayerProps) {
   const audio = useAudio();
   const isDock = variant === "dock";
@@ -84,6 +87,7 @@ export function AudioPlayer({
   const hasNext = activeTrackIndex < tracks.length - 1;
   const canSeek = isActivePlaylist && duration > 0;
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+  const currentTrackCompletionStatus = currentTrack ? getTrackCompletionStatus?.(currentTrack) ?? null : null;
 
   function handlePlay() {
     if (isActivePlaylist) {
@@ -148,6 +152,7 @@ export function AudioPlayer({
               {badgeLabel && (
                 <Badge className="bg-highlight/10 text-highlight">{badgeLabel}</Badge>
               )}
+              <CompletionBadge completed={currentTrackCompletionStatus} />
               <Badge
                 className={cn(
                   isDock
@@ -348,6 +353,7 @@ export function AudioPlayer({
           {tracks.map((t, i) => {
             const isCurrent = i === activeTrackIndex;
             const isCurrentPlaying = isCurrent && isPlaying;
+            const trackCompletionStatus = getTrackCompletionStatus?.(t) ?? null;
 
             return (
               <button
@@ -396,20 +402,22 @@ export function AudioPlayer({
                     )}
                   </div>
                 </div>
-                <Badge
-                  className={cn(
-                    "shrink-0 self-start sm:self-center",
-                    isDock
-                      ? isCurrent
-                        ? "border-highlight/20 bg-highlight/15 text-highlight"
-                        : "border-primary-foreground/10 bg-primary-foreground/8 text-primary-foreground"
-                      : isCurrent
-                        ? "border-primary/20 bg-primary/10 text-primary"
-                        : "bg-highlight/10 text-highlight",
-                  )}
-                >
-                  {isCurrentPlaying ? "Tocando" : isCurrent ? "Pausado" : "Ouvir"}
-                </Badge>
+                <div className="flex shrink-0 flex-wrap items-center gap-2 self-start sm:self-center">
+                  <CompletionBadge completed={trackCompletionStatus} />
+                  <Badge
+                    className={cn(
+                      isDock
+                        ? isCurrent
+                          ? "border-highlight/20 bg-highlight/15 text-highlight"
+                          : "border-primary-foreground/10 bg-primary-foreground/8 text-primary-foreground"
+                        : isCurrent
+                          ? "border-primary/20 bg-primary/10 text-primary"
+                          : "bg-highlight/10 text-highlight",
+                    )}
+                  >
+                    {isCurrentPlaying ? "Tocando" : isCurrent ? "Pausado" : "Ouvir"}
+                  </Badge>
+                </div>
               </button>
             );
           })}

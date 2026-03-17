@@ -13,7 +13,14 @@ import type { ReactNode } from "react";
 import { Howl } from "howler";
 
 import type { ApiEnvelope } from "@/lib/auth/types";
-import type { HistoryContentType, PlaybackProgressSnapshot } from "@/lib/history";
+import {
+  HISTORY_PROGRESS_UPDATED_EVENT,
+} from "@/lib/history";
+import type {
+  HistoryContentType,
+  HistoryProgressUpdatedDetail,
+  PlaybackProgressSnapshot,
+} from "@/lib/history";
 
 const PROGRESS_SYNC_INTERVAL_SECONDS = 12;
 const PLAYBACK_SAMPLE_INTERVAL_MS = 500;
@@ -137,14 +144,35 @@ export function AudioProvider({ children }: { children: ReactNode }) {
       totalDurationSeconds: Math.max(1, Math.floor(total)),
     };
 
-    void fetch("/api/history/progress", {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-      keepalive: true,
-    });
+    void (async () => {
+      try {
+        const response = await fetch("/api/history/progress", {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+          keepalive: true,
+        });
+        const envelope = (await response.json().catch(() => null)) as ApiEnvelope<PlaybackProgressSnapshot> | null;
+
+        if (!response.ok || envelope?.status !== "success" || !envelope.data) {
+          return;
+        }
+
+        window.dispatchEvent(
+          new CustomEvent<HistoryProgressUpdatedDetail>(HISTORY_PROGRESS_UPDATED_EVENT, {
+            detail: {
+              ...envelope.data,
+              contentType: target.contentType,
+              contentId: target.contentId,
+            },
+          }),
+        );
+      } catch {
+        // Ignore sync failures and try again on the next interval/end event.
+      }
+    })();
   }, []);
 
   const stopProgressTimer = useCallback(() => {

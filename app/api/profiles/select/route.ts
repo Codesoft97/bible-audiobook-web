@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { fetchBackend, getBackendAuthHeaders, resolveBackendToken } from "@/lib/backend-api";
+import { fetchBackend, getBackendAuthHeaders, resolveBackendTokens } from "@/lib/backend-api";
 import { parseSession } from "@/lib/auth/session";
 import type { Profile } from "@/lib/auth/types";
 import { AUTH_COOKIE_NAME, SESSION_COOKIE_NAME } from "@/lib/constants";
 import { hydrateSessionFamily } from "@/lib/family";
-import { jsonError, mirrorBackendCookie, parseBackendEnvelope, persistSession } from "@/lib/server-response";
+import {
+  jsonError,
+  mirrorBackendAuthCookies,
+  parseBackendEnvelope,
+  persistSession,
+} from "@/lib/server-response";
 import { selectProfileSchema } from "@/lib/validation";
 
 export async function POST(request: NextRequest) {
@@ -25,7 +30,11 @@ export async function POST(request: NextRequest) {
     body: JSON.stringify(validation.data),
   });
 
-  const envelope = await parseBackendEnvelope<{ profile: Profile; token?: string }>(backendResponse);
+  const envelope = await parseBackendEnvelope<{
+    profile: Profile;
+    token?: string;
+    refreshToken?: string;
+  }>(backendResponse);
 
   if (!backendResponse.ok || envelope?.status !== "success" || !envelope.data) {
     return NextResponse.json(envelope, {
@@ -46,8 +55,14 @@ export async function POST(request: NextRequest) {
     },
   });
 
-  const selectedProfileToken = resolveBackendToken(backendResponse, envelope.data.token);
-  mirrorBackendCookie(response, backendResponse, selectedProfileToken ?? undefined);
+  const { token: selectedProfileToken } = resolveBackendTokens(backendResponse, {
+    token: envelope.data.token,
+    refreshToken: envelope.data.refreshToken,
+  });
+  mirrorBackendAuthCookies(response, backendResponse, {
+    token: selectedProfileToken ?? undefined,
+    refreshToken: envelope.data.refreshToken,
+  });
 
   if (sessionWithFamily) {
     const updatedProfiles = sessionWithFamily.profiles.some(
