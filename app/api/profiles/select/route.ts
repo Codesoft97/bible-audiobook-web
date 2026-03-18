@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { fetchBackend, getBackendAuthHeaders, resolveBackendTokens } from "@/lib/backend-api";
+import { fetchBackend, getBackendAuthHeaders } from "@/lib/backend-api";
 import { parseSession } from "@/lib/auth/session";
 import type { Profile } from "@/lib/auth/types";
 import { AUTH_COOKIE_NAME, SESSION_COOKIE_NAME } from "@/lib/constants";
@@ -32,8 +32,6 @@ export async function POST(request: NextRequest) {
 
   const envelope = await parseBackendEnvelope<{
     profile: Profile;
-    token?: string;
-    refreshToken?: string;
   }>(backendResponse);
 
   if (!backendResponse.ok || envelope?.status !== "success" || !envelope.data) {
@@ -55,14 +53,7 @@ export async function POST(request: NextRequest) {
     },
   });
 
-  const { token: selectedProfileToken } = resolveBackendTokens(backendResponse, {
-    token: envelope.data.token,
-    refreshToken: envelope.data.refreshToken,
-  });
-  mirrorBackendAuthCookies(response, backendResponse, {
-    token: selectedProfileToken ?? undefined,
-    refreshToken: envelope.data.refreshToken,
-  });
+  mirrorBackendAuthCookies(response, backendResponse);
 
   if (sessionWithFamily) {
     const updatedProfiles = sessionWithFamily.profiles.some(

@@ -71,6 +71,7 @@ describe("GoogleLoginButton", () => {
     expect(fetchSpy).toHaveBeenCalledWith(
       "/api/auth/google",
       expect.objectContaining({
+        credentials: "include",
         method: "POST",
       }),
     );

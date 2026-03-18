@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { fetchBackend, resolveBackendTokens } from "@/lib/backend-api";
 import type { AuthResponse } from "@/lib/auth/types";
 import { fetchCurrentFamily } from "@/lib/family";
+import { fetchCurrentProfiles } from "@/lib/profiles";
 import {
   parseBackendEnvelope,
   jsonError,
@@ -35,26 +36,33 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  const { token } = resolveBackendTokens(registerResponse, registerEnvelope.data);
+  const { token } = resolveBackendTokens(registerResponse);
 
   if (!token) {
     return jsonError("Cadastro concluido, mas nenhum token valido foi recebido.", 502);
   }
 
-  const family = (await fetchCurrentFamily({ token })) ?? registerEnvelope.data.family;
+  const [familyResult, profilesResult] = await Promise.all([
+    fetchCurrentFamily({ token }),
+    fetchCurrentProfiles({ token }),
+  ]);
+  const family = familyResult ?? registerEnvelope.data.family;
+  const profiles =
+    profilesResult ??
+    (Array.isArray(registerEnvelope.data.profiles) ? registerEnvelope.data.profiles : []);
 
   const response = NextResponse.json({
     status: "success",
     data: {
       family,
-      profiles: registerEnvelope.data.profiles,
+      profiles,
     },
   });
 
-  mirrorBackendAuthCookies(response, registerResponse, registerEnvelope.data);
+  mirrorBackendAuthCookies(response, registerResponse);
   persistSession(response, {
     family,
-    profiles: registerEnvelope.data.profiles,
+    profiles,
     selectedProfile: null,
   });
   return response;

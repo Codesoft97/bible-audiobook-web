@@ -1,10 +1,10 @@
 import { fetchBackend, parseJsonSafe } from "@/lib/backend-api";
-import type { ApiEnvelope, SessionTokens } from "@/lib/auth/types";
+import type { ApiEnvelope } from "@/lib/auth/types";
 
 const INVALID_REFRESH_RESPONSE = {
   status: "error",
   message: "Resposta invalida do backend.",
-} satisfies ApiEnvelope<SessionTokens>;
+} satisfies ApiEnvelope<unknown>;
 
 export async function requestSessionRefresh(options: {
   cookieHeader?: string;
@@ -22,18 +22,10 @@ export async function requestSessionRefresh(options: {
     body: useBodyRefreshToken ? JSON.stringify({ refreshToken }) : undefined,
   });
 
-  const envelope =
-    (await parseJsonSafe<ApiEnvelope<SessionTokens>>(backendResponse)) ??
-    INVALID_REFRESH_RESPONSE;
+  const envelope = (await parseJsonSafe<ApiEnvelope<unknown>>(backendResponse)) ?? INVALID_REFRESH_RESPONSE;
 
   return {
     backendResponse,
     envelope,
   };
-}
-
-export function hasSessionTokens(
-  data: ApiEnvelope<SessionTokens>["data"],
-): data is SessionTokens {
-  return Boolean(data?.token && data.refreshToken);
 }

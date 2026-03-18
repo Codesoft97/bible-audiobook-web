@@ -8,7 +8,7 @@ export default function LoginPage() {
   return (
     <AuthShell
       eyebrow="Login"
-      title="Entre para continuar a jornada da sua familia."
+      title="Entre para continuar sua jornada."
       description="Use email e senha ou Google e escolha seu perfil após entrar."
       footer={
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
