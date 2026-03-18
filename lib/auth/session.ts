@@ -4,8 +4,16 @@ import { SESSION_COOKIE_NAME } from "@/lib/constants";
 import { env } from "@/lib/env";
 import type { AppSession } from "@/lib/auth/types";
 
+function normalizeSession(session: AppSession) {
+  return {
+    ...session,
+    profiles: Array.isArray(session.profiles) ? session.profiles : [],
+    selectedProfile: session.selectedProfile ?? null,
+  } satisfies AppSession;
+}
+
 function encodeSession(session: AppSession) {
-  return Buffer.from(JSON.stringify(session), "utf8").toString("base64url");
+  return Buffer.from(JSON.stringify(normalizeSession(session)), "utf8").toString("base64url");
 }
 
 function decodeSession(value: string) {
@@ -43,7 +51,13 @@ export function parseSession(cookieValue?: string | null) {
   }
 
   try {
-    return decodeSession(payload);
+    const session = decodeSession(payload);
+
+    if (!session || typeof session !== "object" || !("family" in session)) {
+      return null;
+    }
+
+    return normalizeSession(session);
   } catch {
     return null;
   }

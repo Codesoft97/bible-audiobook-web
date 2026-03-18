@@ -1,11 +1,11 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-import { hasSessionTokens, requestSessionRefresh } from "@/lib/auth/refresh";
+import { resolveBackendTokens } from "@/lib/backend-api";
+import { requestSessionRefresh } from "@/lib/auth/refresh";
 import { isTokenExpiredOrNearExpiry } from "@/lib/auth/jwt";
-import type { SessionTokens } from "@/lib/auth/types";
 import { APP_ROUTES, AUTH_COOKIE_NAME, REFRESH_COOKIE_NAME, SESSION_COOKIE_NAME } from "@/lib/constants";
-import { clearAuthState, persistAuthTokens } from "@/lib/server-response";
+import { clearAuthState, mirrorBackendAuthCookies } from "@/lib/server-response";
 
 const ACCESS_TOKEN_REFRESH_BUFFER_SECONDS = 60;
 
@@ -108,7 +108,7 @@ export async function middleware(request: NextRequest) {
   let isAuthenticated = Boolean(sessionCookie);
   const { pathname } = request.nextUrl;
   let requestHeaders: Headers | undefined;
-  let refreshedTokens: SessionTokens | null = null;
+  let refreshResponse: Response | null = null;
   let shouldClearSession = false;
 
   if (sessionCookie && !shouldSkipAutomaticRefresh(pathname)) {
@@ -128,15 +128,22 @@ export async function middleware(request: NextRequest) {
         cookieHeader: request.headers.get("cookie") ?? "",
       });
 
-      if (backendResponse.ok && envelope.status === "success" && hasSessionTokens(envelope.data)) {
-        refreshedTokens = envelope.data;
-        requestHeaders = applyCookieOverridesToRequestHeaders(
-          request,
-          new Map([
-            [AUTH_COOKIE_NAME, envelope.data.token],
-            [REFRESH_COOKIE_NAME, envelope.data.refreshToken],
-          ]),
-        );
+      if (backendResponse.ok && envelope.status === "success") {
+        const refreshedTokens = resolveBackendTokens(backendResponse);
+        const cookieOverrides = new Map<string, string | null>();
+
+        if (refreshedTokens.token) {
+          cookieOverrides.set(AUTH_COOKIE_NAME, refreshedTokens.token);
+        }
+
+        if (refreshedTokens.refreshToken) {
+          cookieOverrides.set(REFRESH_COOKIE_NAME, refreshedTokens.refreshToken);
+        }
+
+        if (cookieOverrides.size > 0) {
+          refreshResponse = backendResponse;
+          requestHeaders = applyCookieOverridesToRequestHeaders(request, cookieOverrides);
+        }
       } else if (backendResponse.status === 401) {
         shouldClearSession = true;
         isAuthenticated = false;
@@ -173,8 +180,8 @@ export async function middleware(request: NextRequest) {
     response = buildRequestContinuationResponse(requestHeaders);
   }
 
-  if (refreshedTokens) {
-    persistAuthTokens(response, refreshedTokens);
+  if (refreshResponse) {
+    mirrorBackendAuthCookies(response, refreshResponse);
   }
 
   if (shouldClearSession) {

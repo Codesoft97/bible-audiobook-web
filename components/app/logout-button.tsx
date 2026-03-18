@@ -6,10 +6,19 @@ import { LogOut } from "@/components/icons";
 import { useRouter } from "next/navigation";
 
 import { useAudio } from "@/components/providers/audio-context";
-import { Button } from "@/components/ui/button";
+import { Button, type ButtonProps } from "@/components/ui/button";
 import { APP_ROUTES } from "@/lib/constants";
+import { cn } from "@/lib/utils";
 
-export function LogoutButton({ compact = false }: { compact?: boolean }) {
+export function LogoutButton({
+  compact = false,
+  className,
+  variant = "ghost",
+}: {
+  compact?: boolean;
+  className?: string;
+  variant?: ButtonProps["variant"];
+}) {
   const router = useRouter();
   const audio = useAudio();
   const [pending, startTransition] = useTransition();
@@ -20,6 +29,7 @@ export function LogoutButton({ compact = false }: { compact?: boolean }) {
     try {
       await fetch("/api/auth/logout", {
         method: "POST",
+        credentials: "include",
       });
     } catch {
       return;
@@ -33,12 +43,13 @@ export function LogoutButton({ compact = false }: { compact?: boolean }) {
 
   return (
     <Button
-      variant="ghost"
+      variant={variant}
       size={compact ? "icon" : "default"}
       aria-label="Sair"
       title="Sair"
       onClick={() => void handleLogout()}
       disabled={pending}
+      className={cn(className)}
     >
       <LogOut className="size-4" />
       {compact ? null : pending ? "Saindo..." : "Sair"}

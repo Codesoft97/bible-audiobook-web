@@ -4,6 +4,7 @@ import { z } from "zod";
 import { fetchBackend, resolveBackendTokens } from "@/lib/backend-api";
 import type { AuthResponse } from "@/lib/auth/types";
 import { fetchCurrentFamily } from "@/lib/family";
+import { fetchCurrentProfiles } from "@/lib/profiles";
 import {
   jsonError,
   mirrorBackendAuthCookies,
@@ -39,27 +40,33 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  const { token } = resolveBackendTokens(backendResponse, envelope.data);
+  const { token } = resolveBackendTokens(backendResponse);
 
   if (!token) {
     return jsonError("Autenticacao Google concluida sem token valido.", 502);
   }
 
-  const family = (await fetchCurrentFamily({ token })) ?? envelope.data.family;
+  const [familyResult, profilesResult] = await Promise.all([
+    fetchCurrentFamily({ token }),
+    fetchCurrentProfiles({ token }),
+  ]);
+  const family = familyResult ?? envelope.data.family;
+  const profiles =
+    profilesResult ?? (Array.isArray(envelope.data.profiles) ? envelope.data.profiles : []);
 
   const response = NextResponse.json({
     status: "success",
     data: {
       family,
-      profiles: envelope.data.profiles,
+      profiles,
       isNewFamily: envelope.data.isNewFamily ?? false,
     },
   });
 
-  mirrorBackendAuthCookies(response, backendResponse, envelope.data);
+  mirrorBackendAuthCookies(response, backendResponse);
   persistSession(response, {
     family,
-    profiles: envelope.data.profiles,
+    profiles,
     selectedProfile: null,
   });
   return response;

@@ -82,6 +82,7 @@ describe("LoginForm", () => {
     expect(fetchSpy).toHaveBeenCalledWith(
       "/api/auth/login",
       expect.objectContaining({
+        credentials: "include",
         method: "POST",
       }),
     );

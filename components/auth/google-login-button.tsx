@@ -63,6 +63,7 @@ export function GoogleLoginButton({ flow = "login" }: GoogleLoginButtonProps) {
     try {
       const authResponse = await fetch("/api/auth/google", {
         method: "POST",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },

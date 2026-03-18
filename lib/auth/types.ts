@@ -41,9 +41,7 @@ export interface ApiEnvelope<T> {
 
 export interface AuthResponse {
   family: Family;
-  profiles: Profile[];
-  token?: string;
-  refreshToken?: string;
+  profiles?: Profile[];
   isNewFamily?: boolean;
 }
 
