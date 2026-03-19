@@ -1,15 +1,13 @@
+import Image from "next/image";
 import Link from "next/link";
 
 import {
   BookOpenText,
   CheckCircle2,
   Headphones,
-  Image as ImageIcon,
   MessageCircleHeart,
   HandsPraying,
-  PersonSimpleHike,
   PlayCircle,
-  Video,
 } from "@/components/icons";
 
 import { Logo } from "@/components/logo";
@@ -18,36 +16,52 @@ import { APP_ROUTES } from "@/lib/constants";
 
 const FEATURES = [
   {
-    title: "Biblioteca em áudio",
+    eyebrow: "Explore o app",
+    title: "Biblioteca completa",
     description:
-      "Explore livros da Bíblia em áudio com organização por capítulos para ouvir todos os dias.",
+      "Navegue por livros, capitulos e jornadas em áudio, continue de onde parou e siga aprendendo.",
     icon: BookOpenText,
-    imageLabel: "Imagem da biblioteca",
-    videoLabel: "Video da navegacao",
+    imageSrc: "/landing_home.png",
+    imageAlt: "Tela principal da plataforma Evangelho em áudio",
+    highlights: ["Livros e capitulos organizados", "Retome do ponto em que parou"],
+    glowClassName: "bg-[radial-gradient(circle,rgba(229,187,102,0.24),transparent_68%)]",
+    imageClassName: "object-[center_50%]",
   },
   {
-    title: "Jornadas de personagens",
+    eyebrow: "Histórias reflexivas",
+    title: "Parábolas",
     description:
-      "Tenha trilhas especiais com narrações guiadas por personagens biblicos e temas da fé.",
-    icon: PersonSimpleHike,
-    imageLabel: "Imagem das jornadas",
-    videoLabel: "Video das jornadas",
+      "Escute parábolas da Bíblia e aprenda com as histórias contadas por Jesus.",
+    icon: PlayCircle,
+    imageSrc: "/landing_parabolas.png",
+    imageAlt: "Notebook exibindo a secao de parabolas",
+    highlights: ["Parábolas de Jesus em áudio", "Referências para estudo enquanto ouve"],
+    glowClassName: "bg-[radial-gradient(circle,rgba(77,131,212,0.24),transparent_68%)]",
+    imageClassName: "object-[center_35%]",
   },
   {
-    title: "Promessas para o dia",
+    eyebrow: "Vida e fé",
+    title: "Ensinamentos",
     description:
-      "Receba promessas biblicas em áudio para fortalecer sua rotina e tempo de devocional.",
+      "Ouça os ensinamentos de Deus sobre fé, perdão, família e muito mais.",
     icon: HandsPraying,
-    imageLabel: "Imagem das promessas",
-    videoLabel: "Video das promessas",
+    imageSrc: "/landing_ensinamentos.png",
+    imageAlt: "Pessoa ouvindo ensinamentos biblicos no celular",
+    highlights: ["Temas para o dia a dia", "Palavra de conforto em momentos difíceis"],
+    glowClassName: "bg-[radial-gradient(circle,rgba(229,187,102,0.2),transparent_70%)]",
+    imageClassName: "!object-contain object-center scale-[0.92] md:scale-[0.98]",
   },
   {
-    title: "Envio no WhatsApp",
+    eyebrow: "Entrega automática",
+    title: "WhatsApp",
     description:
-      "Ative entregas de capitulos ou promessas direto no WhatsApp todos os dias.",
+      "Ative o envio no WhatsApp para receber diariamente a palavra de Deus.",
     icon: MessageCircleHeart,
-    imageLabel: "Imagem do WhatsApp",
-    videoLabel: "Video do WhatsApp",
+    imageSrc: "/landing_whatsapp.png",
+    imageAlt: "Mockup do envio de conteudo pelo WhatsApp",
+    highlights: ["Comece o dia com uma promessa", "Mais constância na rotina espiritual"],
+    glowClassName: "bg-[radial-gradient(circle,rgba(48,189,124,0.18),transparent_70%)]",
+    imageClassName: "object-[center_2%]",
   },
 ] as const;
 
@@ -56,7 +70,8 @@ const STORE_LINKS = [
     label: "Google Play",
     href: "https://play.google.com/store",
     hint: "Android",
-    available: true,
+    available: false,
+    badge: "Em breve",
   },
   {
     label: "App Store",
@@ -64,6 +79,21 @@ const STORE_LINKS = [
     hint: "iOS",
     available: false,
     badge: "Em breve",
+  },
+] as const;
+
+const SOCIAL_LINKS = [
+  {
+    label: "YouTube",
+    href: "https://www.youtube.com/@Evangelhoemaudio-01",
+  },
+  {
+    label: "Instagram",
+    href: "https://www.instagram.com/evangelhoemaudio",
+  },
+  {
+    label: "Facebook",
+    href: "https://www.facebook.com/profile.php?id=61584976944772&locale=pt_BR",
   },
 ] as const;
 
@@ -89,8 +119,8 @@ export default function HomePage() {
       <div className="mx-auto w-full max-w-6xl px-4 pb-10 pt-28 md:px-6 md:pt-32">
         <header className="fixed inset-x-0 top-0 z-40 border-b border-border/65 bg-card/85 backdrop-blur-md">
           <div className="mx-auto w-full max-w-6xl px-4 py-3 md:px-6">
-            <div className="grid items-center gap-3 sm:grid-cols-[auto_1fr] lg:grid-cols-[auto_1fr_auto]">
-              <Logo className="h-11 w-[180px] sm:h-14 sm:w-[260px]" compact={false} priority />
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 lg:grid-cols-[auto_1fr_auto]">
+              <Logo className="h-10 w-[148px] sm:h-14 sm:w-[260px]" compact={false} priority />
 
               <nav className="hidden items-center justify-center gap-2 lg:flex">
                 <a
@@ -113,7 +143,7 @@ export default function HomePage() {
                 </a>
               </nav>
 
-              <div className="flex flex-wrap items-center justify-start gap-2 sm:justify-end">
+              <div className="flex flex-nowrap items-center justify-end gap-1.5 sm:gap-2">
                 <Link
                   href={APP_ROUTES.login}
                   className="inline-flex h-9 items-center justify-center rounded-full border border-border/70 bg-background/70 px-3 text-xs font-medium text-foreground transition hover:bg-background sm:h-10 sm:px-4 sm:text-sm"
@@ -130,22 +160,22 @@ export default function HomePage() {
               </div>
             </div>
 
-            <nav className="mt-3 flex items-center gap-2 overflow-x-auto pb-1 lg:hidden">
+            <nav className="mt-3 grid grid-cols-3 gap-2 lg:hidden">
               <a
                 href="#funcionalidades"
-                className="shrink-0 rounded-full border border-border/60 bg-background/65 px-3 py-1.5 text-xs font-medium text-foreground"
+                className="inline-flex h-9 items-center justify-center rounded-full border border-border/60 bg-background/65 px-3 text-[11px] font-medium text-foreground sm:text-xs"
               >
                 Funcionalidades
               </a>
               <a
                 href="#planos"
-                className="shrink-0 rounded-full border border-border/60 bg-background/65 px-3 py-1.5 text-xs font-medium text-foreground"
+                className="inline-flex h-9 items-center justify-center rounded-full border border-border/60 bg-background/65 px-3 text-[11px] font-medium text-foreground sm:text-xs"
               >
                 Planos
               </a>
               <a
                 href="#baixar-app"
-                className="shrink-0 rounded-full border border-border/60 bg-background/65 px-3 py-1.5 text-xs font-medium text-foreground"
+                className="inline-flex h-9 items-center justify-center rounded-full border border-border/60 bg-background/65 px-3 text-[11px] font-medium text-foreground sm:text-xs"
               >
                 Baixar app
               </a>
@@ -198,7 +228,7 @@ export default function HomePage() {
               <div className="rounded-2xl border border-border/65 bg-background/55 p-4">
                 <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Conteúdo</p>
                 <p className="mt-2 text-2xl font-semibold text-foreground">Em áudio</p>
-                <p className="mt-1 text-sm text-muted-foreground">Livros, Jornadas, Promessas e parábolas</p>
+                <p className="mt-1 text-sm text-muted-foreground">Livros, Jornadas, Parábolas e muito mais</p>
               </div>
               <div className="rounded-2xl border border-border/65 bg-background/55 p-4">
                 <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Família</p>
@@ -209,51 +239,88 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section id="funcionalidades" className="mt-12 scroll-mt-28">
-          <div className="flex items-end justify-between gap-4">
-            <div>
+        <section id="funcionalidades" className="relative left-1/2 mt-14 w-screen -translate-x-1/2 scroll-mt-28">
+          <div className="mx-auto w-full max-w-6xl px-4 md:px-6">
+            <div className="max-w-3xl">
               <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
                 Funcionalidades
               </p>
-              <h2 className="mt-1 text-3xl font-semibold text-foreground md:text-4xl">
-                Ouça os ensinamentos de Deus em qualquer lugar
+              <h2 className="mt-2 text-3xl font-semibold text-foreground md:text-4xl">
+                Uma jornada espiritual para ouvir, aprender e compartilhar.
               </h2>
+              <p className="mt-3 text-sm leading-6 text-muted-foreground md:text-base">
+                Viva o Evangelho em áudio, em casa, na escola, no trabalho, no trânsito ou onde quiser.
+              </p>
             </div>
           </div>
 
-          <div className="mt-5 grid gap-3 md:grid-cols-2">
-            {FEATURES.map((feature) => (
+          <div className="mt-8 border-y border-black/10 dark:border-border/60">
+            {FEATURES.map((feature, index) => (
               <article
                 key={feature.title}
-                className="rounded-2xl border border-border/65 bg-card/78 p-5 transition hover:border-highlight/35 hover:bg-card"
+                className="relative overflow-hidden border-b border-black/10 bg-[linear-gradient(135deg,rgba(255,250,242,0.98),rgba(244,248,255,0.96)_46%,rgba(252,243,227,0.98))] last:border-b-0 dark:border-border/60 dark:bg-[linear-gradient(135deg,rgba(8,18,33,0.98),rgba(12,28,49,0.95)_44%,rgba(8,16,28,0.98))]"
               >
-                <p className="inline-flex size-10 items-center justify-center rounded-xl bg-highlight/12 text-highlight">
-                  <feature.icon className="size-5" />
-                </p>
-                <h3 className="mt-3 text-xl font-semibold text-foreground">{feature.title}</h3>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">{feature.description}</p>
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(232,191,104,0.16),transparent_24%),radial-gradient(circle_at_82%_50%,rgba(67,111,183,0.14),transparent_30%)] dark:bg-[radial-gradient(circle_at_18%_18%,rgba(232,191,104,0.08),transparent_24%),radial-gradient(circle_at_82%_50%,rgba(67,111,183,0.16),transparent_30%)]" />
+                <div className={`absolute -right-24 top-1/2 h-72 w-72 -translate-y-1/2 blur-3xl ${feature.glowClassName}`} />
 
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  <div className="group aspect-video rounded-xl border border-dashed border-border/70 bg-background/60 p-3 transition hover:border-highlight/40 hover:bg-background/80">
-                    <p className="inline-flex items-center gap-2 text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
-                      <ImageIcon className="size-3.5 text-highlight" />
-                      Imagem
+                <div className="relative mx-auto grid w-full max-w-6xl gap-8 px-4 py-10 md:px-6 lg:grid-cols-[minmax(0,0.76fr)_minmax(0,1.24fr)] lg:items-center lg:gap-8 lg:py-14">
+                  <div className="max-w-xl">
+                    <span className="inline-flex items-center gap-2 rounded-full border border-highlight/40 bg-white/75 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-highlight shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:border-highlight/25 dark:bg-highlight/10 dark:shadow-none">
+                      <feature.icon className="size-3.5" />
+                      {feature.eyebrow}
+                    </span>
+
+                    <h3 className="mt-5 text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
+                      {feature.title}
+                    </h3>
+                    <p className="mt-4 text-base leading-7 text-muted-foreground md:text-lg">
+                      {feature.description}
                     </p>
-                    <p className="mt-2 text-sm font-medium text-foreground">{feature.imageLabel}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      Espaco reservado para screenshot da funcionalidade.
-                    </p>
+
+                    <div className="mt-6 flex flex-wrap gap-3">
+                      {feature.highlights.map((highlight) => (
+                        <span
+                          key={highlight}
+                          className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/70 px-3 py-2 text-sm text-foreground/90 shadow-[0_12px_32px_rgba(15,23,42,0.06)] backdrop-blur-sm dark:border-border/65 dark:bg-background/35 dark:shadow-none"
+                        >
+                          <span className="size-2 rounded-full bg-highlight" />
+                          {highlight}
+                        </span>
+                      ))}
+                    </div>
+
+                    <div className="mt-8 grid gap-3 sm:grid-cols-2">
+                      <div className="rounded-2xl border border-black/10 bg-white/68 p-4 shadow-[0_16px_40px_rgba(15,23,42,0.07)] backdrop-blur-sm dark:border-border/60 dark:bg-background/25 dark:shadow-none">
+                        <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+                          Experiência
+                        </p>
+                        <p className="mt-2 text-lg font-semibold text-foreground">
+                          Interface simples e intuitiva
+                        </p>
+                      </div>
+                      <div className="rounded-2xl border border-black/10 bg-white/68 p-4 shadow-[0_16px_40px_rgba(15,23,42,0.07)] backdrop-blur-sm dark:border-border/60 dark:bg-background/25 dark:shadow-none">
+                        <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+                          Rotina
+                        </p>
+                        <p className="mt-2 text-lg font-semibold text-foreground">
+                          Conteúdo pronto para acompanhar seu dia
+                        </p>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="group aspect-video rounded-xl border border-dashed border-border/70 bg-background/60 p-3 transition hover:border-highlight/40 hover:bg-background/80">
-                    <p className="inline-flex items-center gap-2 text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
-                      <Video className="size-3.5 text-highlight" />
-                      Video
-                    </p>
-                    <p className="mt-2 text-sm font-medium text-foreground">{feature.videoLabel}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      Espaco reservado para demo em video.
-                    </p>
+                  <div className="relative flex min-h-[360px] items-center justify-center md:min-h-[460px] lg:min-h-[560px]">
+                    <div className="relative h-full min-h-[340px] w-full md:min-h-[430px] lg:min-h-[520px]">
+                      <Image
+                        src={feature.imageSrc}
+                        alt={feature.imageAlt}
+                        fill
+                        priority={index === 0}
+                        quality={100}
+                        sizes="(min-width: 1280px) 760px, (min-width: 1024px) 62vw, 100vw"
+                        className={`object-cover drop-shadow-[0_28px_55px_rgba(0,0,0,0.38)] ${feature.imageClassName}`}
+                      />
+                    </div>
                   </div>
                 </div>
               </article>
@@ -272,7 +339,7 @@ export default function HomePage() {
                 Escolha o melhor plano para sua família
               </h2>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground md:text-base">
-                Ao realizar seu cadastro você já começa no período gratuito para testar a plataforma sem compromisso e sem assinatura.
+                Ao realizar seu cadastro você já começa no período gratuito para testar a plataforma sem compromisso.
               </p>
             </div>
 
@@ -302,6 +369,12 @@ export default function HomePage() {
                   </li>
                 ))}
               </ul>
+              <Link
+                href={APP_ROUTES.register}
+                className="mt-5 inline-flex h-11 w-full items-center justify-center rounded-xl border border-highlight/45 bg-highlight px-4 text-sm font-semibold text-background shadow-[0_14px_30px_rgba(229,187,102,0.22)] transition hover:bg-highlight/90"
+              >
+                Assinar plano mensal
+              </Link>
             </article>
 
             <article className="rounded-2xl border border-highlight/35 bg-gradient-to-br from-highlight/12 to-background p-5">
@@ -324,6 +397,12 @@ export default function HomePage() {
                   </li>
                 ))}
               </ul>
+              <Link
+                href={APP_ROUTES.register}
+                className="mt-5 inline-flex h-11 w-full items-center justify-center rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
+              >
+                Assinar plano anual
+              </Link>
             </article>
           </div>
         </section>
@@ -362,6 +441,11 @@ export default function HomePage() {
                           {store.hint}
                         </span>
                         <span className="block text-sm font-semibold text-foreground">{store.label}</span>
+                        {store.badge ? (
+                          <span className="mt-1 inline-flex rounded-full border border-highlight/35 bg-highlight/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-highlight">
+                            {store.badge}
+                          </span>
+                        ) : null}
                       </span>
                       <PlayCircle className="size-4 text-highlight" />
                     </a>
@@ -391,7 +475,7 @@ export default function HomePage() {
       </div>
 
       <footer className="border-t border-border/70 bg-card/70">
-        <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-10 md:grid-cols-3 md:px-6">
+        <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-10 md:grid-cols-5 md:px-6">
           <div>
             <Logo className="h-14 w-[220px]" compact={false} />
             <p className="mt-3 text-sm leading-6 text-muted-foreground">
@@ -429,14 +513,45 @@ export default function HomePage() {
                     {store.label} ({store.hint})
                   </a>
                 ) : (
-                  <span key={store.label} className="inline-flex items-center gap-2 text-muted-foreground/85">
-                    {store.label} ({store.hint})
+                  <span key={store.label} className="flex flex-col items-start gap-1 text-muted-foreground/85">
+                    <span>
+                      {store.label} ({store.hint})
+                    </span>
                     <span className="rounded-full border border-highlight/35 bg-highlight/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-highlight">
                       {store.badge}
                     </span>
                   </span>
                 ),
               )}
+            </div>
+          </div>
+
+          <div>
+            <p className="text-sm font-semibold text-foreground">Redes sociais</p>
+            <div className="mt-3 flex flex-col gap-2 text-sm text-muted-foreground">
+              {SOCIAL_LINKS.map((social) => (
+                <a
+                  key={social.label}
+                  href={social.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="transition hover:text-foreground"
+                >
+                  {social.label}
+                </a>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <p className="text-sm font-semibold text-foreground">Contato</p>
+            <div className="mt-3 flex flex-col gap-2 text-sm text-muted-foreground">
+              <a
+                href="mailto:evangelhoemaudio@gmail.com"
+                className="transition hover:text-foreground"
+              >
+                contato@evangelhoemaudio
+              </a>
             </div>
           </div>
         </div>
