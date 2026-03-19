@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { FEEDBACK_CATEGORIES } from "@/lib/feedbacks";
+
 export const loginSchema = z.object({
   email: z.string().trim().email("Informe um email valido."),
   password: z
@@ -90,4 +92,14 @@ export const subscriptionPixCheckoutSchema = z.object({
     .string()
     .trim()
     .regex(/^\d{11}$/, "Informe um CPF valido com 11 digitos."),
+});
+
+export const feedbackCreateSchema = z.object({
+  category: z.enum(FEEDBACK_CATEGORIES, {
+    errorMap: () => ({
+      message:
+        "A categoria do feedback deve ser bug, melhoria, funcionalidade nova ou comentario geral",
+    }),
+  }),
+  description: z.string().trim().min(1, "Descreva o feedback."),
 });

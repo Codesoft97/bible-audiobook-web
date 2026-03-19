@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { fetchBackend, getBackendAuthHeaders } from "@/lib/backend-api";
 import { parseSession } from "@/lib/auth/session";
 import type { Profile } from "@/lib/auth/types";
+import {
+  applyBackendProxyAuth,
+  fetchBackendWithAutoRefresh,
+} from "@/lib/backend-proxy";
 import { AUTH_COOKIE_NAME, SESSION_COOKIE_NAME } from "@/lib/constants";
 import { hydrateSessionFamily } from "@/lib/family";
 import {
   jsonError,
-  mirrorBackendAuthCookies,
   parseBackendEnvelope,
   persistSession,
 } from "@/lib/server-response";
@@ -21,28 +23,32 @@ export async function POST(request: NextRequest) {
     return jsonError(validation.error.issues[0]?.message ?? "Dados invalidos.", 400);
   }
 
-  const backendResponse = await fetchBackend("/profiles/select", {
+  const result = await fetchBackendWithAutoRefresh(request, "/profiles/select", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...getBackendAuthHeaders(request),
     },
     body: JSON.stringify(validation.data),
   });
-
   const envelope = await parseBackendEnvelope<{
     profile: Profile;
-  }>(backendResponse);
+  }>(result.backendResponse);
 
-  if (!backendResponse.ok || envelope?.status !== "success" || !envelope.data) {
-    return NextResponse.json(envelope, {
-      status: backendResponse.status || 400,
+  if (
+    !result.backendResponse.ok ||
+    envelope?.status !== "success" ||
+    !envelope.data
+  ) {
+    const response = NextResponse.json(envelope, {
+      status: result.backendResponse.status || 400,
     });
+
+    return applyBackendProxyAuth(response, result);
   }
   const selectedProfile = envelope.data.profile;
 
   const session = parseSession(request.cookies.get(SESSION_COOKIE_NAME)?.value);
-  const token = request.cookies.get(AUTH_COOKIE_NAME)?.value;
+  const token = result.fallbackTokens.token ?? request.cookies.get(AUTH_COOKIE_NAME)?.value;
   const sessionWithFamily = session
     ? await hydrateSessionFamily(session, { token })
     : null;
@@ -52,8 +58,6 @@ export async function POST(request: NextRequest) {
       profile: selectedProfile,
     },
   });
-
-  mirrorBackendAuthCookies(response, backendResponse);
 
   if (sessionWithFamily) {
     const updatedProfiles = sessionWithFamily.profiles.some(
@@ -69,5 +73,5 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  return response;
+  return applyBackendProxyAuth(response, result);
 }

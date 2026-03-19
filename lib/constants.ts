@@ -20,6 +20,10 @@ export const PROFILE_LIMITS: Record<ProfileType, number> = {
   child: 1,
 };
 
+export const WHATSAPP_AUDIOBOOKS_ENABLED = false;
+export const WHATSAPP_AUDIOBOOKS_COMING_SOON_MESSAGE =
+  "Estamos terminando o primeiro livro, em breve estara disponivel.";
+
 export const FUTURE_FEATURES = [
   "Biblioteca",
   "Jornadas",

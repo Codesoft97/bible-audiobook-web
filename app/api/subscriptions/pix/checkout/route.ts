@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { fetchBackend, getBackendAuthHeaders } from "@/lib/backend-api";
+import {
+  applyBackendProxyAuth,
+  fetchBackendWithAutoRefresh,
+} from "@/lib/backend-proxy";
 import type {
   SubscriptionPixCheckoutPayload,
   SubscriptionPixCheckoutResponse,
@@ -18,18 +21,23 @@ export async function POST(request: NextRequest) {
 
   const validatedPayload: SubscriptionPixCheckoutPayload = validation.data;
 
-  const backendResponse = await fetchBackend("/subscriptions/pix/checkout", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...getBackendAuthHeaders(request),
+  const result = await fetchBackendWithAutoRefresh(
+    request,
+    "/subscriptions/pix/checkout",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(validatedPayload),
     },
-    body: JSON.stringify(validatedPayload),
+  );
+  const envelope = await parseBackendEnvelope<SubscriptionPixCheckoutResponse>(
+    result.backendResponse,
+  );
+  const response = NextResponse.json(envelope, {
+    status: result.backendResponse.status || 400,
   });
 
-  const envelope = await parseBackendEnvelope<SubscriptionPixCheckoutResponse>(backendResponse);
-
-  return NextResponse.json(envelope, {
-    status: backendResponse.status || 400,
-  });
+  return applyBackendProxyAuth(response, result);
 }

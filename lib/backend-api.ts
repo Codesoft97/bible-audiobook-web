@@ -64,20 +64,18 @@ export function extractCookieValue(setCookieHeader: string | null, cookieName: s
 }
 
 export function resolveBackendToken(response: Response, fallbackToken?: string) {
-  if (fallbackToken) {
-    return fallbackToken;
-  }
-
-  return extractCookieValue(getBackendSetCookie(response), AUTH_COOKIE_NAME) ?? undefined;
+  return (
+    extractCookieValue(getBackendSetCookie(response), AUTH_COOKIE_NAME) ??
+    fallbackToken ??
+    undefined
+  );
 }
 
 export function resolveBackendRefreshToken(response: Response, fallbackRefreshToken?: string) {
-  if (fallbackRefreshToken) {
-    return fallbackRefreshToken;
-  }
-
   return (
-    extractCookieValue(getBackendSetCookie(response), REFRESH_COOKIE_NAME) ?? undefined
+    extractCookieValue(getBackendSetCookie(response), REFRESH_COOKIE_NAME) ??
+    fallbackRefreshToken ??
+    undefined
   );
 }
 
