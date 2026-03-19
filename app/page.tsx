@@ -70,7 +70,7 @@ const STORE_LINKS = [
     label: "Google Play",
     href: "https://play.google.com/store",
     hint: "Android",
-    available: true,
+    available: false,
     badge: "Em breve",
   },
   {
@@ -513,8 +513,10 @@ export default function HomePage() {
                     {store.label} ({store.hint})
                   </a>
                 ) : (
-                  <span key={store.label} className="inline-flex items-center gap-2 text-muted-foreground/85">
-                    {store.label} ({store.hint})
+                  <span key={store.label} className="flex flex-col items-start gap-1 text-muted-foreground/85">
+                    <span>
+                      {store.label} ({store.hint})
+                    </span>
                     <span className="rounded-full border border-highlight/35 bg-highlight/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-highlight">
                       {store.badge}
                     </span>
