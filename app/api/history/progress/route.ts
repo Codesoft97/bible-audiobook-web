@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { fetchBackend, getBackendAuthHeaders } from "@/lib/backend-api";
+import {
+  applyBackendProxyAuth,
+  fetchBackendWithAutoRefresh,
+} from "@/lib/backend-proxy";
 import type { PlaybackProgressPayload, PlaybackProgressSnapshot } from "@/lib/history";
 import { jsonError, parseBackendEnvelope } from "@/lib/server-response";
 
@@ -11,18 +14,19 @@ export async function PUT(request: NextRequest) {
     return jsonError("Payload invalido.", 400);
   }
 
-  const backendResponse = await fetchBackend("/history/progress", {
+  const result = await fetchBackendWithAutoRefresh(request, "/history/progress", {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
-      ...getBackendAuthHeaders(request),
     },
     body: JSON.stringify(payload),
   });
-
-  const envelope = await parseBackendEnvelope<PlaybackProgressSnapshot>(backendResponse);
-
-  return NextResponse.json(envelope, {
-    status: backendResponse.status || 400,
+  const envelope = await parseBackendEnvelope<PlaybackProgressSnapshot>(
+    result.backendResponse,
+  );
+  const response = NextResponse.json(envelope, {
+    status: result.backendResponse.status || 400,
   });
+
+  return applyBackendProxyAuth(response, result);
 }

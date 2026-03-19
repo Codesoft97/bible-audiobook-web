@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { fetchBackend, getBackendAuthHeaders } from "@/lib/backend-api";
+import {
+  applyBackendProxyAuth,
+  fetchBackendWithAutoRefresh,
+} from "@/lib/backend-proxy";
 import type { PlaybackProgressSnapshot } from "@/lib/history";
 import { jsonError, parseBackendEnvelope } from "@/lib/server-response";
 
@@ -29,18 +32,17 @@ export async function GET(
     return jsonError("Rota de histórico invalida.", 404);
   }
 
-  const backendResponse = await fetchBackend(backendPath, {
+  const result = await fetchBackendWithAutoRefresh(request, backendPath, {
     method: "GET",
-    headers: {
-      ...getBackendAuthHeaders(request),
-    },
+  });
+  const envelope = await parseBackendEnvelope<PlaybackProgressSnapshot | null>(
+    result.backendResponse,
+  );
+  const response = NextResponse.json(envelope, {
+    status: result.backendResponse.status || 400,
   });
 
-  const envelope = await parseBackendEnvelope<PlaybackProgressSnapshot | null>(backendResponse);
-
-  return NextResponse.json(envelope, {
-    status: backendResponse.status || 400,
-  });
+  return applyBackendProxyAuth(response, result);
 }
 
 export async function DELETE(
@@ -53,20 +55,23 @@ export async function DELETE(
     return jsonError("Rota de histórico invalida.", 404);
   }
 
-  const backendResponse = await fetchBackend(`/history/${encodeURIComponent(segments[0])}`, {
-    method: "DELETE",
-    headers: {
-      ...getBackendAuthHeaders(request),
+  const result = await fetchBackendWithAutoRefresh(
+    request,
+    `/history/${encodeURIComponent(segments[0])}`,
+    {
+      method: "DELETE",
     },
-  });
+  );
 
-  if (backendResponse.status === 204) {
-    return new NextResponse(null, { status: 204 });
+  if (result.backendResponse.status === 204) {
+    const response = new NextResponse(null, { status: 204 });
+    return applyBackendProxyAuth(response, result);
   }
 
-  const envelope = await parseBackendEnvelope<null>(backendResponse);
-
-  return NextResponse.json(envelope, {
-    status: backendResponse.status || 400,
+  const envelope = await parseBackendEnvelope<null>(result.backendResponse);
+  const response = NextResponse.json(envelope, {
+    status: result.backendResponse.status || 400,
   });
+
+  return applyBackendProxyAuth(response, result);
 }

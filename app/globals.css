@@ -57,9 +57,27 @@
     padding-bottom: 164px;
   }
 
+  .feedback-floating-ui {
+    bottom: 1rem;
+  }
+
   @media (min-width: 768px) {
     body.mini-player-visible {
       padding-bottom: 96px;
+    }
+
+    .feedback-floating-ui {
+      bottom: 1.5rem;
+    }
+  }
+
+  body.mini-player-visible .feedback-floating-ui {
+    bottom: 180px;
+  }
+
+  @media (min-width: 768px) {
+    body.mini-player-visible .feedback-floating-ui {
+      bottom: 112px;
     }
   }
 

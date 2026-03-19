@@ -13,6 +13,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { ApiEnvelope } from "@/lib/auth/types";
+import {
+  WHATSAPP_AUDIOBOOKS_COMING_SOON_MESSAGE,
+  WHATSAPP_AUDIOBOOKS_ENABLED,
+} from "@/lib/constants";
 import type {
   WhatsAppAudiobookSubscription,
   WhatsAppBibleBook,
@@ -91,7 +95,9 @@ const PROMISE_MAX_DATE = (() => {
 })();
 
 export function WhatsAppSubscriptionPanel() {
-  const [mode, setMode] = useState<SubscriptionMode>("audiobooks");
+  const [mode, setMode] = useState<SubscriptionMode>(
+    WHATSAPP_AUDIOBOOKS_ENABLED ? "audiobooks" : "promises",
+  );
   const [books, setBooks] = useState<WhatsAppBibleBook[]>([]);
   const [booksLoaded, setBooksLoaded] = useState(false);
   const [booksLoading, setBooksLoading] = useState(false);
@@ -120,7 +126,12 @@ export function WhatsAppSubscriptionPanel() {
       : hasActivePromises && !hasActiveAudiobooks
         ? "promises"
         : null;
-  const isAudiobooksBlocked = exclusiveActiveMode === "promises";
+  const isAudiobooksComingSoon =
+    !WHATSAPP_AUDIOBOOKS_ENABLED && !hasActiveAudiobooks;
+  const isAudiobooksBlockedByExclusiveMode =
+    WHATSAPP_AUDIOBOOKS_ENABLED && exclusiveActiveMode === "promises";
+  const isAudiobooksBlocked =
+    isAudiobooksComingSoon || isAudiobooksBlockedByExclusiveMode;
   const isPromisesBlocked = exclusiveActiveMode === "audiobooks";
   const isCurrentModeBlocked = mode === "audiobooks" ? isAudiobooksBlocked : isPromisesBlocked;
   const hasActiveForMode = mode === "audiobooks" ? hasActiveAudiobooks : hasActivePromises;
@@ -179,7 +190,11 @@ export function WhatsAppSubscriptionPanel() {
   }, [loadActiveSubscriptions]);
 
   useEffect(() => {
-    if (mode !== "audiobooks" || booksLoaded) {
+    if (
+      mode !== "audiobooks" ||
+      booksLoaded ||
+      !WHATSAPP_AUDIOBOOKS_ENABLED
+    ) {
       return;
     }
 
@@ -238,6 +253,12 @@ export function WhatsAppSubscriptionPanel() {
     setMode(exclusiveActiveMode);
   }, [exclusiveActiveMode, mode]);
 
+  useEffect(() => {
+    if (mode === "audiobooks" && isAudiobooksComingSoon) {
+      setMode("promises");
+    }
+  }, [isAudiobooksComingSoon, mode]);
+
   function handleModeChange(nextMode: SubscriptionMode) {
     if ((nextMode === "audiobooks" && isAudiobooksBlocked) || (nextMode === "promises" && isPromisesBlocked)) {
       return;
@@ -262,7 +283,9 @@ export function WhatsAppSubscriptionPanel() {
 
     if (isCurrentModeBlocked) {
       setSubmitError(
-        mode === "audiobooks"
+        mode === "audiobooks" && isAudiobooksComingSoon
+          ? WHATSAPP_AUDIOBOOKS_COMING_SOON_MESSAGE
+          : mode === "audiobooks"
           ? "Cancele o envio de promessas para ativar livros."
           : "Cancele o envio de livros para ativar promessas.",
       );
@@ -275,7 +298,7 @@ export function WhatsAppSubscriptionPanel() {
     const normalizedWhatsapp = normalizeWhatsappNumber(whatsappNumber);
 
     if (normalizedWhatsapp.length !== 13) {
-      setSubmitError("Informe um numero de WhatsApp valido com DDI e DDD.");
+      setSubmitError("Informe um número de WhatsApp válido com DDI e DDD.");
       return;
     }
 
@@ -283,6 +306,11 @@ export function WhatsAppSubscriptionPanel() {
 
     try {
       if (mode === "audiobooks") {
+        if (!WHATSAPP_AUDIOBOOKS_ENABLED) {
+          setSubmitError(WHATSAPP_AUDIOBOOKS_COMING_SOON_MESSAGE);
+          return;
+        }
+
         const selectedBook = books.find((book) => book.abbrev === selectedBookAbbrev);
 
         if (!selectedBook) {
@@ -421,7 +449,10 @@ export function WhatsAppSubscriptionPanel() {
           Escolha o que deseja receber
         </h3>
         <p className="mt-2 text-sm text-muted-foreground">
-          Um capitulo por dia até terminar o livro escolhido ou promessas diarias até a data que escolher.
+          Um capitulo por dia até terminar o livro ou promessas diarias até a data que escolher.
+        </p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Envios todos os dias as 08:00 horas da manhã.
         </p>
         {exclusiveActiveMode ? (
           <p className="mt-2 text-xs text-muted-foreground">
@@ -452,7 +483,12 @@ export function WhatsAppSubscriptionPanel() {
                 Livros da Biblia
               </p>
               <div className="flex items-center gap-1.5">
-                {isAudiobooksBlocked ? (
+                {isAudiobooksComingSoon ? (
+                  <span className="rounded-full border border-highlight/35 bg-highlight/12 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-highlight">
+                    EM BREVE
+                  </span>
+                ) : null}
+                {isAudiobooksBlockedByExclusiveMode ? (
                   <span className="rounded-full border border-border/50 bg-background/60 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
                     Bloqueado
                   </span>
@@ -472,6 +508,11 @@ export function WhatsAppSubscriptionPanel() {
             <p className="mt-2 text-sm text-muted-foreground">
               Receba 1 capitulo por dia no WhatsApp do livro que escolher.
             </p>
+            {isAudiobooksComingSoon ? (
+              <p className="mt-2 text-xs font-medium text-muted-foreground">
+                {WHATSAPP_AUDIOBOOKS_COMING_SOON_MESSAGE}
+              </p>
+            ) : null}
           </button>
 
           <button

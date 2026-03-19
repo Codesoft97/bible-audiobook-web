@@ -1,20 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { fetchBackend, getBackendAuthHeaders } from "@/lib/backend-api";
+import {
+  applyBackendProxyAuth,
+  fetchBackendWithAutoRefresh,
+} from "@/lib/backend-proxy";
 import type { SubscriptionPlansResponse } from "@/lib/subscriptions";
 import { parseBackendEnvelope } from "@/lib/server-response";
 
 export async function GET(request: NextRequest) {
-  const backendResponse = await fetchBackend("/subscriptions/plans", {
+  const result = await fetchBackendWithAutoRefresh(request, "/subscriptions/plans", {
     method: "GET",
-    headers: {
-      ...getBackendAuthHeaders(request),
-    },
+  });
+  const envelope = await parseBackendEnvelope<SubscriptionPlansResponse>(
+    result.backendResponse,
+  );
+  const response = NextResponse.json(envelope, {
+    status: result.backendResponse.status || 400,
   });
 
-  const envelope = await parseBackendEnvelope<SubscriptionPlansResponse>(backendResponse);
-
-  return NextResponse.json(envelope, {
-    status: backendResponse.status || 400,
-  });
+  return applyBackendProxyAuth(response, result);
 }

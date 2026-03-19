@@ -23,6 +23,7 @@ import {
 import type { LucideIcon } from "@/components/icons";
 
 import { AudiobookBrowser } from "@/components/app/audiobook-browser";
+import { FeedbackFab } from "@/components/app/feedback-fab";
 import { HistoryPanel } from "@/components/app/history-panel";
 import { LogoutButton } from "@/components/app/logout-button";
 import { Logo } from "@/components/logo";
@@ -535,6 +536,8 @@ export function AppShell({
           )}
         </section>
       </div>
+
+      <FeedbackFab />
     </main>
   );
 }
