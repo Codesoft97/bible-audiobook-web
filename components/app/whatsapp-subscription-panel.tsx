@@ -17,6 +17,10 @@ import {
   WHATSAPP_AUDIOBOOKS_COMING_SOON_MESSAGE,
   WHATSAPP_AUDIOBOOKS_ENABLED,
 } from "@/lib/constants";
+import {
+  WHATSAPP_AUDIOBOOK_CONSENT_TEXT_SNAPSHOT,
+  WHATSAPP_PROMISE_CONSENT_TEXT_SNAPSHOT,
+} from "@/lib/whatsapp-consent";
 import type {
   WhatsAppAudiobookSubscription,
   WhatsAppBibleBook,
@@ -117,6 +121,7 @@ export function WhatsAppSubscriptionPanel() {
   const [cancellingMode, setCancellingMode] = useState<SubscriptionMode | null>(null);
   const [submitError, setSubmitError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [consentAccepted, setConsentAccepted] = useState(false);
 
   const hasActiveAudiobooks = activeAudiobookSubscriptions.length > 0;
   const hasActivePromises = activePromiseSubscriptions.length > 0;
@@ -135,6 +140,10 @@ export function WhatsAppSubscriptionPanel() {
   const isPromisesBlocked = exclusiveActiveMode === "audiobooks";
   const isCurrentModeBlocked = mode === "audiobooks" ? isAudiobooksBlocked : isPromisesBlocked;
   const hasActiveForMode = mode === "audiobooks" ? hasActiveAudiobooks : hasActivePromises;
+  const consentTextSnapshot =
+    mode === "audiobooks"
+      ? WHATSAPP_AUDIOBOOK_CONSENT_TEXT_SNAPSHOT
+      : WHATSAPP_PROMISE_CONSENT_TEXT_SNAPSHOT;
 
   const loadActiveSubscriptions = useCallback(async () => {
     setActiveLoading(true);
@@ -259,12 +268,17 @@ export function WhatsAppSubscriptionPanel() {
     }
   }, [isAudiobooksComingSoon, mode]);
 
+  useEffect(() => {
+    setConsentAccepted(false);
+  }, [mode]);
+
   function handleModeChange(nextMode: SubscriptionMode) {
     if ((nextMode === "audiobooks" && isAudiobooksBlocked) || (nextMode === "promises" && isPromisesBlocked)) {
       return;
     }
 
     setMode(nextMode);
+    setConsentAccepted(false);
     setSubmitError("");
     setSuccessMessage("");
   }
@@ -302,6 +316,11 @@ export function WhatsAppSubscriptionPanel() {
       return;
     }
 
+    if (!consentAccepted) {
+      setSubmitError("Voce precisa aceitar o texto de consentimento para ativar o envio.");
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -318,9 +337,6 @@ export function WhatsAppSubscriptionPanel() {
           return;
         }
 
-        const currentChapter = 0;
-        const nextChapter = 1;
-
         const response = await fetch("/api/whatsapp/audiobooks", {
           method: "POST",
           headers: {
@@ -331,8 +347,6 @@ export function WhatsAppSubscriptionPanel() {
             abbrev: selectedBook.abbrev,
             whatsappNumber: normalizedWhatsapp,
             totalChapters: selectedBook.totalChapters,
-            currentChapter,
-            nextChapter,
           }),
         });
         const payload = (await response.json()) as ApiEnvelope<WhatsAppAudiobookSubscription>;
@@ -587,10 +601,16 @@ export function WhatsAppSubscriptionPanel() {
                       WhatsApp: {formatWhatsappNumber(subscription.whatsappNumber)}
                     </p>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      Ativado em: {formatDateTimeLabel(subscription.createdAt)}
+                      Ativado em: {formatDateTimeLabel(subscription.consentAcceptedAt)}
                     </p>
                     <p className="mt-1 text-sm text-muted-foreground">
                       Proximo capitulo: {subscription.nextChapter}
+                    </p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Envio previsto ate: {formatDateLabel(subscription.endDate)}
+                    </p>
+                    <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                      Consentimento registrado: {subscription.consentTextSnapshot}
                     </p>
                   </div>
                 ))
@@ -601,10 +621,13 @@ export function WhatsAppSubscriptionPanel() {
                       WhatsApp: {formatWhatsappNumber(subscription.whatsappNumber)}
                     </p>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      Ativado em: {formatDateTimeLabel(subscription.createdAt)}
+                      Ativado em: {formatDateTimeLabel(subscription.consentAcceptedAt)}
                     </p>
                     <p className="mt-1 text-sm text-muted-foreground">
                       Ativo ate: {formatDateLabel(subscription.endDate)}
+                    </p>
+                    <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                      Consentimento registrado: {subscription.consentTextSnapshot}
                     </p>
                   </div>
                 ))}
@@ -704,11 +727,28 @@ export function WhatsAppSubscriptionPanel() {
               </p>
             </div>
 
+            <div className="rounded-2xl border border-border/60 bg-background/65 p-4">
+              <p className="text-sm font-medium text-foreground">Consentimento</p>
+              <label className="mt-3 flex items-start gap-3 text-sm leading-6 text-muted-foreground">
+                <input
+                  type="checkbox"
+                  checked={consentAccepted}
+                  onChange={(event) => setConsentAccepted(event.target.checked)}
+                  className="mt-1 size-4 rounded border-border/60 text-highlight focus:ring-highlight/35"
+                />
+                <span>{consentTextSnapshot}</span>
+              </label>
+            </div>
+
             <Button
               type="submit"
               className="h-12 rounded-full px-6"
               disabled={
-                submitting || activeLoading || isCurrentModeBlocked || (mode === "promises" && !promiseEndDate)
+                submitting ||
+                activeLoading ||
+                isCurrentModeBlocked ||
+                !consentAccepted ||
+                (mode === "promises" && !promiseEndDate)
               }
             >
               {submitting ? (

@@ -72,14 +72,6 @@ export const whatsappAudiobookSubscribeSchema = z.object({
     .number()
     .int("Total de capitulos invalido.")
     .min(1, "Total de capitulos invalido."),
-  currentChapter: z
-    .number()
-    .int("Capitulo atual invalido.")
-    .min(0, "Capitulo atual invalido."),
-  nextChapter: z
-    .number()
-    .int("Proximo capitulo invalido.")
-    .min(1, "Proximo capitulo invalido."),
 });
 
 export const subscriptionCheckoutSchema = z.object({

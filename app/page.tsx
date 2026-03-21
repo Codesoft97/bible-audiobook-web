@@ -12,7 +12,7 @@ import {
 
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
-import { APP_ROUTES } from "@/lib/constants";
+import { APP_ROUTES, WHATSAPP_FEATURE_ENABLED } from "@/lib/constants";
 
 const FEATURES = [
   {
@@ -113,6 +113,18 @@ const YEARLY_PLAN_FEATURES = [
   "Renovação anual simples",
 ] as const;
 
+const LANDING_FEATURES = FEATURES.filter(
+  (feature) => WHATSAPP_FEATURE_ENABLED || feature.title !== "WhatsApp",
+);
+
+const LANDING_MONTHLY_PLAN_FEATURES = MONTHLY_PLAN_FEATURES.filter(
+  (feature) => WHATSAPP_FEATURE_ENABLED || !feature.includes("WhatsApp"),
+);
+
+const LANDING_HERO_DESCRIPTION = WHATSAPP_FEATURE_ENABLED
+  ? "Biblia em Ã¡udio, jornadas, promessas, parÃ¡bolas e envio no WhatsApp em uma experiÃªncia unica para toda a famÃ­lia."
+  : "Biblia em Ã¡udio, jornadas, promessas e parÃ¡bolas em uma experiÃªncia unica para toda a famÃ­lia.";
+
 export default function HomePage() {
   return (
     <main className="relative min-h-screen overflow-hidden auth-atmosphere">
@@ -193,8 +205,7 @@ export default function HomePage() {
               Ouça, aprenda e viva a Palavra de Deus todos os dias.
             </h1>
             <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground md:text-lg">
-              Biblia em áudio, jornadas, promessas, parábolas e envio no WhatsApp em uma experiência unica
-              para toda a família.
+              {LANDING_HERO_DESCRIPTION}
             </p>
 
             <div className="mt-7 flex flex-wrap items-center gap-3">
@@ -255,7 +266,7 @@ export default function HomePage() {
           </div>
 
           <div className="mt-8 border-y border-black/10 dark:border-border/60">
-            {FEATURES.map((feature, index) => (
+            {LANDING_FEATURES.map((feature, index) => (
               <article
                 key={feature.title}
                 className="relative overflow-hidden border-b border-black/10 bg-[linear-gradient(135deg,rgba(255,250,242,0.98),rgba(244,248,255,0.96)_46%,rgba(252,243,227,0.98))] last:border-b-0 dark:border-border/60 dark:bg-[linear-gradient(135deg,rgba(8,18,33,0.98),rgba(12,28,49,0.95)_44%,rgba(8,16,28,0.98))]"
@@ -357,7 +368,7 @@ export default function HomePage() {
               <p className="mt-3 text-4xl font-semibold text-foreground">R$ 12,90</p>
               <p className="mt-1 text-sm text-muted-foreground">por mês</p>
               <ul className="mt-4 grid gap-2 text-sm">
-                {MONTHLY_PLAN_FEATURES.map((feature) => (
+                {LANDING_MONTHLY_PLAN_FEATURES.map((feature) => (
                   <li
                     key={feature}
                     className="flex items-start gap-2.5 rounded-xl border border-border/60 bg-card/50 px-3 py-2.5 text-foreground/90"

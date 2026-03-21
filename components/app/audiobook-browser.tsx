@@ -21,11 +21,17 @@ import { useJourneySelection } from "@/components/app/hooks/use-journey-selectio
 import { JourneyDetailPanel } from "@/components/app/journey-detail-panel";
 import { JourneyGrid } from "@/components/app/journey-grid";
 import { WhatsAppSubscriptionPanel } from "@/components/app/whatsapp-subscription-panel";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import type { Audiobook, AudiobookBookSummary } from "@/lib/audiobooks";
-import { groupAudiobooksByBook } from "@/lib/audiobooks";
+import type { Audiobook, AudiobookBookSummary, AudiobookTestament } from "@/lib/audiobooks";
+import {
+  formatAudiobookTestamentLabel,
+  groupAudiobookSummariesByTestament,
+  groupAudiobooksByBook,
+} from "@/lib/audiobooks";
 import type { CharacterJourney } from "@/lib/character-journeys";
 import type { HistoryContentType } from "@/lib/history";
+import { WHATSAPP_FEATURE_ENABLED } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 type LibraryView = "books" | "journeys" | "parables" | "teachings" | "promises" | "whatsapp";
@@ -161,6 +167,8 @@ export function AudiobookBrowser({
   onViewChange,
 }: AudiobookBrowserProps) {
   const [query, setQuery] = useState("");
+  const [bookTestamentFilter, setBookTestamentFilter] =
+    useState<AudiobookTestament>("old");
   const deferredQuery = useDeferredValue(query);
 
   const book = useBookSelection(initialAudiobooks);
@@ -192,10 +200,16 @@ export function AudiobookBrowser({
     () =>
       bookSummaries.filter(
         (bookSummary) =>
-          bookSummary.title.toLowerCase().includes(deferredQuery.trim().toLowerCase()) ||
-          bookSummary.slug.toLowerCase().includes(deferredQuery.trim().toLowerCase()),
+          bookSummary.testament === bookTestamentFilter &&
+          (bookSummary.title.toLowerCase().includes(deferredQuery.trim().toLowerCase()) ||
+            bookSummary.slug.toLowerCase().includes(deferredQuery.trim().toLowerCase())),
       ),
-    [bookSummaries, deferredQuery],
+    [bookSummaries, bookTestamentFilter, deferredQuery],
+  );
+
+  const filteredBookSections = useMemo(
+    () => groupAudiobookSummariesByTestament(filteredBooks),
+    [filteredBooks],
   );
 
   const filteredJourneys = useMemo(
@@ -223,6 +237,14 @@ export function AudiobookBrowser({
     clearJourneySelections();
     book.clearBook();
     void book.handleSelectBook(selected);
+  }
+
+  function handleBookTestamentFilterChange(nextFilter: AudiobookTestament) {
+    setBookTestamentFilter(nextFilter);
+
+    if (book.selectedBook && book.selectedBook.testament !== nextFilter) {
+      book.clearBook();
+    }
   }
 
   function handleSelectJourneyLike(selected: CharacterJourney, kind: JourneyLikeView) {
@@ -381,19 +403,44 @@ export function AudiobookBrowser({
                   {!hasPremiumAccess ? <Lock className="size-3.5" /> : null}
                 </span>
               </FilterTab>
-              <FilterTab
-                active={view === "whatsapp"}
-                locked={!hasPremiumAccess}
-                onClick={() => handleTabChange("whatsapp")}
-              >
-                <span className="inline-flex items-center gap-1">
-                  WhatsApp
-                  {!hasPremiumAccess ? <Lock className="size-3.5" /> : null}
-                </span>
-              </FilterTab>
+              {WHATSAPP_FEATURE_ENABLED ? (
+                <FilterTab
+                  active={view === "whatsapp"}
+                  locked={!hasPremiumAccess}
+                  onClick={() => handleTabChange("whatsapp")}
+                >
+                  <span className="inline-flex items-center gap-1">
+                    WhatsApp
+                    {!hasPremiumAccess ? <Lock className="size-3.5" /> : null}
+                  </span>
+                </FilterTab>
+              ) : null}
             </div>
           </div>
         </div>
+
+        {view === "books" ? (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {([
+              { value: "old", label: formatAudiobookTestamentLabel("old") },
+              { value: "new", label: formatAudiobookTestamentLabel("new") },
+            ] as const).map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => handleBookTestamentFilterChange(option.value)}
+                className={cn(
+                  "rounded-full border px-4 py-2 text-sm font-medium transition",
+                  bookTestamentFilter === option.value
+                    ? "border-highlight/55 bg-highlight/12 text-foreground"
+                    : "border-border/60 bg-background/65 text-muted-foreground hover:border-highlight/30 hover:text-foreground",
+                )}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        ) : null}
       </div>
 
       {lockedView ? (
@@ -409,7 +456,7 @@ export function AudiobookBrowser({
               </h2>
               <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
                 No plano free voce acessa apenas os livros da Biblia. Assine para liberar jornadas,
-                parabolas, ensinamentos, promessas, WhatsApp e historico.
+                parabolas, ensinamentos, promessas e historico.
               </p>
             </div>
             <button
@@ -491,13 +538,37 @@ export function AudiobookBrowser({
 
               <div className="space-y-2.5 sm:space-y-3 xl:max-h-[calc(100vh-14rem)] xl:overflow-y-auto xl:pr-2">
                 {view === "books" ? (
-                  <BookGrid
-                    books={filteredBooks}
-                    selectedSlug={book.selectedBook?.slug ?? null}
-                    onSelect={handleSelectBook}
-                    layout="rail"
-                    getCompletionSummary={getBookCompletionSummary}
-                  />
+                  filteredBooks.length > 0 ? (
+                    <div className="space-y-4">
+                      {filteredBookSections.map((section) => (
+                        <div key={section.testament} className="space-y-3">
+                          <div className="flex items-center justify-between gap-3 px-1">
+                            <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                              {section.title}
+                            </p>
+                            <Badge className="border-highlight/30 bg-highlight/10 text-highlight">
+                              {section.books.length} livros
+                            </Badge>
+                          </div>
+                          <BookGrid
+                            books={section.books}
+                            selectedSlug={book.selectedBook?.slug ?? null}
+                            onSelect={handleSelectBook}
+                            layout="rail"
+                            getCompletionSummary={getBookCompletionSummary}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <BookGrid
+                      books={filteredBooks}
+                      selectedSlug={book.selectedBook?.slug ?? null}
+                      onSelect={handleSelectBook}
+                      layout="rail"
+                      getCompletionSummary={getBookCompletionSummary}
+                    />
+                  )
                 ) : (
                   <JourneyGrid
                     journeys={activeJourneyItems}

@@ -7,6 +7,7 @@ import {
   subscriptionCheckoutSchema,
   subscriptionPixCheckoutSchema,
   verifyResetCodeSchema,
+  whatsappAudiobookSubscribeSchema,
   whatsappPromiseSubscribeSchema,
 } from "@/lib/validation";
 
@@ -56,6 +57,17 @@ describe("lib/validation", () => {
     });
 
     expect(result.success).toBe(false);
+  });
+
+  it("valida payload de assinatura de audiobook no WhatsApp", () => {
+    const result = whatsappAudiobookSubscribeSchema.safeParse({
+      book: "Jonas",
+      abbrev: "jn",
+      whatsappNumber: "5511999999999",
+      totalChapters: 4,
+    });
+
+    expect(result.success).toBe(true);
   });
 
   it("valida codigo de reset com 6 digitos", () => {
