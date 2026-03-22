@@ -6,7 +6,11 @@ import type { AudioTrack } from "@/components/app/audio-player";
 import { CompletionBadge } from "@/components/app/completion-badge";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import type { Audiobook, AudiobookBookSummary } from "@/lib/audiobooks";
+import {
+  formatAudiobookTestamentLabel,
+  type Audiobook,
+  type AudiobookBookSummary,
+} from "@/lib/audiobooks";
 
 function buildStreamUrl(trackId: string) {
   return `/api/audiobooks/${encodeURIComponent(trackId)}/stream`;
@@ -88,6 +92,9 @@ export function BookDetailPanel({
               <AudioLines className="size-3.5" />
               Livro selecionado
             </div>
+            <Badge className="border-border/60 bg-background/70 text-foreground">
+              {formatAudiobookTestamentLabel(selectedBook.testament)}
+            </Badge>
             {historyLoaded ? (
               allChaptersCompleted ? (
                 <Badge className="border-success/30 bg-success/10 text-success">

@@ -33,7 +33,7 @@ import { Card } from "@/components/ui/card";
 import type { AppSession } from "@/lib/auth/types";
 import type { Audiobook } from "@/lib/audiobooks";
 import type { CharacterJourney } from "@/lib/character-journeys";
-import { APP_ROUTES } from "@/lib/constants";
+import { APP_ROUTES, WHATSAPP_FEATURE_ENABLED } from "@/lib/constants";
 import { cn, formatPlanLabel } from "@/lib/utils";
 
 type LibraryView = "books" | "journeys" | "parables" | "teachings" | "promises" | "whatsapp";
@@ -206,6 +206,20 @@ export function AppShell({
     }
   }, [activeSidebar, hasPremiumAccess, libraryView]);
 
+  useEffect(() => {
+    if (WHATSAPP_FEATURE_ENABLED) {
+      return;
+    }
+
+    if (libraryView === "whatsapp") {
+      setLibraryView("books");
+    }
+
+    if (activeSidebar === "whatsapp") {
+      setActiveSidebar("books");
+    }
+  }, [activeSidebar, libraryView]);
+
   if (!selectedProfile) {
     return null;
   }
@@ -267,7 +281,9 @@ export function AppShell({
 
           <nav className="mt-5 space-y-1.5">
             <div className="space-y-1.5">
-              {LIBRARY_ITEMS.map((item) => {
+              {LIBRARY_ITEMS
+                .filter((item) => WHATSAPP_FEATURE_ENABLED || item.key !== "whatsapp")
+                .map((item) => {
                 const locked = Boolean(item.premium && !hasPremiumAccess);
 
                 return (

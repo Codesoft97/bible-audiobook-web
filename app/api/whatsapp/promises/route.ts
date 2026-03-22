@@ -5,6 +5,7 @@ import {
   fetchBackendWithAutoRefresh,
 } from "@/lib/backend-proxy";
 import { jsonError, parseBackendEnvelope } from "@/lib/server-response";
+import { buildPromiseSubscribePayload } from "@/lib/whatsapp-consent";
 import type { WhatsAppPromiseSubscription } from "@/lib/whatsapp";
 import { whatsappPromiseSubscribeSchema } from "@/lib/validation";
 
@@ -30,12 +31,17 @@ export async function POST(request: NextRequest) {
     return jsonError(validation.error.issues[0]?.message ?? "Dados invalidos.", 400);
   }
 
+  const backendPayload = buildPromiseSubscribePayload(
+    validation.data,
+    request.headers,
+  );
+
   const result = await fetchBackendWithAutoRefresh(request, "/whatsapp/promises", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(validation.data),
+    body: JSON.stringify(backendPayload),
   });
   const envelope = await parseBackendEnvelope<WhatsAppPromiseSubscription>(
     result.backendResponse,

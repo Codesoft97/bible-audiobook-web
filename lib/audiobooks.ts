@@ -1,6 +1,9 @@
+export type AudiobookTestament = "old" | "new";
+
 export interface Audiobook {
   id: string;
   book: string;
+  testament: AudiobookTestament;
   chapter: number;
   isActive: boolean;
   coverImageUrl: string;
@@ -11,10 +14,17 @@ export interface Audiobook {
 export interface AudiobookBookSummary {
   slug: string;
   title: string;
+  testament: AudiobookTestament;
   totalChapters: number;
   latestChapter: number;
   coverImageUrl: string;
   updatedAt: string;
+}
+
+export interface AudiobookBookSection {
+  testament: AudiobookTestament;
+  title: string;
+  books: AudiobookBookSummary[];
 }
 
 const CANONICAL_BOOKS = [
@@ -159,6 +169,10 @@ const BOOK_ORDER_LOOKUP = new Map<string, number>(
   CANONICAL_BOOKS.map((book, index) => [book, index]),
 );
 
+const BOOK_TESTAMENT_LOOKUP = new Map<string, AudiobookTestament>(
+  CANONICAL_BOOKS.map((book, index) => [book, index < 39 ? "old" : "new"]),
+);
+
 function normalizeBookKey(value: string) {
   return value.toLowerCase().replace(/[\s_-]+/g, "").replace(/[^\da-z]/g, "");
 }
@@ -184,6 +198,21 @@ export function formatBookLabel(slug: string) {
   return BOOK_LABELS[normalizeBookKey(slug)] ?? titleizeSlug(slug);
 }
 
+export function formatAudiobookTestamentLabel(testament: AudiobookTestament) {
+  return testament === "old" ? "Antigo Testamento" : "Novo Testamento";
+}
+
+export function resolveAudiobookTestament(
+  testament: string | null | undefined,
+  bookSlug: string,
+): AudiobookTestament {
+  if (testament === "old" || testament === "new") {
+    return testament;
+  }
+
+  return BOOK_TESTAMENT_LOOKUP.get(normalizeBookKey(bookSlug)) ?? "old";
+}
+
 export function groupAudiobooksByBook(items: Audiobook[]) {
   const groups = new Map<string, Audiobook[]>();
 
@@ -196,10 +225,14 @@ export function groupAudiobooksByBook(items: Audiobook[]) {
   return [...groups.entries()]
     .map(([slug, chapters]) => {
       const sortedChapters = [...chapters].sort((first, second) => first.chapter - second.chapter);
+      const testament =
+        sortedChapters.find((chapter) => chapter.testament === "old" || chapter.testament === "new")
+          ?.testament ?? resolveAudiobookTestament(undefined, slug);
 
       return {
         slug,
         title: formatBookLabel(slug),
+        testament,
         totalChapters: sortedChapters.length,
         latestChapter: sortedChapters[sortedChapters.length - 1]?.chapter ?? 0,
         coverImageUrl: sortedChapters[0]?.coverImageUrl ?? "",
@@ -207,6 +240,16 @@ export function groupAudiobooksByBook(items: Audiobook[]) {
       } satisfies AudiobookBookSummary;
     })
     .sort(sortBooks);
+}
+
+export function groupAudiobookSummariesByTestament(items: AudiobookBookSummary[]) {
+  return (["old", "new"] as const)
+    .map((testament) => ({
+      testament,
+      title: formatAudiobookTestamentLabel(testament),
+      books: items.filter((item) => item.testament === testament),
+    }))
+    .filter((section) => section.books.length > 0) satisfies AudiobookBookSection[];
 }
 
 export function sortAudiobookChapters(items: Audiobook[]) {
