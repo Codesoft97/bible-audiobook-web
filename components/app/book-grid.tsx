@@ -95,14 +95,16 @@ export function BookGrid({
             </div>
 
             <div className="min-w-0 flex-1">
-              <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+              <div className="space-y-2">
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold leading-5 text-foreground">{book.title}</p>
+                  <p className="break-words text-sm font-semibold leading-5 text-foreground">
+                    {book.title}
+                  </p>
                   <p className="mt-1 text-xs text-muted-foreground">
                     Ultimo capitulo: {book.latestChapter}
                   </p>
                 </div>
-                <div className="flex shrink-0 flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {renderBookCompletionBadge(completionSummary)}
                   <Badge>{book.totalChapters} caps</Badge>
                 </div>

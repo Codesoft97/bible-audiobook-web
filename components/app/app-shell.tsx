@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   AlertCircle,
@@ -12,6 +12,7 @@ import {
   Crown,
   Info,
   HandsPraying,
+  HighlighterCircle,
   Lock,
   MessageCircle,
   NotebookIcon,
@@ -32,13 +33,23 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import type { AppSession } from "@/lib/auth/types";
 import type { Audiobook } from "@/lib/audiobooks";
+import type { BibleTextBook, BibleTextReadingState } from "@/lib/bible-text";
 import type { CharacterJourney } from "@/lib/character-journeys";
 import { APP_ROUTES, WHATSAPP_FEATURE_ENABLED } from "@/lib/constants";
 import { cn, formatPlanLabel } from "@/lib/utils";
 
-type LibraryView = "books" | "journeys" | "parables" | "teachings" | "promises" | "whatsapp";
+type LibraryView =
+  | "books"
+  | "bibleText"
+  | "journeys"
+  | "parables"
+  | "teachings"
+  | "promises"
+  | "whatsapp";
 type SidebarKey =
   | "books"
+  | "bibleText"
+  | "bibleHighlights"
   | "journeys"
   | "parables"
   | "teachings"
@@ -65,7 +76,9 @@ const LIBRARY_ITEMS: Array<{
   view: LibraryView;
   premium?: boolean;
 }> = [
-  { key: "books", label: "Livros da Biblia", icon: BookOpenText, view: "books" },
+  { key: "books", label: "Biblia em audio", icon: BookOpenText, view: "books" },
+  { key: "bibleText", label: "Biblia em texto", icon: BookOpenText, view: "bibleText" },
+  { key: "bibleHighlights", label: "Destaques", icon: HighlighterCircle, view: "bibleText" },
   { key: "journeys", label: "Jornadas", icon: PersonSimpleHike, view: "journeys", premium: true },
   { key: "parables", label: "Parabolas", icon: BookOpenText, view: "parables", premium: true },
   { key: "teachings", label: "Ensinamentos", icon: NotebookIcon, view: "teachings", premium: true },
@@ -74,7 +87,7 @@ const LIBRARY_ITEMS: Array<{
 ];
 
 function isPremiumLibraryView(view: LibraryView) {
-  return view !== "books";
+  return view !== "books" && view !== "bibleText";
 }
 
 type RedirectStatus = "success" | "cancel" | "portal";
@@ -123,12 +136,16 @@ function parseRedirectStatus(value: string | null): RedirectStatus | null {
 export function AppShell({
   session,
   initialAudiobooks,
+  initialBibleTextBooks,
+  initialBibleTextReadingState,
   initialCharacterJourneys,
   initialParables,
   initialTeachings,
 }: {
   session: AppSession;
   initialAudiobooks: Audiobook[];
+  initialBibleTextBooks: BibleTextBook[];
+  initialBibleTextReadingState: BibleTextReadingState | null;
   initialCharacterJourneys: CharacterJourney[];
   initialParables: CharacterJourney[];
   initialTeachings: CharacterJourney[];
@@ -139,6 +156,7 @@ export function AppShell({
   const hasPremiumAccess = session.family.plan !== "free";
   const hasActiveSubscription = session.family.plan === "paid";
   const isTrial = session.family.plan === "free_trial";
+  const bibleTextExitGuardRef = useRef<null | (() => Promise<boolean>)>(null);
   const [statusFeedback, setStatusFeedback] = useState<RedirectStatus | null>(null);
   const [libraryView, setLibraryView] = useState<LibraryView>("books");
   const [activeSidebar, setActiveSidebar] = useState<SidebarKey>("books");
@@ -197,7 +215,7 @@ export function AppShell({
       activeSidebar === "promises" ||
       activeSidebar === "whatsapp";
 
-    if (libraryView !== "books") {
+    if (isPremiumLibraryView(libraryView)) {
       setLibraryView("books");
     }
 
@@ -236,7 +254,21 @@ export function AppShell({
     }
   }
 
-  function openSubscription() {
+  async function confirmLeavingBibleText(nextView?: LibraryView) {
+    if (libraryView !== "bibleText" || nextView === "bibleText") {
+      return true;
+    }
+
+    return (await bibleTextExitGuardRef.current?.()) ?? true;
+  }
+
+  async function openSubscription() {
+    const canLeave = await confirmLeavingBibleText();
+
+    if (!canLeave) {
+      return;
+    }
+
     router.push(APP_ROUTES.subscription);
   }
 
@@ -268,6 +300,17 @@ export function AppShell({
 
           <Link
             href={APP_ROUTES.profiles}
+            onClick={async (event) => {
+              event.preventDefault();
+
+              const canLeave = await confirmLeavingBibleText();
+
+              if (!canLeave) {
+                return;
+              }
+
+              router.push(APP_ROUTES.profiles);
+            }}
             className="mt-6 block rounded-[22px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#082a4c]"
             aria-label="Alterar perfil ativo"
           >
@@ -290,10 +333,22 @@ export function AppShell({
                   <button
                     key={item.key}
                     type="button"
-                    onClick={() => {
+                    onClick={async () => {
                       if (locked) {
+                        const canLeave = await confirmLeavingBibleText();
+
+                        if (!canLeave) {
+                          return;
+                        }
+
                         openSubscription();
                         closeSidebarOnMobile();
+                        return;
+                      }
+
+                      const canLeave = await confirmLeavingBibleText(item.view);
+
+                      if (!canLeave) {
                         return;
                       }
 
@@ -332,8 +387,14 @@ export function AppShell({
                 <button
                   key={item.key}
                   type="button"
-                  onClick={() => {
+                  onClick={async () => {
                     if (item.route) {
+                      const canLeave = await confirmLeavingBibleText();
+
+                      if (!canLeave) {
+                        return;
+                      }
+
                       setActiveSidebar(item.key);
                       router.push(item.route);
                       closeSidebarOnMobile();
@@ -341,8 +402,20 @@ export function AppShell({
                     }
 
                     if (locked) {
+                      const canLeave = await confirmLeavingBibleText();
+
+                      if (!canLeave) {
+                        return;
+                      }
+
                       openSubscription();
                       closeSidebarOnMobile();
+                      return;
+                    }
+
+                    const canLeave = await confirmLeavingBibleText();
+
+                    if (!canLeave) {
                       return;
                     }
 
@@ -373,7 +446,11 @@ export function AppShell({
 
           <Link
             href={APP_ROUTES.subscription}
-            onClick={closeSidebarOnMobile}
+            onClick={async (event) => {
+              event.preventDefault();
+              closeSidebarOnMobile();
+              await openSubscription();
+            }}
             className="mt-4 mb-4 block rounded-[20px] border border-highlight/35 bg-highlight/12 p-4 text-primary-foreground transition hover:bg-highlight/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground/55"
           >
             <p className="text-xs uppercase tracking-[0.16em] text-primary-foreground/75">Plano premium</p>
@@ -476,6 +553,17 @@ export function AppShell({
                 <Badge className="bg-highlight/15 text-highlight">{session.profiles.length} perfis</Badge>
                 <Link
                   href={APP_ROUTES.profiles}
+                  onClick={async (event) => {
+                    event.preventDefault();
+
+                    const canLeave = await confirmLeavingBibleText();
+
+                    if (!canLeave) {
+                      return;
+                    }
+
+                    router.push(APP_ROUTES.profiles);
+                  }}
                   className="flex size-11 items-center justify-center rounded-2xl border border-highlight/45 bg-highlight/18 font-semibold text-highlight transition hover:bg-highlight/24 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-highlight/70 focus-visible:ring-offset-2"
                   aria-label="Ir para seleção de perfis"
                 >
@@ -533,15 +621,27 @@ export function AppShell({
           ) : (
             <AudiobookBrowser
               initialAudiobooks={initialAudiobooks}
+              initialBibleTextBooks={initialBibleTextBooks}
+              initialBibleTextReadingState={initialBibleTextReadingState}
               initialCharacterJourneys={initialCharacterJourneys}
               initialParables={initialParables}
               initialTeachings={initialTeachings}
               view={libraryView}
+              bibleTextEntryMode={activeSidebar === "bibleHighlights" ? "highlights" : "reader"}
               hasPremiumAccess={hasPremiumAccess}
               onUpgradeRequest={openSubscription}
-              onViewChange={(view) => {
+              onRegisterBibleTextExitGuard={(guard) => {
+                bibleTextExitGuardRef.current = guard;
+              }}
+              onViewChange={async (view) => {
                 if (!hasPremiumAccess && isPremiumLibraryView(view)) {
                   openSubscription();
+                  return;
+                }
+
+                const canLeave = await confirmLeavingBibleText(view);
+
+                if (!canLeave) {
                   return;
                 }
 

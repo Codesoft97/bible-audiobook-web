@@ -122,8 +122,8 @@ const LANDING_MONTHLY_PLAN_FEATURES = MONTHLY_PLAN_FEATURES.filter(
 );
 
 const LANDING_HERO_DESCRIPTION = WHATSAPP_FEATURE_ENABLED
-  ? "Biblia em Ã¡udio, jornadas, promessas, parÃ¡bolas e envio no WhatsApp em uma experiÃªncia unica para toda a famÃ­lia."
-  : "Biblia em Ã¡udio, jornadas, promessas e parÃ¡bolas em uma experiÃªncia unica para toda a famÃ­lia.";
+  ? "Biblia em áudio, jornadas, promessas, parábolas e envio no WhatsApp em uma experiência única para toda a famí­lia."
+  : "Biblia em áudio, jornadas, promessas e parábolas em uma experiência única para toda a famí­lia.";
 
 export default function HomePage() {
   return (

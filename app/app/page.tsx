@@ -2,6 +2,10 @@ import { redirect } from "next/navigation";
 
 import { AppShell } from "@/components/app/app-shell";
 import { getServerAudiobooks } from "@/lib/audiobooks.server";
+import {
+  getServerBibleTextBooks,
+  getServerBibleTextReadingState,
+} from "@/lib/bible-text.server";
 import { getServerCharacterJourneys } from "@/lib/character-journeys.server";
 import { getServerParables } from "@/lib/parables.server";
 import { getServerTeachings } from "@/lib/teachings.server";
@@ -20,6 +24,8 @@ export default async function AppPage() {
   }
 
   const initialAudiobooks = await getServerAudiobooks();
+  const initialBibleTextBooks = await getServerBibleTextBooks();
+  const initialBibleTextReadingState = await getServerBibleTextReadingState();
   const initialCharacterJourneys = await getServerCharacterJourneys();
   const initialParables = await getServerParables();
   const initialTeachings = await getServerTeachings();
@@ -28,6 +34,8 @@ export default async function AppPage() {
     <AppShell
       session={session}
       initialAudiobooks={initialAudiobooks}
+      initialBibleTextBooks={initialBibleTextBooks}
+      initialBibleTextReadingState={initialBibleTextReadingState}
       initialCharacterJourneys={initialCharacterJourneys}
       initialParables={initialParables}
       initialTeachings={initialTeachings}

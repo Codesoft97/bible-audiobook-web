@@ -1,7 +1,10 @@
 import {
   ArrowClockwise,
   ArrowCounterClockwise,
+  BookmarkSimple,
   BookOpenText,
+  CaretLeft,
+  CaretRight,
   CaretDown,
   CaretUp,
   ChatCircle,
@@ -13,6 +16,7 @@ import {
   GoogleLogo,
   HandsPraying,
   Headphones,
+  HighlighterCircle as HighlighterCircleIcon,
   Image,
   Info,
   Lock,
@@ -47,10 +51,14 @@ export type { IconProps };
 
 export const AlertCircle = WarningCircle;
 export const AudioLines = Waveform;
+export const Bookmark = BookmarkSimple;
 export const CheckCircle2 = CheckCircle;
+export const ChevronLeft = CaretLeft;
+export const ChevronRight = CaretRight;
 export const ChevronDown = CaretDown;
 export const ChevronUp = CaretUp;
 export const Clock3 = ClockCounterClockwise;
+export const HighlighterCircle = HighlighterCircleIcon;
 export const Loader2 = CircleNotch;
 export const LoaderCircle = CircleNotch;
 export const LogOut = SignOut;
