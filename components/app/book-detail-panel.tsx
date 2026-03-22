@@ -54,7 +54,7 @@ export function BookDetailPanel({
             <div className="flex size-12 items-center justify-center rounded-2xl bg-highlight/14 text-highlight">
               <BookOpenText className="size-6" />
             </div>
-            <h3 className="text-xl font-semibold text-foreground sm:text-2xl">Livros da Biblia</h3>
+            <h3 className="text-xl font-semibold text-foreground sm:text-2xl">Biblia em audio</h3>
           </div>
           <p className="text-sm leading-6 text-muted-foreground">
             Escolha um item da lista para liberar os capitulos disponiveis no player.

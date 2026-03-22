@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useDeferredValue, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 
 import {
   BookOpenText,
@@ -12,9 +12,14 @@ import {
   Search,
 } from "@/components/icons";
 
+import { BibleTextBookList } from "@/components/app/bible-text-book-list";
+import { BibleTextDetailPanel } from "@/components/app/bible-text-detail-panel";
+import { BibleTextHighlightsPanel } from "@/components/app/bible-text-highlights-panel";
 import { BiblePromisePanel } from "@/components/app/bible-promise-panel";
+import { useConfirmationModal } from "@/components/app/hooks/use-confirmation-modal";
 import { BookDetailPanel } from "@/components/app/book-detail-panel";
 import { BookGrid } from "@/components/app/book-grid";
+import { useBibleTextSelection } from "@/components/app/hooks/use-bible-text-selection";
 import { useBookSelection } from "@/components/app/hooks/use-book-selection";
 import { useContentCompletionStatus } from "@/components/app/hooks/use-content-completion-status";
 import { useJourneySelection } from "@/components/app/hooks/use-journey-selection";
@@ -29,22 +34,41 @@ import {
   groupAudiobookSummariesByTestament,
   groupAudiobooksByBook,
 } from "@/lib/audiobooks";
+import {
+  formatBibleTextTestamentLabel,
+  sortBibleTextBooks,
+  type BibleTextBook,
+  type BibleTextHighlight,
+  type BibleTextReadingState,
+  type BibleTextTestament,
+} from "@/lib/bible-text";
 import type { CharacterJourney } from "@/lib/character-journeys";
 import type { HistoryContentType } from "@/lib/history";
 import { WHATSAPP_FEATURE_ENABLED } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
-type LibraryView = "books" | "journeys" | "parables" | "teachings" | "promises" | "whatsapp";
+type LibraryView =
+  | "books"
+  | "bibleText"
+  | "journeys"
+  | "parables"
+  | "teachings"
+  | "promises"
+  | "whatsapp";
 type JourneyLikeView = "journeys" | "parables" | "teachings";
 
 interface AudiobookBrowserProps {
   initialAudiobooks: Audiobook[];
+  initialBibleTextBooks: BibleTextBook[];
+  initialBibleTextReadingState: BibleTextReadingState | null;
   initialCharacterJourneys: CharacterJourney[];
   initialParables: CharacterJourney[];
   initialTeachings: CharacterJourney[];
   view: LibraryView;
+  bibleTextEntryMode?: "reader" | "highlights";
   hasPremiumAccess: boolean;
   onUpgradeRequest: () => void;
+  onRegisterBibleTextExitGuard?: (guard: (() => Promise<boolean>) | null) => void;
   onViewChange: (view: LibraryView) => void;
 }
 
@@ -124,7 +148,7 @@ function selectedIcon(view: JourneyLikeView) {
 }
 
 function isPremiumView(view: LibraryView) {
-  return view !== "books";
+  return view !== "books" && view !== "bibleText";
 }
 
 function FilterTab({
@@ -158,20 +182,32 @@ function FilterTab({
 
 export function AudiobookBrowser({
   initialAudiobooks,
+  initialBibleTextBooks,
+  initialBibleTextReadingState,
   initialCharacterJourneys,
   initialParables,
   initialTeachings,
   view,
+  bibleTextEntryMode = "reader",
   hasPremiumAccess,
   onUpgradeRequest,
+  onRegisterBibleTextExitGuard,
   onViewChange,
 }: AudiobookBrowserProps) {
   const [query, setQuery] = useState("");
   const [bookTestamentFilter, setBookTestamentFilter] =
     useState<AudiobookTestament>("old");
+  const [bibleTextTestamentFilter, setBibleTextTestamentFilter] =
+    useState<BibleTextTestament>("old");
   const deferredQuery = useDeferredValue(query);
+  const confirmationModal = useConfirmationModal();
 
   const book = useBookSelection(initialAudiobooks);
+  const bibleText = useBibleTextSelection(
+    initialBibleTextBooks,
+    initialBibleTextReadingState,
+    confirmationModal.requestConfirmation,
+  );
   const { historyLoaded, getContentCompletion } = useContentCompletionStatus();
   const journey = useJourneySelection();
   const parable = useJourneySelection({
@@ -212,6 +248,19 @@ export function AudiobookBrowser({
     [filteredBooks],
   );
 
+  const filteredBibleTextBooks = useMemo(
+    () =>
+      sortBibleTextBooks(
+        initialBibleTextBooks.filter(
+          (item) =>
+            item.testament === bibleTextTestamentFilter &&
+            (item.name.toLowerCase().includes(deferredQuery.trim().toLowerCase()) ||
+              item.abbrev.toLowerCase().includes(deferredQuery.trim().toLowerCase())),
+        ),
+      ),
+    [bibleTextTestamentFilter, deferredQuery, initialBibleTextBooks],
+  );
+
   const filteredJourneys = useMemo(
     () => filterJourneyLikeItems(initialCharacterJourneys, deferredQuery),
     [deferredQuery, initialCharacterJourneys],
@@ -226,6 +275,53 @@ export function AudiobookBrowser({
     () => filterJourneyLikeItems(initialTeachings, deferredQuery),
     [deferredQuery, initialTeachings],
   );
+  const lastReadBook = bibleText.lastRead
+    ? initialBibleTextBooks.find((item) => item.abbrev === bibleText.lastRead?.abbrev) ?? null
+    : null;
+  const lastReadLabel = bibleText.lastRead
+    ? `${lastReadBook?.name ?? bibleText.lastRead.abbrev.toUpperCase()} ${bibleText.lastRead.chapter}:${bibleText.lastRead.verse}`
+    : "";
+  const highlightedVerses = bibleText.chapterHighlights.map((item) => item.verse);
+  const filteredAllHighlights = useMemo(() => {
+    const normalizedQuery = deferredQuery.trim().toLowerCase();
+
+    if (!normalizedQuery) {
+      return bibleText.allHighlights;
+    }
+
+    return bibleText.allHighlights.filter(
+      (item) =>
+        item.book.toLowerCase().includes(normalizedQuery) ||
+        item.abbrev.toLowerCase().includes(normalizedQuery) ||
+        item.text.toLowerCase().includes(normalizedQuery) ||
+        `${item.chapter}:${item.verse}`.includes(normalizedQuery),
+    );
+  }, [bibleText.allHighlights, deferredQuery]);
+
+  useEffect(() => {
+    if (!onRegisterBibleTextExitGuard) {
+      return;
+    }
+
+    onRegisterBibleTextExitGuard(() => bibleText.confirmExitIfNeeded());
+
+    return () => {
+      onRegisterBibleTextExitGuard(null);
+    };
+  }, [bibleText, onRegisterBibleTextExitGuard]);
+
+  useEffect(() => {
+    if (view !== "bibleText") {
+      return;
+    }
+
+    if (bibleTextEntryMode === "highlights") {
+      void bibleText.openAllHighlights();
+      return;
+    }
+
+    bibleText.closeAllHighlights();
+  }, [bibleTextEntryMode, view]);
 
   function clearJourneySelections() {
     journey.clearJourney();
@@ -234,6 +330,7 @@ export function AudiobookBrowser({
   }
 
   function handleSelectBook(selected: AudiobookBookSummary) {
+    bibleText.clearSelection();
     clearJourneySelections();
     book.clearBook();
     void book.handleSelectBook(selected);
@@ -247,7 +344,54 @@ export function AudiobookBrowser({
     }
   }
 
+  function handleBibleTextTestamentFilterChange(nextFilter: BibleTextTestament) {
+    setBibleTextTestamentFilter(nextFilter);
+
+    if (bibleText.selectedBook && bibleText.selectedBook.testament !== nextFilter) {
+      bibleText.clearSelection();
+    }
+  }
+
+  function handleToggleBibleTextBook(selected: BibleTextBook) {
+    clearJourneySelections();
+    book.clearBook();
+    bibleText.toggleBook(selected);
+  }
+
+  function handleSelectBibleTextChapter(selected: BibleTextBook, chapterNumber: number) {
+    clearJourneySelections();
+    book.clearBook();
+    void bibleText.selectChapter(selected, chapterNumber);
+  }
+
+  async function handleResumeBibleTextLastRead() {
+    if (bibleText.lastRead) {
+      const targetBook =
+        initialBibleTextBooks.find((item) => item.abbrev === bibleText.lastRead?.abbrev) ?? null;
+
+      if (targetBook) {
+        setBibleTextTestamentFilter(targetBook.testament);
+      }
+    }
+
+    await bibleText.resumeLastRead();
+  }
+
+  async function handleOpenAllBibleTextHighlights() {
+    clearJourneySelections();
+    book.clearBook();
+    await bibleText.openAllHighlights();
+  }
+
+  async function handleOpenBibleTextHighlight(highlight: BibleTextHighlight) {
+    clearJourneySelections();
+    book.clearBook();
+    setBibleTextTestamentFilter(highlight.testament);
+    await bibleText.openHighlight(highlight);
+  }
+
   function handleSelectJourneyLike(selected: CharacterJourney, kind: JourneyLikeView) {
+    bibleText.clearSelection();
     book.clearBook();
     journey.clearJourney();
     parable.clearJourney();
@@ -269,6 +413,10 @@ export function AudiobookBrowser({
   const resultCount =
     view === "books"
       ? filteredBooks.length
+      : view === "bibleText"
+        ? bibleText.showingAllHighlights
+          ? filteredAllHighlights.length
+          : filteredBibleTextBooks.length
       : view === "journeys"
         ? filteredJourneys.length
         : view === "parables"
@@ -289,12 +437,18 @@ export function AudiobookBrowser({
     : view === "parables"
       ? filteredParables
       : filteredTeachings;
-  const ActiveStoryIcon = view === "books" ? BookOpenText : selectedIcon(view as JourneyLikeView);
+  const ActiveStoryIcon = isJourneyLike ? selectedIcon(view as JourneyLikeView) : BookOpenText;
   const lockedView = isPremiumView(view) && !hasPremiumAccess;
-  const listTitle = view === "books" ? "Lista de livros" : "Lista de conteudos";
+  const listTitle = view === "books"
+    ? "Lista de livros"
+    : view === "bibleText"
+      ? "Navegacão da leitura"
+      : "Lista de conteudos";
   const listDescription = view === "books"
     ? "Selecione um livro para atualizar o player e a fila de capitulos."
-    : "Selecione um item para atualizar o player principal.";
+    : view === "bibleText"
+      ? "Expanda um livro para abrir os capitulos ou use Destaques para revisar versiculos salvos."
+      : "Selecione um item para atualizar o player principal.";
   const selectedJourneyCompletionStatus =
     activeStoryConfig && activeJourneySelection.selectedJourney
       ? getContentCompletion(
@@ -333,8 +487,9 @@ export function AudiobookBrowser({
   }
 
   return (
-    <div className="space-y-6">
-      <div className="rounded-2xl border border-border/60 bg-card/75 px-4 py-4 md:px-5">
+    <>
+      <div className="space-y-6">
+        <div className="rounded-2xl border border-border/60 bg-card/75 px-4 py-4 md:px-5">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           {view === "promises" || view === "whatsapp" ? (
             <div className="w-full rounded-2xl border border-highlight/30 bg-highlight/8 px-4 py-3 text-sm text-muted-foreground xl:max-w-[680px]">
@@ -349,7 +504,11 @@ export function AudiobookBrowser({
                 value={query}
                 placeholder={
                   view === "books"
-                    ? "Buscar por livro, tema ou capitulo"
+                    ? "Buscar por livro, tema ou capitulo em audio"
+                    : view === "bibleText"
+                      ? bibleText.showingAllHighlights
+                        ? "Buscar por livro ou texto destacado"
+                        : "Buscar por livro da Biblia"
                     : "Buscar por personagem, categoria ou perfil"
                 }
                 className="h-12 rounded-full border-border/70 bg-background/80 pl-11"
@@ -361,7 +520,10 @@ export function AudiobookBrowser({
           <div className="-mx-1 overflow-x-auto px-1">
             <div className="inline-flex min-w-max items-center rounded-full bg-accent/75 p-1">
               <FilterTab active={view === "books"} onClick={() => handleTabChange("books")}>
-                Livros da Biblia
+                Biblia em audio
+              </FilterTab>
+              <FilterTab active={view === "bibleText"} onClick={() => handleTabChange("bibleText")}>
+                Biblia em texto
               </FilterTab>
               <FilterTab
                 active={view === "journeys"}
@@ -419,19 +581,28 @@ export function AudiobookBrowser({
           </div>
         </div>
 
-        {view === "books" ? (
+        {view === "books" || view === "bibleText" ? (
           <div className="mt-4 flex flex-wrap gap-2">
-            {([
-              { value: "old", label: formatAudiobookTestamentLabel("old") },
-              { value: "new", label: formatAudiobookTestamentLabel("new") },
-            ] as const).map((option) => (
+            {(view === "books"
+              ? ([
+                  { value: "old", label: formatAudiobookTestamentLabel("old") },
+                  { value: "new", label: formatAudiobookTestamentLabel("new") },
+                ] as const)
+              : ([
+                  { value: "old", label: formatBibleTextTestamentLabel("old") },
+                  { value: "new", label: formatBibleTextTestamentLabel("new") },
+                ] as const)).map((option) => (
               <button
                 key={option.value}
                 type="button"
-                onClick={() => handleBookTestamentFilterChange(option.value)}
+                onClick={() =>
+                  view === "books"
+                    ? handleBookTestamentFilterChange(option.value)
+                    : handleBibleTextTestamentFilterChange(option.value)
+                }
                 className={cn(
                   "rounded-full border px-4 py-2 text-sm font-medium transition",
-                  bookTestamentFilter === option.value
+                  (view === "books" ? bookTestamentFilter : bibleTextTestamentFilter) === option.value
                     ? "border-highlight/55 bg-highlight/12 text-foreground"
                     : "border-border/60 bg-background/65 text-muted-foreground hover:border-highlight/30 hover:text-foreground",
                 )}
@@ -443,8 +614,8 @@ export function AudiobookBrowser({
         ) : null}
       </div>
 
-      {lockedView ? (
-        <section className="rounded-2xl border border-highlight/35 bg-highlight/10 p-5 md:p-6">
+        {lockedView ? (
+          <section className="rounded-2xl border border-highlight/35 bg-highlight/10 p-5 md:p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-highlight">
@@ -455,8 +626,8 @@ export function AudiobookBrowser({
                 Este recurso esta disponivel no plano pago
               </h2>
               <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-                No plano free voce acessa apenas os livros da Biblia. Assine para liberar jornadas,
-                parabolas, ensinamentos, promessas e historico.
+                No plano free voce acessa a Biblia em audio e em texto. Assine para liberar
+                jornadas, parabolas, ensinamentos, promessas e historico.
               </p>
             </div>
             <button
@@ -468,17 +639,17 @@ export function AudiobookBrowser({
               Assinar plano pago
             </button>
           </div>
-        </section>
-      ) : view === "promises" ? (
-        <section className="space-y-4">
-          <BiblePromisePanel />
-        </section>
-      ) : view === "whatsapp" ? (
-        <section className="space-y-4">
-          <WhatsAppSubscriptionPanel />
-        </section>
-      ) : (
-        <section className="rounded-2xl border border-border/60 bg-card/75 p-3 sm:p-4 md:p-5">
+          </section>
+        ) : view === "promises" ? (
+          <section className="space-y-4">
+            <BiblePromisePanel />
+          </section>
+        ) : view === "whatsapp" ? (
+          <section className="space-y-4">
+            <WhatsAppSubscriptionPanel />
+          </section>
+        ) : (
+          <section className="rounded-2xl border border-border/60 bg-card/75 p-3 sm:p-4 md:p-5">
           <div className="grid gap-4 lg:gap-5 xl:grid-cols-[minmax(0,1fr)_380px] xl:items-start">
             <div className="space-y-4 sm:space-y-5">
               <div className="flex flex-wrap items-end justify-between gap-4">
@@ -503,6 +674,46 @@ export function AudiobookBrowser({
                     return getContentCompletion(track.progressContentType, track.progressContentId);
                   }}
                 />
+              ) : view === "bibleText" ? (
+                bibleText.showingAllHighlights ? (
+                  <BibleTextHighlightsPanel
+                    highlights={filteredAllHighlights}
+                    loading={bibleText.allHighlightsLoading}
+                    error={bibleText.allHighlightsError}
+                    onOpenHighlight={handleOpenBibleTextHighlight}
+                  />
+                ) : (
+                  <BibleTextDetailPanel
+                    selectedBook={bibleText.selectedBook}
+                    selectedChapter={bibleText.selectedChapter}
+                    loading={bibleText.chapterLoading}
+                    error={bibleText.chapterError}
+                    readingStateLoading={bibleText.readingStateLoading}
+                    readingStateError={bibleText.readingStateError}
+                    fontScale={bibleText.fontScale}
+                    fontSaving={bibleText.fontSaving}
+                    canDecreaseFont={bibleText.canDecreaseFont}
+                    canIncreaseFont={bibleText.canIncreaseFont}
+                    activeVerseNumber={bibleText.activeVerseNumber}
+                    highlightedVerses={highlightedVerses}
+                    highlightsLoading={bibleText.highlightsLoading}
+                    highlightsError={bibleText.highlightsError}
+                    highlightPendingVerse={bibleText.highlightPendingVerse}
+                    lastRead={bibleText.lastRead}
+                    lastReadLabel={lastReadLabel}
+                    bookmarkSaving={bibleText.bookmarkSaving}
+                    hasPendingBookmark={bibleText.hasPendingBookmark}
+                    onNavigateChapter={(chapterNumber) => bibleText.goToChapter(chapterNumber)}
+                    onDecreaseFont={() => bibleText.adjustFontScale("decrease")}
+                    onIncreaseFont={() => bibleText.adjustFontScale("increase")}
+                    onSelectVerse={(verseNumber) => bibleText.selectVerse(verseNumber)}
+                    onToggleHighlight={(verseNumber) => bibleText.toggleHighlight(verseNumber)}
+                    onSaveBookmark={async () => {
+                      await bibleText.saveBookmark();
+                    }}
+                    onResumeLastRead={() => handleResumeBibleTextLastRead()}
+                  />
+                )
               ) : (
                 <JourneyDetailPanel
                   selectedJourney={activeJourneySelection.selectedJourney}
@@ -569,6 +780,20 @@ export function AudiobookBrowser({
                       getCompletionSummary={getBookCompletionSummary}
                     />
                   )
+                ) : view === "bibleText" ? (
+                  <BibleTextBookList
+                    books={filteredBibleTextBooks}
+                    expandedBookAbbrev={bibleText.expandedBook?.abbrev ?? null}
+                    selectedBookAbbrev={bibleText.selectedBook?.abbrev ?? null}
+                    selectedChapterNumber={bibleText.selectedChapterNumber}
+                    loadingChapterKey={bibleText.loadingChapterKey}
+                    showingAllHighlights={bibleText.showingAllHighlights}
+                    allHighlightsLoading={bibleText.allHighlightsLoading}
+                    allHighlightsCount={bibleText.allHighlights.length}
+                    onToggleBook={handleToggleBibleTextBook}
+                    onOpenHighlights={handleOpenAllBibleTextHighlights}
+                    onSelectChapter={handleSelectBibleTextChapter}
+                  />
                 ) : (
                   <JourneyGrid
                     journeys={activeJourneyItems}
@@ -589,8 +814,10 @@ export function AudiobookBrowser({
               </div>
             </aside>
           </div>
-        </section>
-      )}
-    </div>
+          </section>
+        )}
+      </div>
+      {confirmationModal.confirmationModal}
+    </>
   );
 }
