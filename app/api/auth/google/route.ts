@@ -5,11 +5,11 @@ import { fetchBackend, resolveBackendTokens } from "@/lib/backend-api";
 import type { AuthResponse } from "@/lib/auth/types";
 import { fetchCurrentFamily } from "@/lib/family";
 import { fetchCurrentProfiles } from "@/lib/profiles";
+import { persistSession } from "@/lib/session-response";
 import {
   jsonError,
   mirrorBackendAuthCookies,
   parseBackendEnvelope,
-  persistSession,
 } from "@/lib/server-response";
 
 const schema = z.object({

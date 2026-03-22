@@ -7,7 +7,8 @@ import {
   fetchBackendWithAutoRefresh,
 } from "@/lib/backend-proxy";
 import { hydrateSessionFamily } from "@/lib/family";
-import { jsonError, parseBackendEnvelope, persistSession } from "@/lib/server-response";
+import { persistSession } from "@/lib/session-response";
+import { jsonError, parseBackendEnvelope } from "@/lib/server-response";
 import { profileSchema } from "@/lib/validation";
 import { AUTH_COOKIE_NAME, SESSION_COOKIE_NAME } from "@/lib/constants";
 
