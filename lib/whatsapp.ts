@@ -31,7 +31,7 @@ export interface WhatsAppSubscriptionBase extends WhatsAppConsentMetadata {
   updatedAt: string;
 }
 
-export interface WhatsAppPromiseSubscription extends WhatsAppSubscriptionBase {}
+export type WhatsAppPromiseSubscription = WhatsAppSubscriptionBase;
 
 export interface WhatsAppAudiobookSubscription extends WhatsAppSubscriptionBase {
   book: string;

@@ -8,8 +8,8 @@ import {
   parseJsonSafe,
   resolveBackendTokens,
 } from "@/lib/backend-api";
-import { buildClearedSessionCookie, buildSessionCookie } from "@/lib/auth/session";
-import type { ApiEnvelope, AppSession, SessionTokens } from "@/lib/auth/types";
+import { buildClearedSessionCookie } from "@/lib/auth/session-cookie";
+import type { ApiEnvelope, SessionTokens } from "@/lib/auth/types";
 
 export function jsonError(message: string, status = 400) {
   return NextResponse.json(
@@ -55,11 +55,6 @@ export function mirrorBackendAuthCookies(
   fallbackTokens: Partial<SessionTokens> = {},
 ) {
   return persistAuthTokens(response, resolveBackendTokens(backendResponse, fallbackTokens));
-}
-
-export function persistSession(response: NextResponse, session: AppSession) {
-  response.cookies.set(buildSessionCookie(session));
-  return response;
 }
 
 export function clearAuthState(response: NextResponse) {

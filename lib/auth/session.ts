@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from "crypto";
 
-import { SESSION_COOKIE_NAME } from "@/lib/constants";
+import { buildSerializedSessionCookie } from "@/lib/auth/session-cookie";
 import { env } from "@/lib/env";
 import type { AppSession } from "@/lib/auth/types";
 
@@ -64,25 +64,5 @@ export function parseSession(cookieValue?: string | null) {
 }
 
 export function buildSessionCookie(session: AppSession) {
-  return {
-    name: SESSION_COOKIE_NAME,
-    value: serializeSession(session),
-    httpOnly: true,
-    sameSite: "lax" as const,
-    secure: env.IS_PRODUCTION,
-    path: "/",
-    maxAge: 60 * 60 * 24 * 7,
-  };
-}
-
-export function buildClearedSessionCookie() {
-  return {
-    name: SESSION_COOKIE_NAME,
-    value: "",
-    httpOnly: true,
-    sameSite: "lax" as const,
-    secure: env.IS_PRODUCTION,
-    path: "/",
-    maxAge: 0,
-  };
+  return buildSerializedSessionCookie(serializeSession(session));
 }

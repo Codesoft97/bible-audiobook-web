@@ -4,12 +4,12 @@ import { fetchBackend, resolveBackendTokens } from "@/lib/backend-api";
 import type { AuthResponse } from "@/lib/auth/types";
 import { fetchCurrentFamily } from "@/lib/family";
 import { fetchCurrentProfiles } from "@/lib/profiles";
+import { persistSession } from "@/lib/session-response";
 import { loginSchema } from "@/lib/validation";
 import {
   jsonError,
   mirrorBackendAuthCookies,
   parseBackendEnvelope,
-  persistSession,
 } from "@/lib/server-response";
 
 export async function POST(request: NextRequest) {
