@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   BookOpenText,
@@ -297,6 +297,8 @@ export function AudiobookBrowser({
         `${item.chapter}:${item.verse}`.includes(normalizedQuery),
     );
   }, [bibleText.allHighlights, deferredQuery]);
+  const openAllHighlightsRef = useRef(bibleText.openAllHighlights);
+  const closeAllHighlightsRef = useRef(bibleText.closeAllHighlights);
 
   useEffect(() => {
     if (!onRegisterBibleTextExitGuard) {
@@ -311,16 +313,21 @@ export function AudiobookBrowser({
   }, [bibleText, onRegisterBibleTextExitGuard]);
 
   useEffect(() => {
+    openAllHighlightsRef.current = bibleText.openAllHighlights;
+    closeAllHighlightsRef.current = bibleText.closeAllHighlights;
+  }, [bibleText]);
+
+  useEffect(() => {
     if (view !== "bibleText") {
       return;
     }
 
     if (bibleTextEntryMode === "highlights") {
-      void bibleText.openAllHighlights();
+      void openAllHighlightsRef.current();
       return;
     }
 
-    bibleText.closeAllHighlights();
+    closeAllHighlightsRef.current();
   }, [bibleTextEntryMode, view]);
 
   function clearJourneySelections() {
@@ -709,7 +716,6 @@ export function AudiobookBrowser({
                     lastRead={bibleText.lastRead}
                     lastReadLabel={lastReadLabel}
                     bookmarkSaving={bibleText.bookmarkSaving}
-                    hasPendingBookmark={bibleText.hasPendingBookmark}
                     onNavigateChapter={(chapterNumber) => bibleText.goToChapter(chapterNumber)}
                     onDecreaseFont={() => bibleText.adjustFontScale("decrease")}
                     onIncreaseFont={() => bibleText.adjustFontScale("increase")}

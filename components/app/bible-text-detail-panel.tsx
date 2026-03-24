@@ -44,7 +44,6 @@ interface BibleTextDetailPanelProps {
   lastRead: BibleTextLastRead | null;
   lastReadLabel: string;
   bookmarkSaving: boolean;
-  hasPendingBookmark: boolean;
   onNavigateChapter: (chapterNumber: number) => void | Promise<void>;
   onDecreaseFont: () => void;
   onIncreaseFont: () => void;
@@ -111,7 +110,6 @@ export function BibleTextDetailPanel({
   lastRead,
   lastReadLabel,
   bookmarkSaving,
-  hasPendingBookmark,
   onNavigateChapter,
   onDecreaseFont,
   onIncreaseFont,
