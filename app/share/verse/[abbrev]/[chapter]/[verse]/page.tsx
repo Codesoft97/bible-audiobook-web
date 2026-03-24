@@ -240,7 +240,7 @@ export default async function VerseSharePage({
 
                     <blockquote className="mt-8 rounded-[28px] border border-border/65 bg-background/60 p-6 md:p-7">
                       <p className="text-xl leading-9 text-foreground md:text-2xl md:leading-10">
-                        "{result.data.text}"
+                        &ldquo;{result.data.text}&rdquo;
                       </p>
                       <footer className="mt-5 text-sm font-medium uppercase tracking-[0.16em] text-highlight">
                         {result.data.reference}
