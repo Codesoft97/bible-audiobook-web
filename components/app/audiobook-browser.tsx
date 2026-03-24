@@ -680,7 +680,12 @@ export function AudiobookBrowser({
                     highlights={filteredAllHighlights}
                     loading={bibleText.allHighlightsLoading}
                     error={bibleText.allHighlightsError}
+                    sharePendingKey={bibleText.sharePendingKey}
+                    shareFeedback={bibleText.shareFeedback}
                     onOpenHighlight={handleOpenBibleTextHighlight}
+                    onShareHighlight={async (highlight) => {
+                      await bibleText.shareHighlight(highlight);
+                    }}
                   />
                 ) : (
                   <BibleTextDetailPanel
@@ -699,6 +704,8 @@ export function AudiobookBrowser({
                     highlightsLoading={bibleText.highlightsLoading}
                     highlightsError={bibleText.highlightsError}
                     highlightPendingVerse={bibleText.highlightPendingVerse}
+                    sharePendingKey={bibleText.sharePendingKey}
+                    shareFeedback={bibleText.shareFeedback}
                     lastRead={bibleText.lastRead}
                     lastReadLabel={lastReadLabel}
                     bookmarkSaving={bibleText.bookmarkSaving}
@@ -708,6 +715,9 @@ export function AudiobookBrowser({
                     onIncreaseFont={() => bibleText.adjustFontScale("increase")}
                     onSelectVerse={(verseNumber) => bibleText.selectVerse(verseNumber)}
                     onToggleHighlight={(verseNumber) => bibleText.toggleHighlight(verseNumber)}
+                    onShareVerse={async (verseNumber) => {
+                      await bibleText.shareSelectedVerse(verseNumber);
+                    }}
                     onSaveBookmark={async () => {
                       await bibleText.saveBookmark();
                     }}

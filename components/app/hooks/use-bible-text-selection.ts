@@ -14,6 +14,15 @@ import {
   type BibleTextReadingState,
   type BibleTextReadingStateUpdateInput,
 } from "@/lib/bible-text";
+import {
+  buildBibleVerseShareApiPath,
+  buildBibleVerseShareImageApiPath,
+  buildBibleVerseShareKey,
+  formatBibleVerseShareText,
+  type BibleVerseShareData,
+  type BibleVerseShareFeedback,
+  type BibleVerseShareParams,
+} from "@/lib/verse-share";
 
 const SHARED_CHAPTER_CACHE_LIMIT = 120;
 const SHARED_HIGHLIGHTS_CACHE_LIMIT = 80;
@@ -37,6 +46,11 @@ interface ReadingStateRequestResult {
 
 interface HighlightsRequestResult {
   highlights: BibleTextHighlight[] | null;
+  error: string;
+}
+
+interface ShareRequestResult {
+  share: BibleVerseShareData | null;
   error: string;
 }
 
@@ -502,6 +516,123 @@ function removeChapterHighlights(
   );
 }
 
+function isShareAbortError(error: unknown) {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "name" in error &&
+    (error as { name?: string }).name === "AbortError"
+  );
+}
+
+function sanitizeShareFileName(value: string) {
+  const nextValue = value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  return nextValue || "versiculo";
+}
+
+async function fetchBibleVerseShareRequest(
+  params: BibleVerseShareParams,
+): Promise<ShareRequestResult> {
+  try {
+    const response = await fetch(buildBibleVerseShareApiPath(params), {
+      cache: "no-store",
+    });
+    const payload = (await response.json()) as ApiEnvelope<BibleVerseShareData>;
+
+    if (!response.ok || payload.status !== "success" || !payload.data) {
+      return {
+        share: null,
+        error: payload.message ?? "Nao foi possivel preparar o compartilhamento.",
+      };
+    }
+
+    return {
+      share: payload.data,
+      error: "",
+    };
+  } catch {
+    return {
+      share: null,
+      error: "Nao foi possivel preparar o compartilhamento.",
+    };
+  }
+}
+
+async function fetchBibleVerseShareImageFile(
+  params: BibleVerseShareParams,
+  reference: string,
+) {
+  if (typeof File === "undefined") {
+    return null;
+  }
+
+  try {
+    const response = await fetch(buildBibleVerseShareImageApiPath(params), {
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const blob = await response.blob();
+
+    return new File([blob], `${sanitizeShareFileName(reference)}.png`, {
+      type: blob.type || "image/png",
+    });
+  } catch {
+    return null;
+  }
+}
+
+async function shareBibleVerseWithNativeApi(
+  shareData: BibleVerseShareData,
+  params: BibleVerseShareParams,
+) {
+  const navigatorWithShare = navigator as Navigator & {
+    canShare?: (data: ShareData) => boolean;
+  };
+  const sharePayload = {
+    title: shareData.reference,
+    text: formatBibleVerseShareText(shareData),
+    url: shareData.shareUrl,
+  } satisfies ShareData;
+  const imageFile = await fetchBibleVerseShareImageFile(params, shareData.reference);
+
+  if (imageFile) {
+    const sharePayloadWithFile = {
+      ...sharePayload,
+      files: [imageFile],
+    } satisfies ShareData;
+
+    if (
+      !navigatorWithShare.canShare ||
+      navigatorWithShare.canShare(sharePayloadWithFile)
+    ) {
+      await navigatorWithShare.share(sharePayloadWithFile);
+      return;
+    }
+  }
+
+  await navigatorWithShare.share(sharePayload);
+}
+
+async function copyBibleVerseShareFallback(shareData: BibleVerseShareData) {
+  if (!navigator.clipboard?.writeText) {
+    return false;
+  }
+
+  await navigator.clipboard.writeText(
+    `${formatBibleVerseShareText(shareData)}\n${shareData.shareUrl}`,
+  );
+  return true;
+}
+
 interface SelectChapterOptions {
   preferredVerseNumber?: number | null;
 }
@@ -546,6 +677,9 @@ export function useBibleTextSelection(
   const [allHighlightsLoading, setAllHighlightsLoading] = useState(false);
   const [allHighlightsError, setAllHighlightsError] = useState("");
   const [showingAllHighlights, setShowingAllHighlights] = useState(false);
+  const [sharePendingKey, setSharePendingKey] = useState<string | null>(null);
+  const [shareFeedback, setShareFeedback] =
+    useState<BibleVerseShareFeedback | null>(null);
 
   const currentReadingPosition =
     selectedBook && selectedChapter && activeVerseNumber
@@ -676,6 +810,8 @@ export function useBibleTextSelection(
     setHighlightPendingVerse(null);
     setShowingAllHighlights(false);
     setAllHighlightsError("");
+    setSharePendingKey(null);
+    setShareFeedback(null);
   }
 
   function toggleBook(book: BibleTextBook) {
@@ -689,6 +825,8 @@ export function useBibleTextSelection(
     setHighlightPendingVerse(null);
     setShowingAllHighlights(false);
     setAllHighlightsError("");
+    setSharePendingKey(null);
+    setShareFeedback(null);
     setSelectedBook(book);
 
     setExpandedBook((current) => (
@@ -718,6 +856,8 @@ export function useBibleTextSelection(
     setHighlightPendingVerse(null);
     setShowingAllHighlights(false);
     setAllHighlightsError("");
+    setSharePendingKey(null);
+    setShareFeedback(null);
 
     const cachedChapter = readSharedChapter(chapterKey);
 
@@ -769,17 +909,20 @@ export function useBibleTextSelection(
   }
 
   function selectVerse(verseNumber: number) {
+    setShareFeedback(null);
     setActiveVerseNumber(verseNumber);
   }
 
   function closeAllHighlights() {
     setShowingAllHighlights(false);
     setAllHighlightsError("");
+    setShareFeedback(null);
   }
 
   async function openAllHighlights() {
     setShowingAllHighlights(true);
     setAllHighlightsError("");
+    setShareFeedback(null);
 
     const cachedHighlights = readSharedAllHighlights();
 
@@ -869,6 +1012,7 @@ export function useBibleTextSelection(
 
     setExpandedBook(targetBook);
     setShowingAllHighlights(false);
+    setShareFeedback(null);
     await selectChapter(targetBook, highlight.chapter, {
       preferredVerseNumber: highlight.verse,
     });
@@ -996,6 +1140,95 @@ export function useBibleTextSelection(
       : false;
   }
 
+  async function shareVersePosition(params: BibleVerseShareParams) {
+    const shareKey = buildBibleVerseShareKey(params);
+
+    setSharePendingKey(shareKey);
+    setShareFeedback(null);
+
+    const result = await fetchBibleVerseShareRequest(params);
+
+    if (!result.share) {
+      setShareFeedback({
+        tone: "error",
+        message: result.error,
+      });
+      setSharePendingKey(null);
+      return false;
+    }
+
+    try {
+      if (typeof navigator !== "undefined" && "share" in navigator) {
+        await shareBibleVerseWithNativeApi(result.share, params);
+        return true;
+      }
+
+      const copied = await copyBibleVerseShareFallback(result.share);
+
+      if (copied) {
+        setShareFeedback({
+          tone: "success",
+          message:
+            "O link do versiculo foi copiado para voce compartilhar manualmente.",
+        });
+        return true;
+      }
+
+      setShareFeedback({
+        tone: "error",
+        message: "Seu navegador nao suporta compartilhamento neste dispositivo.",
+      });
+      return false;
+    } catch (error) {
+      if (isShareAbortError(error)) {
+        return false;
+      }
+
+      const copied = await copyBibleVerseShareFallback(result.share);
+
+      if (copied) {
+        setShareFeedback({
+          tone: "success",
+          message:
+            "O compartilhamento nativo falhou, mas o link foi copiado para voce.",
+        });
+        return true;
+      }
+
+      setShareFeedback({
+        tone: "error",
+        message: "Nao foi possivel compartilhar este versiculo.",
+      });
+      return false;
+    } finally {
+      setSharePendingKey(null);
+    }
+  }
+
+  async function shareSelectedVerse(verseNumber = activeVerseNumber) {
+    if (!selectedBook || !selectedChapter || !verseNumber) {
+      setShareFeedback({
+        tone: "error",
+        message: "Selecione um versiculo antes de compartilhar.",
+      });
+      return false;
+    }
+
+    return shareVersePosition({
+      abbrev: selectedBook.abbrev,
+      chapter: selectedChapter.chapter,
+      verse: verseNumber,
+    });
+  }
+
+  async function shareHighlight(highlight: BibleTextHighlight) {
+    return shareVersePosition({
+      abbrev: highlight.abbrev,
+      chapter: highlight.chapter,
+      verse: highlight.verse,
+    });
+  }
+
   return {
     expandedBook,
     selectedBook,
@@ -1022,6 +1255,8 @@ export function useBibleTextSelection(
     allHighlightsLoading,
     allHighlightsError,
     showingAllHighlights,
+    sharePendingKey,
+    shareFeedback,
     toggleBook,
     selectChapter,
     goToChapter,
@@ -1033,6 +1268,8 @@ export function useBibleTextSelection(
     adjustFontScale,
     saveBookmark,
     resumeLastRead,
+    shareSelectedVerse,
+    shareHighlight,
     confirmExitIfNeeded,
     clearSelection,
   };

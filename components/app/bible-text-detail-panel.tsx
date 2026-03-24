@@ -5,6 +5,7 @@ import {
   ChevronRight,
   HighlighterCircle,
   LoaderCircle,
+  ShareNetwork,
 } from "@/components/icons";
 
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +17,10 @@ import {
   type BibleTextChapter,
   type BibleTextLastRead,
 } from "@/lib/bible-text";
+import {
+  buildBibleVerseShareKey,
+  type BibleVerseShareFeedback,
+} from "@/lib/verse-share";
 import { cn } from "@/lib/utils";
 
 interface BibleTextDetailPanelProps {
@@ -34,6 +39,8 @@ interface BibleTextDetailPanelProps {
   highlightsLoading: boolean;
   highlightsError: string;
   highlightPendingVerse: number | null;
+  sharePendingKey: string | null;
+  shareFeedback: BibleVerseShareFeedback | null;
   lastRead: BibleTextLastRead | null;
   lastReadLabel: string;
   bookmarkSaving: boolean;
@@ -43,6 +50,7 @@ interface BibleTextDetailPanelProps {
   onIncreaseFont: () => void;
   onSelectVerse: (verseNumber: number) => void;
   onToggleHighlight: (verseNumber: number) => void | Promise<void>;
+  onShareVerse: (verseNumber: number) => void | Promise<void>;
   onSaveBookmark: () => void | Promise<void>;
   onResumeLastRead: () => void | Promise<void>;
 }
@@ -98,6 +106,8 @@ export function BibleTextDetailPanel({
   highlightsLoading,
   highlightsError,
   highlightPendingVerse,
+  sharePendingKey,
+  shareFeedback,
   lastRead,
   lastReadLabel,
   bookmarkSaving,
@@ -107,6 +117,7 @@ export function BibleTextDetailPanel({
   onIncreaseFont,
   onSelectVerse,
   onToggleHighlight,
+  onShareVerse,
   onSaveBookmark,
   onResumeLastRead,
 }: BibleTextDetailPanelProps) {
@@ -267,6 +278,19 @@ export function BibleTextDetailPanel({
                 {highlightsError}
               </div>
             ) : null}
+
+            {shareFeedback ? (
+              <div
+                className={cn(
+                  "rounded-2xl border px-4 py-3 text-sm",
+                  shareFeedback.tone === "error"
+                    ? "border-destructive/20 bg-destructive/10 text-destructive"
+                    : "border-success/25 bg-success/10 text-foreground",
+                )}
+              >
+                {shareFeedback.message}
+              </div>
+            ) : null}
           </div>
         </div>
       ) : null}
@@ -298,6 +322,13 @@ export function BibleTextDetailPanel({
                   {selectedChapter.verses.map((verse) => {
                     const isActive = activeVerseNumber === verse.number;
                     const isHighlighted = highlightedVerses.includes(verse.number);
+                    const isSharing =
+                      sharePendingKey ===
+                      buildBibleVerseShareKey({
+                        abbrev: selectedChapter.abbrev,
+                        chapter: selectedChapter.chapter,
+                        verse: verse.number,
+                      });
                     const isBookmarked =
                       Boolean(lastRead) &&
                       lastRead!.abbrev === selectedChapter.abbrev &&
@@ -329,26 +360,46 @@ export function BibleTextDetailPanel({
                                 </Badge>
                               ) : null}
                               {isActive ? (
-                                <Button
-                                  variant={isHighlighted ? "primary" : "secondary"}
-                                  size="sm"
-                                  onClick={() => void onToggleHighlight(verse.number)}
-                                  disabled={
-                                    highlightPendingVerse === verse.number || highlightsLoading
-                                  }
-                                >
-                                  {highlightPendingVerse === verse.number ? (
-                                    <>
-                                      <LoaderCircle className="size-4 animate-spin" />
-                                      Salvando...
-                                    </>
-                                  ) : (
-                                    <>
-                                      <HighlighterCircle className="size-4" />
-                                      {isHighlighted ? "Remover destaque" : "Destacar"}
-                                    </>
-                                  )}
-                                </Button>
+                                <>
+                                  <Button
+                                    variant={isHighlighted ? "primary" : "secondary"}
+                                    size="sm"
+                                    onClick={() => void onToggleHighlight(verse.number)}
+                                    disabled={
+                                      highlightPendingVerse === verse.number || highlightsLoading
+                                    }
+                                  >
+                                    {highlightPendingVerse === verse.number ? (
+                                      <>
+                                        <LoaderCircle className="size-4 animate-spin" />
+                                        Salvando...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <HighlighterCircle className="size-4" />
+                                        {isHighlighted ? "Remover destaque" : "Destacar"}
+                                      </>
+                                    )}
+                                  </Button>
+                                  <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={() => void onShareVerse(verse.number)}
+                                    disabled={isSharing}
+                                  >
+                                    {isSharing ? (
+                                      <>
+                                        <LoaderCircle className="size-4 animate-spin" />
+                                        Compartilhando...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <ShareNetwork className="size-4" />
+                                        Compartilhar
+                                      </>
+                                    )}
+                                  </Button>
+                                </>
                               ) : null}
                             </div>
                           ) : null}
