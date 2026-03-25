@@ -58,7 +58,10 @@ export function buildBibleVerseShareApiPath(params: BibleVerseShareParams) {
 }
 
 export function buildBibleVerseShareImageApiPath(params: BibleVerseShareParams) {
-  return `/api/share/verse/image?${buildBibleVerseShareSearchParams(params).toString()}`;
+  return `/api/share/verse/image?${buildBibleVerseShareSearchParams({
+    ...params,
+    bg: params.bg ?? 0,
+  }).toString()}`;
 }
 
 export function formatBibleVerseShareText(
