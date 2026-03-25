@@ -31,6 +31,13 @@ describe("verse share helpers", () => {
         abbrev: "GN",
         chapter: 1,
         verse: 1,
+      }),
+    ).toBe("/api/share/verse/image?abbrev=gn&chapter=1&verse=1&bg=0");
+    expect(
+      buildBibleVerseShareImageApiPath({
+        abbrev: "GN",
+        chapter: 1,
+        verse: 1,
         bg: 3,
       }),
     ).toBe("/api/share/verse/image?abbrev=gn&chapter=1&verse=1&bg=3");
@@ -57,7 +64,7 @@ describe("verse share helpers", () => {
         shareUrl: "https://evangelhoemaudio.com/share/verse/gn/1/1",
       }),
     ).toBe(
-      "https://evangelhoemaudio.com/api/share/verse/image?abbrev=gn&chapter=1&verse=1",
+      "https://evangelhoemaudio.com/api/share/verse/image?abbrev=gn&chapter=1&verse=1&bg=0",
     );
   });
 });
