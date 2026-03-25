@@ -16,9 +16,8 @@ import {
 } from "@/lib/bible-text";
 import {
   buildBibleVerseShareApiPath,
-  buildBibleVerseShareImageApiPath,
   buildBibleVerseShareKey,
-  formatBibleVerseShareText,
+  resolveBibleVerseShareImageUrl,
   type BibleVerseShareData,
   type BibleVerseShareFeedback,
   type BibleVerseShareParams,
@@ -525,16 +524,6 @@ function isShareAbortError(error: unknown) {
   );
 }
 
-function sanitizeShareFileName(value: string) {
-  const nextValue = value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-
-  return nextValue || "versiculo";
-}
-
 async function fetchBibleVerseShareRequest(
   params: BibleVerseShareParams,
 ): Promise<ShareRequestResult> {
@@ -563,63 +552,10 @@ async function fetchBibleVerseShareRequest(
   }
 }
 
-async function fetchBibleVerseShareImageFile(
-  params: BibleVerseShareParams,
-  reference: string,
-) {
-  if (typeof File === "undefined") {
-    return null;
-  }
-
-  try {
-    const response = await fetch(buildBibleVerseShareImageApiPath(params), {
-      cache: "no-store",
-    });
-
-    if (!response.ok) {
-      return null;
-    }
-
-    const blob = await response.blob();
-
-    return new File([blob], `${sanitizeShareFileName(reference)}.png`, {
-      type: blob.type || "image/png",
-    });
-  } catch {
-    return null;
-  }
-}
-
-async function shareBibleVerseWithNativeApi(
-  shareData: BibleVerseShareData,
-  params: BibleVerseShareParams,
-) {
-  const navigatorWithShare = navigator as Navigator & {
-    canShare?: (data: ShareData) => boolean;
-  };
-  const sharePayload = {
-    title: shareData.reference,
-    text: formatBibleVerseShareText(shareData),
-    url: shareData.shareUrl,
-  } satisfies ShareData;
-  const imageFile = await fetchBibleVerseShareImageFile(params, shareData.reference);
-
-  if (imageFile) {
-    const sharePayloadWithFile = {
-      ...sharePayload,
-      files: [imageFile],
-    } satisfies ShareData;
-
-    if (
-      !navigatorWithShare.canShare ||
-      navigatorWithShare.canShare(sharePayloadWithFile)
-    ) {
-      await navigatorWithShare.share(sharePayloadWithFile);
-      return;
-    }
-  }
-
-  await navigatorWithShare.share(sharePayload);
+async function shareBibleVerseWithNativeApi(shareData: BibleVerseShareData) {
+  await navigator.share({
+    url: resolveBibleVerseShareImageUrl(shareData),
+  });
 }
 
 async function copyBibleVerseShareFallback(shareData: BibleVerseShareData) {
@@ -627,9 +563,7 @@ async function copyBibleVerseShareFallback(shareData: BibleVerseShareData) {
     return false;
   }
 
-  await navigator.clipboard.writeText(
-    `${formatBibleVerseShareText(shareData)}\n${shareData.shareUrl}`,
-  );
+  await navigator.clipboard.writeText(resolveBibleVerseShareImageUrl(shareData));
   return true;
 }
 
@@ -1159,7 +1093,7 @@ export function useBibleTextSelection(
 
     try {
       if (typeof navigator !== "undefined" && "share" in navigator) {
-        await shareBibleVerseWithNativeApi(result.share, params);
+        await shareBibleVerseWithNativeApi(result.share);
         return true;
       }
 
@@ -1169,7 +1103,7 @@ export function useBibleTextSelection(
         setShareFeedback({
           tone: "success",
           message:
-            "O link do versiculo foi copiado para voce compartilhar manualmente.",
+            "O link da imagem do versiculo foi copiado para voce compartilhar manualmente.",
         });
         return true;
       }
@@ -1190,7 +1124,7 @@ export function useBibleTextSelection(
         setShareFeedback({
           tone: "success",
           message:
-            "O compartilhamento nativo falhou, mas o link foi copiado para voce.",
+            "O compartilhamento nativo falhou, mas o link da imagem foi copiado para voce.",
         });
         return true;
       }
