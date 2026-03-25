@@ -194,7 +194,7 @@ export default async function VerseSharePage({
       />
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,8,15,0.26),rgba(3,8,15,0.44)_56%,rgba(3,8,15,0.72))]" />
 
-      <div className="relative flex min-h-screen items-end justify-center px-4 pb-8 pt-8 md:pb-12">
+      <div className="relative flex min-h-screen items-end justify-center px-4 pb-16 pt-8 md:pb-12">
         <h1 className="sr-only">{result.data.reference}</h1>
         <Link
           href={APP_ROUTES.root}
