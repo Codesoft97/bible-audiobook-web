@@ -588,8 +588,7 @@ async function fetchBibleVerseShareImageFile(shareData: BibleVerseShareData) {
 }
 
 async function shareBibleVerseWithNativeApi(shareData: BibleVerseShareData) {
-  const imageUrl = resolveBibleVerseShareImageUrl(shareData);
-  const shareText = formatBibleVerseShareText(shareData);
+  const shareText = `${formatBibleVerseShareText(shareData)}\n${shareData.shareUrl}`;
   const imageFile = await fetchBibleVerseShareImageFile(shareData);
   const navigatorWithShare = navigator as Navigator & {
     canShare?: (data: ShareData) => boolean;
@@ -612,7 +611,7 @@ async function shareBibleVerseWithNativeApi(shareData: BibleVerseShareData) {
 
   await navigator.share({
     text: shareText,
-    url: imageUrl,
+    url: shareData.shareUrl,
   });
 }
 
@@ -622,7 +621,7 @@ async function copyBibleVerseShareFallback(shareData: BibleVerseShareData) {
   }
 
   await navigator.clipboard.writeText(
-    `${formatBibleVerseShareText(shareData)}\n${resolveBibleVerseShareImageUrl(shareData)}`,
+    `${formatBibleVerseShareText(shareData)}\n${shareData.shareUrl}\n${resolveBibleVerseShareImageUrl(shareData)}`,
   );
   return true;
 }
@@ -1163,7 +1162,7 @@ export function useBibleTextSelection(
         setShareFeedback({
           tone: "success",
           message:
-            "A imagem e o texto do versiculo foram copiados para voce compartilhar manualmente.",
+            "A imagem continua no compartilhamento e os links do versiculo foram copiados para voce.",
         });
         return true;
       }
@@ -1184,7 +1183,7 @@ export function useBibleTextSelection(
         setShareFeedback({
           tone: "success",
           message:
-            "O compartilhamento nativo falhou, mas a imagem e o texto foram copiados para voce.",
+            "O compartilhamento nativo falhou, mas os links do versiculo foram copiados para voce.",
         });
         return true;
       }

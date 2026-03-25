@@ -1,17 +1,13 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { cache } from "react";
 
-import {
-  BookOpenText,
-  Headphones,
-  ShareNetwork,
-} from "@/components/icons";
-import { Logo } from "@/components/logo";
 import { APP_ROUTES } from "@/lib/constants";
 import { fetchBackend } from "@/lib/backend-api";
 import { parseBackendEnvelope } from "@/lib/server-response";
 import {
+  buildBibleVerseShareImageApiPath,
   formatBibleVerseShareText,
   resolveBibleVerseShareImageUrl,
   type BibleVerseShareData,
@@ -158,148 +154,54 @@ export default async function VerseSharePage({
     resolvedParams.chapter,
     resolvedParams.verse,
   );
+  const displayImagePath = result.data ? buildBibleVerseShareImageApiPath(result.data) : "";
 
-  return (
-    <main className="auth-atmosphere min-h-screen px-4 py-8 md:px-6 md:py-10">
-      <div className="mx-auto flex min-h-[calc(100vh-2rem)] w-full max-w-5xl flex-col justify-center">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <Link href={APP_ROUTES.root} className="inline-flex">
-            <Logo className="h-12 w-[220px]" compact={false} priority />
-          </Link>
-
-          <div className="flex flex-wrap gap-2">
-            <Link
-              href={APP_ROUTES.root}
-              className="inline-flex h-11 items-center justify-center rounded-2xl border border-border/65 bg-background/70 px-5 text-sm font-medium text-foreground transition hover:bg-background"
-            >
-              Conhecer a plataforma
-            </Link>
-            <Link
-              href={APP_ROUTES.login}
-              className="inline-flex h-11 items-center justify-center rounded-2xl bg-primary px-5 text-sm font-medium text-primary-foreground transition hover:bg-primary/90"
-            >
-              Entrar
-            </Link>
+  if (!result.data) {
+    return (
+      <main className="auth-atmosphere min-h-screen px-4 py-8 md:px-6 md:py-10">
+        <div className="mx-auto flex min-h-[calc(100vh-2rem)] w-full max-w-3xl items-center justify-center">
+          <div className="rounded-[28px] border border-border/70 bg-card/88 p-8 text-center shadow-glow">
+            <h1 className="text-3xl font-semibold text-foreground md:text-4xl">
+              Nao foi possivel abrir este versiculo
+            </h1>
+            <p className="mt-4 text-sm leading-7 text-muted-foreground md:text-base">
+              {result.message}
+            </p>
+            <div className="mt-8">
+              <Link
+                href={APP_ROUTES.root}
+                className="inline-flex h-11 items-center justify-center rounded-2xl bg-primary px-5 text-sm font-medium text-primary-foreground transition hover:bg-primary/90"
+              >
+                Conhecer a plataforma
+              </Link>
+            </div>
           </div>
         </div>
+      </main>
+    );
+  }
 
-        <section className="mt-8 overflow-hidden rounded-[32px] border border-border/70 bg-card/88 shadow-glow">
-          <div className="grid gap-0 lg:grid-cols-[0.82fr_1.18fr]">
-            <div className="relative overflow-hidden border-b border-border/60 bg-[linear-gradient(160deg,rgba(229,187,102,0.22),rgba(255,250,242,0.85)_44%,rgba(214,226,245,0.55))] p-6 dark:bg-[linear-gradient(160deg,rgba(229,187,102,0.14),rgba(12,28,49,0.96)_44%,rgba(8,16,28,0.98))] lg:border-b-0 lg:border-r">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(232,191,104,0.2),transparent_22%),radial-gradient(circle_at_84%_14%,rgba(48,91,167,0.16),transparent_26%),radial-gradient(circle_at_52%_100%,rgba(232,191,104,0.14),transparent_34%)]" />
+  return (
+    <main className="relative min-h-screen overflow-hidden bg-[#07101b]">
+      <Image
+        src={displayImagePath}
+        alt={result.data.reference}
+        fill
+        priority
+        unoptimized
+        sizes="100vw"
+        className="object-cover"
+      />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,8,15,0.26),rgba(3,8,15,0.44)_56%,rgba(3,8,15,0.72))]" />
 
-              <div className="relative">
-                <p className="inline-flex items-center gap-2 rounded-full border border-highlight/35 bg-highlight/12 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-highlight">
-                  <ShareNetwork className="size-3.5" />
-                  Compartilhamento de versiculo
-                </p>
-
-                <div className="mt-6 rounded-[28px] border border-border/55 bg-background/70 p-5 backdrop-blur-sm">
-                  <div className="flex items-center gap-3">
-                    <div className="flex size-11 items-center justify-center rounded-2xl bg-highlight/12 text-highlight">
-                      <BookOpenText className="size-5" />
-                    </div>
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">
-                        Evangelho em Audio
-                      </p>
-                      <p className="text-sm font-medium text-foreground">
-                        Biblia em texto para compartilhar
-                      </p>
-                    </div>
-                  </div>
-
-                  <p className="mt-5 text-sm leading-7 text-muted-foreground">
-                    Receba um versiculo pronto para enviar no WhatsApp, nas redes sociais
-                    ou guardar em sua rotina de leitura.
-                  </p>
-
-                  <div className="mt-5 flex flex-wrap gap-2">
-                    <span className="inline-flex items-center gap-2 rounded-full border border-border/65 bg-background/75 px-3 py-1.5 text-xs font-medium text-foreground">
-                      <Headphones className="size-3.5 text-highlight" />
-                      Plataforma com audio e texto
-                    </span>
-                    <span className="inline-flex rounded-full border border-border/65 bg-background/75 px-3 py-1.5 text-xs font-medium text-foreground">
-                      @evangelhoemaudio
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-6 md:p-8 lg:p-10">
-              {result.data ? (
-                <div className="flex h-full flex-col justify-between">
-                  <div>
-                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
-                      {result.data.book} / {result.data.translation.toUpperCase()}
-                    </p>
-                    <h1 className="mt-3 text-3xl font-semibold leading-tight text-foreground md:text-5xl">
-                      {result.data.reference}
-                    </h1>
-
-                    <blockquote className="mt-8 rounded-[28px] border border-border/65 bg-background/60 p-6 md:p-7">
-                      <p className="text-xl leading-9 text-foreground md:text-2xl md:leading-10">
-                        &ldquo;{result.data.text}&rdquo;
-                      </p>
-                      <footer className="mt-5 text-sm font-medium uppercase tracking-[0.16em] text-highlight">
-                        {result.data.reference}
-                      </footer>
-                    </blockquote>
-
-                    <p className="mt-5 text-sm leading-7 text-muted-foreground">
-                      {formatBibleVerseShareText(result.data)}
-                    </p>
-                  </div>
-
-                  <div className="mt-8 flex flex-wrap gap-3">
-                    <a
-                      href={result.data.shareUrl}
-                      className="inline-flex h-11 items-center justify-center rounded-2xl bg-primary px-5 text-sm font-medium text-primary-foreground transition hover:bg-primary/90"
-                    >
-                      Abrir link compartilhavel
-                    </a>
-                    <a
-                      href={resolveBibleVerseShareImageUrl(result.data)}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex h-11 items-center justify-center rounded-2xl border border-border/65 bg-background/70 px-5 text-sm font-medium text-foreground transition hover:bg-background"
-                    >
-                      Abrir imagem do versiculo
-                    </a>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex h-full flex-col justify-center">
-                  <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
-                    Compartilhamento indisponivel
-                  </p>
-                  <h1 className="mt-3 text-3xl font-semibold text-foreground md:text-4xl">
-                    Nao foi possivel abrir este versiculo
-                  </h1>
-                  <p className="mt-4 max-w-2xl text-sm leading-7 text-muted-foreground md:text-base">
-                    {result.message}
-                  </p>
-
-                  <div className="mt-8 flex flex-wrap gap-3">
-                    <Link
-                      href={APP_ROUTES.root}
-                      className="inline-flex h-11 items-center justify-center rounded-2xl bg-primary px-5 text-sm font-medium text-primary-foreground transition hover:bg-primary/90"
-                    >
-                      Ir para o inicio
-                    </Link>
-                    <Link
-                      href={APP_ROUTES.login}
-                      className="inline-flex h-11 items-center justify-center rounded-2xl border border-border/65 bg-background/70 px-5 text-sm font-medium text-foreground transition hover:bg-background"
-                    >
-                      Entrar na plataforma
-                    </Link>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
+      <div className="relative flex min-h-screen items-end justify-center px-4 pb-8 pt-8 md:pb-12">
+        <h1 className="sr-only">{result.data.reference}</h1>
+        <Link
+          href={APP_ROUTES.root}
+          className="inline-flex h-11 items-center justify-center rounded-2xl bg-primary px-5 text-sm font-medium text-primary-foreground shadow-[0_18px_40px_rgba(7,16,27,0.42)] transition hover:bg-primary/90"
+        >
+          Conhecer a plataforma
+        </Link>
       </div>
     </main>
   );
