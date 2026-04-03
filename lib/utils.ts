@@ -10,10 +10,6 @@ export function formatPlanLabel(plan: string) {
     return "Plano Pago";
   }
 
-  if (plan === "free_trial") {
-    return "Periodo de Teste";
-  }
-
   return "Plano Free";
 }
 

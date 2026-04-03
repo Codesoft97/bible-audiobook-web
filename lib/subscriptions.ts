@@ -2,8 +2,8 @@ import type { PlanType } from "@/lib/auth/types";
 
 export type BillingCycle = "monthly" | "annual";
 export type SubscriptionCheckoutPlatform = "web";
-export type SubscriptionBillingSource = "trial" | "stripe" | "google_play" | "apple_app_store" | "none";
-export type SubscriptionBillingType = "trial" | "recurring" | "one_time" | "none";
+export type SubscriptionBillingSource = "stripe" | "google_play" | "apple_app_store" | "none";
+export type SubscriptionBillingType = "recurring" | "one_time" | "none";
 export type SubscriptionManagementChannel = "none" | "stripe" | "google_play" | "apple_app_store";
 export type SubscriptionInAppPlatform = "android" | "ios";
 
@@ -39,7 +39,6 @@ export interface SubscriptionPortalResponse {
 }
 
 export interface SubscriptionPlansResponse {
-  freeTrialDays: number;
   monthlyPrice: number;
   annualPrice: number;
 }
@@ -64,7 +63,4 @@ export interface SubscriptionStatusResponse {
   activeInAppPlatform: SubscriptionInAppPlatform | null;
   activeInAppProductId: string | null;
   hasMultipleActiveRecurringSubscriptions: boolean;
-  freeTrialStartedAt: string | null;
-  freeTrialEndsAt: string | null;
-  freeTrialDaysRemaining: number | null;
 }

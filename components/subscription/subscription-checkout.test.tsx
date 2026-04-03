@@ -63,9 +63,6 @@ function createSubscriptionStatus(
     activeInAppPlatform: "android",
     activeInAppProductId: "premium",
     hasMultipleActiveRecurringSubscriptions: false,
-    freeTrialStartedAt: "2026-03-01T10:00:00.000Z",
-    freeTrialEndsAt: "2026-03-08T10:00:00.000Z",
-    freeTrialDaysRemaining: null,
     ...overrides,
   };
 }
@@ -93,11 +90,7 @@ describe("SubscriptionCheckout", () => {
     expect(
       await screen.findAllByText("Gerencie ou cancele sua assinatura no Google Play."),
     ).toHaveLength(2);
-    expect(
-      screen.getByText(
-        "Esta conta ja possui uma assinatura ativa via Google Play. Gerencie-a no app Android ou na Play Store.",
-      ),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Compra indisponivel")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Gerenciar no Stripe" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Assinar plano mensal" })).not.toBeInTheDocument();
   });
@@ -165,5 +158,53 @@ describe("SubscriptionCheckout", () => {
     expect(
       await screen.findByRole("button", { name: "Gerenciar no Stripe" }),
     ).toBeInTheDocument();
+  });
+
+  it("nao exibe origem quando a conta ainda nao possui assinatura", async () => {
+    vi.spyOn(global, "fetch").mockImplementation(async (input) => {
+      if (input === "/api/subscriptions/me") {
+        return jsonResponse({
+          status: "success",
+          data: createSubscriptionStatus({
+            plan: "free",
+            hasActiveSubscription: false,
+            hasActiveStripeSubscription: false,
+            paidUntil: null,
+            lastPaymentAt: null,
+            lastPaymentProvider: null,
+            billingSource: "none",
+            billingType: "none",
+            managementChannel: "none",
+            managementMessage: null,
+            canManage: false,
+            canCancel: false,
+            canPurchaseOnWeb: false,
+            canPurchaseOnMobile: true,
+            purchaseBlocked: false,
+            purchaseBlockedReason: null,
+            activeInAppPlatform: null,
+            activeInAppProductId: null,
+          }),
+        });
+      }
+
+      throw new Error(`Unexpected fetch: ${String(input)}`);
+    });
+
+    render(
+      <SubscriptionCheckout
+        session={{
+          ...baseSession,
+          family: {
+            ...baseSession.family,
+            plan: "free",
+          },
+        }}
+      />,
+    );
+
+    expect(await screen.findByText("Escolha seu plano")).toBeInTheDocument();
+    expect(screen.queryByText("Origem: none")).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Origem:/)).not.toBeInTheDocument();
   });
 });

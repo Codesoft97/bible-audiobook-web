@@ -10,6 +10,10 @@ vi.mock("next/navigation", () => ({
   }),
 }));
 
+vi.mock("@/components/app/logout-button", () => ({
+  LogoutButton: () => <button type="button">Sair</button>,
+}));
+
 describe("ProfileSelection", () => {
   it("nao quebra quando a sessao chega sem lista de perfis", () => {
     render(
@@ -21,7 +25,7 @@ describe("ProfileSelection", () => {
               familyName: "Familia Silva",
               userName: "Joao",
               email: "joao@email.com",
-              plan: "free_trial",
+              plan: "free",
               authProvider: "local",
               createdAt: "2026-03-18T00:00:00.000Z",
               updatedAt: "2026-03-18T00:00:00.000Z",
