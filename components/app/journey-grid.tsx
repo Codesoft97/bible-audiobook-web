@@ -2,6 +2,7 @@ import Image from "next/image";
 import { PersonSimpleHike } from "@/components/icons";
 import type { LucideIcon } from "@/components/icons";
 
+import { ContentAccessIndicator } from "@/components/app/content-access-indicator";
 import { CompletionBadge } from "@/components/app/completion-badge";
 import type { CharacterJourney } from "@/lib/character-journeys";
 import { Badge } from "@/components/ui/badge";
@@ -88,6 +89,7 @@ export function JourneyGrid({
                   <p className="mt-1 text-xs text-muted-foreground">{journey.categoria}</p>
                 </div>
                 <div className="flex shrink-0 flex-wrap items-center gap-2">
+                  <ContentAccessIndicator isFree={journey.isFree} />
                   <CompletionBadge completed={completionStatus} />
                   <Badge>{journey.duracaoEstimadaMinutos} min</Badge>
                 </div>
@@ -141,6 +143,7 @@ export function JourneyGrid({
                   </div>
                 ) : null}
                 <div className="flex flex-wrap items-center justify-end gap-2">
+                  <ContentAccessIndicator isFree={journey.isFree} />
                   <CompletionBadge completed={completionStatus} />
                   <Badge>{journey.duracaoEstimadaMinutos} min</Badge>
                 </div>

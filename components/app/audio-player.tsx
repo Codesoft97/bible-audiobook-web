@@ -14,6 +14,7 @@ import {
   VolumeX,
 } from "@/components/icons";
 
+import { ContentAccessIndicator } from "@/components/app/content-access-indicator";
 import { CompletionBadge } from "@/components/app/completion-badge";
 import { useAudio } from "@/components/providers/audio-context";
 import type { AudioTrack } from "@/components/providers/audio-context";
@@ -52,9 +53,12 @@ interface AudioPlayerProps {
   title: string;
   description?: string;
   tracks: AudioTrack[];
+  playbackTracks?: AudioTrack[];
   badgeLabel?: string;
   variant?: "default" | "dock";
   getTrackCompletionStatus?: (track: AudioTrack) => boolean | null;
+  canPlayTrack?: (track: AudioTrack) => boolean;
+  onLockedTrackSelect?: (track: AudioTrack) => void;
 }
 
 /* ------------------------------------------------------------------ */
@@ -65,29 +69,37 @@ export function AudioPlayer({
   title,
   description,
   tracks,
+  playbackTracks,
   badgeLabel,
   variant = "default",
   getTrackCompletionStatus,
+  canPlayTrack,
+  onLockedTrackSelect,
 }: AudioPlayerProps) {
   const audio = useAudio();
   const isDock = variant === "dock";
+  const playableTracks = playbackTracks ?? tracks;
 
   // Check if THIS player's playlist is the active one in the global context
-  const isActivePlaylist = isSamePlaylist(audio.playlist, tracks);
-  const activeTrackIndex = isActivePlaylist ? audio.trackIndex : -1;
+  const isActivePlaylist = isSamePlaylist(audio.playlist, playableTracks);
+  const currentTrack = isActivePlaylist ? audio.currentTrack : null;
+  const activeTrackIndex = currentTrack ? tracks.findIndex((track) => track.id === currentTrack.id) : -1;
   const isPlaying = isActivePlaylist && audio.isPlaying;
   const isBuffering = isActivePlaylist && audio.isBuffering;
   const currentTime = isActivePlaylist ? audio.currentTime : 0;
   const duration = isActivePlaylist ? audio.duration : 0;
   const error = isActivePlaylist ? audio.error : "";
-  const currentTrack = isActivePlaylist ? audio.currentTrack : null;
 
   const multiTrack = tracks.length > 1;
-  const hasPrev = activeTrackIndex > 0;
-  const hasNext = activeTrackIndex < tracks.length - 1;
+  const hasPrev = isActivePlaylist && audio.trackIndex > 0;
+  const hasNext = isActivePlaylist && audio.trackIndex < playableTracks.length - 1;
   const canSeek = isActivePlaylist && duration > 0;
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
   const currentTrackCompletionStatus = currentTrack ? getTrackCompletionStatus?.(currentTrack) ?? null : null;
+
+  function resolvePlayableTrackIndex(track: AudioTrack) {
+    return playableTracks.findIndex((item) => item.id === track.id);
+  }
 
   function handlePlay() {
     if (isActivePlaylist) {
@@ -97,15 +109,40 @@ export function AudioPlayer({
         audio.resume();
       }
     } else {
-      audio.play(tracks, 0);
+      if (playableTracks.length === 0) {
+        if (tracks[0]) {
+          onLockedTrackSelect?.(tracks[0]);
+        }
+        return;
+      }
+
+      audio.play(playableTracks, 0);
     }
   }
 
   function handleSelectTrack(index: number) {
+    const track = tracks[index];
+
+    if (!track) {
+      return;
+    }
+
+    if (canPlayTrack && !canPlayTrack(track)) {
+      onLockedTrackSelect?.(track);
+      return;
+    }
+
+    const playbackIndex = resolvePlayableTrackIndex(track);
+
+    if (playbackIndex === -1) {
+      onLockedTrackSelect?.(track);
+      return;
+    }
+
     if (isActivePlaylist) {
-      audio.selectTrack(index);
+      audio.selectTrack(playbackIndex);
     } else {
-      audio.play(tracks, index);
+      audio.play(playableTracks, playbackIndex);
     }
   }
 
@@ -149,6 +186,9 @@ export function AudioPlayer({
               Player
             </div>
             <div className="flex items-center gap-2">
+              {currentTrack?.isFree !== undefined ? (
+                <ContentAccessIndicator isFree={currentTrack.isFree} showLabel />
+              ) : null}
               {badgeLabel && (
                 <Badge className="bg-highlight/10 text-highlight">{badgeLabel}</Badge>
               )}
@@ -354,6 +394,7 @@ export function AudioPlayer({
             const isCurrent = i === activeTrackIndex;
             const isCurrentPlaying = isCurrent && isPlaying;
             const trackCompletionStatus = getTrackCompletionStatus?.(t) ?? null;
+            const trackPlayable = canPlayTrack ? canPlayTrack(t) : true;
 
             return (
               <button
@@ -365,10 +406,14 @@ export function AudioPlayer({
                   isDock
                     ? isCurrent
                       ? "border-highlight/40 bg-primary-foreground/10"
-                      : "border-primary-foreground/12 bg-[#082846] hover:border-highlight/25 hover:bg-primary-foreground/10"
+                      : trackPlayable
+                        ? "border-primary-foreground/12 bg-[#082846] hover:border-highlight/25 hover:bg-primary-foreground/10"
+                        : "border-primary-foreground/12 bg-[#082846] opacity-90"
                     : isCurrent
                       ? "border-highlight/40 bg-accent"
-                      : "border-border/70 bg-background hover:border-highlight/25 hover:bg-background",
+                      : trackPlayable
+                        ? "border-border/70 bg-background hover:border-highlight/25 hover:bg-background"
+                        : "border-border/70 bg-background/90",
                 )}
               >
                 <div className="flex min-w-0 items-center gap-3 sm:gap-4">
@@ -403,6 +448,7 @@ export function AudioPlayer({
                   </div>
                 </div>
                 <div className="flex shrink-0 flex-wrap items-center gap-2 self-start sm:self-center">
+                  {t.isFree !== undefined ? <ContentAccessIndicator isFree={t.isFree} /> : null}
                   <CompletionBadge completed={trackCompletionStatus} />
                   <Badge
                     className={cn(
@@ -415,7 +461,13 @@ export function AudioPlayer({
                           : "bg-highlight/10 text-highlight",
                     )}
                   >
-                    {isCurrentPlaying ? "Tocando" : isCurrent ? "Pausado" : "Ouvir"}
+                    {!trackPlayable
+                      ? "Pago"
+                      : isCurrentPlaying
+                        ? "Tocando"
+                        : isCurrent
+                          ? "Pausado"
+                          : "Ouvir"}
                   </Badge>
                 </div>
               </button>

@@ -15,6 +15,7 @@ import {
   type BibleTextReadingStateUpdateInput,
 } from "@/lib/bible-text";
 import {
+  PAID_PLAN_SHARE_MESSAGE,
   buildBibleVerseShareApiPath,
   buildBibleVerseShareKey,
   formatBibleVerseShareText,
@@ -630,10 +631,16 @@ interface SelectChapterOptions {
   preferredVerseNumber?: number | null;
 }
 
+interface ShareAccessOptions {
+  canShareVerses?: boolean;
+  onShareBlocked?: () => void;
+}
+
 export function useBibleTextSelection(
   initialBooks: BibleTextBook[],
   initialReadingState?: BibleTextReadingState | null,
   requestConfirmation?: (options: ConfirmationModalRequest) => Promise<boolean>,
+  shareAccess?: ShareAccessOptions,
 ) {
   if (initialReadingState && !sharedReadingStateCache) {
     sharedReadingStateCache = initialReadingState;
@@ -642,6 +649,8 @@ export function useBibleTextSelection(
   const seededReadingState = sharedReadingStateCache ?? initialReadingState ?? DEFAULT_READING_STATE;
   const latestRequestedChapterKeyRef = useRef("");
   const latestRequestedHighlightsKeyRef = useRef("");
+  const canShareVerses = shareAccess?.canShareVerses ?? true;
+  const onShareBlocked = shareAccess?.onShareBlocked;
 
   const [expandedBook, setExpandedBook] = useState<BibleTextBook | null>(null);
   const [selectedBook, setSelectedBook] = useState<BibleTextBook | null>(null);
@@ -1134,6 +1143,15 @@ export function useBibleTextSelection(
   }
 
   async function shareVersePosition(params: BibleVerseShareParams) {
+    if (!canShareVerses) {
+      setShareFeedback({
+        tone: "error",
+        message: PAID_PLAN_SHARE_MESSAGE,
+      });
+      onShareBlocked?.();
+      return false;
+    }
+
     const shareKey = buildBibleVerseShareKey(params);
 
     setSharePendingKey(shareKey);

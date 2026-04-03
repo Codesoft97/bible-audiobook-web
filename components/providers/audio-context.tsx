@@ -30,6 +30,7 @@ export interface AudioTrack {
   title: string;
   subtitle?: string;
   src: string;
+  isFree?: boolean;
   progressContentType?: HistoryContentType;
   progressContentId?: string;
 }

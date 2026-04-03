@@ -6,11 +6,18 @@ import type { Audiobook, AudiobookBookSummary } from "@/lib/audiobooks";
 import { sortAudiobookChapters } from "@/lib/audiobooks";
 import { useAudio } from "@/components/providers/audio-context";
 
+interface UseBookSelectionOptions {
+  canPlayChapter?: (chapter: Audiobook) => boolean;
+}
+
 function buildStreamUrl(trackId: string) {
   return `/api/audiobooks/${encodeURIComponent(trackId)}/stream`;
 }
 
-export function useBookSelection(initialAudiobooks: Audiobook[]) {
+export function useBookSelection(
+  initialAudiobooks: Audiobook[],
+  options: UseBookSelectionOptions = {},
+) {
   const audio = useAudio();
 
   const [selectedBook, setSelectedBook] = useState<AudiobookBookSummary | null>(null);
@@ -41,17 +48,23 @@ export function useBookSelection(initialAudiobooks: Audiobook[]) {
       return;
     }
 
-    audio.play(
-      sortedItems.map((chapter, index) => ({
+    const playableTracks = sortedItems
+      .filter((chapter) => (options.canPlayChapter ? options.canPlayChapter(chapter) : true))
+      .map((chapter, index) => ({
         id: chapter.id,
         title: `Capitulo ${chapter.chapter}`,
         subtitle: `Faixa ${index + 1} do livro ${book.title}`,
         src: buildStreamUrl(chapter.id),
-        progressContentType: "bible",
+        isFree: chapter.isFree,
+        progressContentType: "bible" as const,
         progressContentId: chapter.id,
-      })),
-      0,
-    );
+      }));
+
+    if (playableTracks.length > 0) {
+      audio.play(playableTracks, 0);
+    } else {
+      audio.stop();
+    }
 
     setBookLoading(false);
   }

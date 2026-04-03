@@ -3,6 +3,8 @@ import { BookOpenText, ChevronDown, LoaderCircle, PersonSimpleHike } from "@/com
 import type { LucideIcon } from "@/components/icons";
 
 import { CompletionBadge } from "@/components/app/completion-badge";
+import { ContentAccessIndicator } from "@/components/app/content-access-indicator";
+import { PremiumContentCallout } from "@/components/app/premium-content-callout";
 import { AudioPlayer } from "@/components/app/audio-player";
 import { Card } from "@/components/ui/card";
 import {
@@ -10,6 +12,7 @@ import {
   parseBibleReferenceGroups,
 } from "@/lib/bible-references";
 import type { CharacterJourney } from "@/lib/character-journeys";
+import { canConsumeContent } from "@/lib/content-access";
 import type { HistoryContentType } from "@/lib/history";
 
 interface JourneyDetailPanelProps {
@@ -23,6 +26,8 @@ interface JourneyDetailPanelProps {
   progressContentType?: HistoryContentType;
   icon?: LucideIcon;
   completionStatus?: boolean | null;
+  hasPremiumAccess: boolean;
+  onUpgradeRequest: () => void;
 }
 
 export function JourneyDetailPanel({
@@ -36,6 +41,8 @@ export function JourneyDetailPanel({
   progressContentType = "character-journey",
   icon: Icon = PersonSimpleHike,
   completionStatus = null,
+  hasPremiumAccess,
+  onUpgradeRequest,
 }: JourneyDetailPanelProps) {
   if (!selectedJourney) {
     return (
@@ -59,6 +66,7 @@ export function JourneyDetailPanel({
       : [];
   const totalReferencePassages = countBibleReferencePassages(referenceGroups);
   const shouldOpenReferences = totalReferencePassages > 0 && totalReferencePassages <= 4;
+  const canPlaySelectedJourney = canConsumeContent(selectedJourney.isFree, hasPremiumAccess);
 
   return (
     <Card className="rounded-[22px] border-border/70 bg-background/80 p-4 sm:p-5 md:p-6">
@@ -86,6 +94,7 @@ export function JourneyDetailPanel({
               <Icon className="size-3.5" />
               {selectedHeading}
             </div>
+            <ContentAccessIndicator isFree={selectedJourney.isFree} showLabel />
             <CompletionBadge completed={completionStatus} />
           </div>
           <h3 className="text-2xl font-semibold leading-tight text-foreground sm:text-3xl">
@@ -152,6 +161,12 @@ export function JourneyDetailPanel({
           <div className="rounded-2xl border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive">
             {error}
           </div>
+        ) : !canPlaySelectedJourney ? (
+          <PremiumContentCallout
+            title="Assine para ter acesso ao conteúdo em áudio"
+            description="Você pode testar por 7 dias grátis"
+            onUpgradeRequest={onUpgradeRequest}
+          />
         ) : audioUrl ? (
           <AudioPlayer
             title={selectedJourney.titulo}
@@ -162,6 +177,7 @@ export function JourneyDetailPanel({
                 id: selectedJourney.id,
                 title: selectedJourney.titulo,
                 src: audioUrl,
+                isFree: selectedJourney.isFree,
                 progressContentType,
                 progressContentId: selectedJourney.id,
               },

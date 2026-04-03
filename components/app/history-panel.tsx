@@ -19,6 +19,8 @@ import type { ApiEnvelope } from "@/lib/auth/types";
 import type { Audiobook } from "@/lib/audiobooks";
 import { formatBookLabel } from "@/lib/audiobooks";
 import type { CharacterJourney } from "@/lib/character-journeys";
+import { ContentAccessIndicator } from "@/components/app/content-access-indicator";
+import { canConsumeContent } from "@/lib/content-access";
 import type {
   HistoryContentType,
   ListeningHistoryEntry,
@@ -65,6 +67,7 @@ interface HistoryPanelProps {
   initialCharacterJourneys: CharacterJourney[];
   initialParables: CharacterJourney[];
   initialTeachings: CharacterJourney[];
+  hasPremiumAccess: boolean;
   onOpenContent?: (contentType: HistoryContentType) => void;
 }
 
@@ -73,6 +76,7 @@ export function HistoryPanel({
   initialCharacterJourneys,
   initialParables,
   initialTeachings,
+  hasPremiumAccess,
   onOpenContent,
 }: HistoryPanelProps) {
   const [items, setItems] = useState<ListeningHistoryEntry[]>([]);
@@ -174,6 +178,7 @@ export function HistoryPanel({
         title,
         subtitle: "Audiobook biblico",
         coverImageUrl: audiobook?.coverImageUrl ?? "",
+        isFree: audiobook?.isFree ?? null,
       };
     }
 
@@ -184,6 +189,7 @@ export function HistoryPanel({
         title: parable?.titulo ?? "Parabola",
         subtitle: parable?.categoria ?? "Parabola",
         coverImageUrl: parable?.coverImageUrl ?? "",
+        isFree: parable?.isFree ?? null,
       };
     }
 
@@ -194,6 +200,7 @@ export function HistoryPanel({
         title: teaching?.titulo ?? "Ensinamento",
         subtitle: teaching?.categoria ?? "Ensinamento",
         coverImageUrl: teaching?.coverImageUrl ?? "",
+        isFree: teaching?.isFree ?? null,
       };
     }
 
@@ -203,6 +210,7 @@ export function HistoryPanel({
       title: journey?.titulo ?? "Jornada de personagem",
       subtitle: journey?.categoria ?? "Jornada de personagem",
       coverImageUrl: journey?.coverImageUrl ?? "",
+      isFree: journey?.isFree ?? null,
     };
   }
 
@@ -218,6 +226,11 @@ export function HistoryPanel({
             <h2 className="mt-1 text-3xl font-semibold text-foreground md:text-[2.15rem]">
               Continue de onde parou
             </h2>
+            {!hasPremiumAccess ? (
+              <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
+                No plano free voce pode revisar seu historico, mas os itens pagos continuam bloqueados para reproducao.
+              </p>
+            ) : null}
             <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
               Cada perfil possui seu próprio histórico de conteúdos reproduzidos.
             </p>
@@ -263,6 +276,10 @@ export function HistoryPanel({
                 ? Math.min(100, (item.currentPositionSeconds / item.totalDurationSeconds) * 100)
                 : 0;
             const metadata = readContentMetadata(item);
+            const canConsumeItem =
+              metadata.isFree === null
+                ? hasPremiumAccess
+                : canConsumeContent(metadata.isFree, hasPremiumAccess);
 
             return (
               <Card key={item.id} className="rounded-[20px] border-border/70 bg-background/70 p-4">
@@ -315,6 +332,14 @@ export function HistoryPanel({
                   </div>
 
                   <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
+                    {metadata.isFree !== null ? (
+                      <ContentAccessIndicator isFree={metadata.isFree} showLabel />
+                    ) : null}
+                    {!canConsumeItem ? (
+                      <Badge className="border-highlight/30 bg-highlight/10 text-highlight">
+                        Reproducao no plano pago
+                      </Badge>
+                    ) : null}
                     {item.completed ? (
                       <Badge className="border-success/30 bg-success/10 text-success">
                         <CheckCircle2 className="mr-1 size-3.5" />

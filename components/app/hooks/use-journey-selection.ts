@@ -9,6 +9,7 @@ import { useAudio } from "@/components/providers/audio-context";
 interface UseJourneySelectionOptions {
   audioBasePath?: string;
   progressContentType?: HistoryContentType;
+  canPlayJourney?: (journey: CharacterJourney) => boolean;
 }
 
 function buildJourneyAudioUrl(basePath: string, journeyId: string) {
@@ -29,10 +30,17 @@ export function useJourneySelection(
 
   function handleSelectJourney(journey: CharacterJourney) {
     setSelectedJourney(journey);
-    const audioUrl = buildJourneyAudioUrl(audioBasePath, journey.id);
-    setJourneyAudioUrl(audioUrl);
     setJourneyError("");
     setJourneyLoading(false);
+
+    if (options.canPlayJourney && !options.canPlayJourney(journey)) {
+      setJourneyAudioUrl("");
+      audio.stop();
+      return;
+    }
+
+    const audioUrl = buildJourneyAudioUrl(audioBasePath, journey.id);
+    setJourneyAudioUrl(audioUrl);
 
     audio.play(
       [
@@ -41,6 +49,7 @@ export function useJourneySelection(
           title: journey.titulo,
           subtitle: journey.categoria,
           src: audioUrl,
+          isFree: journey.isFree,
           progressContentType,
           progressContentId: journey.id,
         },

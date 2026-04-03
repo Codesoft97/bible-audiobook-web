@@ -3,7 +3,9 @@ import { AudioLines, BookOpenText, LoaderCircle } from "@/components/icons";
 
 import { AudioPlayer } from "@/components/app/audio-player";
 import type { AudioTrack } from "@/components/app/audio-player";
+import { ContentAccessIndicator } from "@/components/app/content-access-indicator";
 import { CompletionBadge } from "@/components/app/completion-badge";
+import { PremiumContentCallout } from "@/components/app/premium-content-callout";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import {
@@ -11,6 +13,7 @@ import {
   type Audiobook,
   type AudiobookBookSummary,
 } from "@/lib/audiobooks";
+import { canConsumeContent, filterConsumableContent } from "@/lib/content-access";
 
 function buildStreamUrl(trackId: string) {
   return `/api/audiobooks/${encodeURIComponent(trackId)}/stream`;
@@ -22,6 +25,7 @@ function chaptersToTracks(bookTitle: string, chapters: Audiobook[]): AudioTrack[
     title: `Capitulo ${chapter.chapter}`,
     subtitle: `Faixa ${index + 1} do livro ${bookTitle}`,
     src: buildStreamUrl(chapter.id),
+    isFree: chapter.isFree,
     progressContentType: "bible",
     progressContentId: chapter.id,
   }));
@@ -34,6 +38,8 @@ interface BookDetailPanelProps {
   error: string;
   historyLoaded: boolean;
   completedChaptersCount: number;
+  hasPremiumAccess: boolean;
+  onUpgradeRequest: () => void;
   getTrackCompletionStatus?: (track: AudioTrack) => boolean | null;
 }
 
@@ -44,6 +50,8 @@ export function BookDetailPanel({
   error,
   historyLoaded,
   completedChaptersCount,
+  hasPremiumAccess,
+  onUpgradeRequest,
   getTrackCompletionStatus,
 }: BookDetailPanelProps) {
   if (!selectedBook) {
@@ -54,7 +62,7 @@ export function BookDetailPanel({
             <div className="flex size-12 items-center justify-center rounded-2xl bg-highlight/14 text-highlight">
               <BookOpenText className="size-6" />
             </div>
-            <h3 className="text-xl font-semibold text-foreground sm:text-2xl">Biblia em audio</h3>
+            <h3 className="text-xl font-semibold text-foreground sm:text-2xl">Bíblia em áudio</h3>
           </div>
           <p className="text-sm leading-6 text-muted-foreground">
             Escolha um item da lista para liberar os capitulos disponiveis no player.
@@ -65,6 +73,12 @@ export function BookDetailPanel({
   }
 
   const allChaptersCompleted = chapters.length > 0 && completedChaptersCount === chapters.length;
+  const displayTracks = chaptersToTracks(selectedBook.title, chapters);
+  const playableTrackIds = new Set(
+    filterConsumableContent(chapters, hasPremiumAccess).map((chapter) => chapter.id),
+  );
+  const playableTracks = displayTracks.filter((track) => playableTrackIds.has(track.id));
+  const hasLockedChapters = chapters.some((chapter) => !canConsumeContent(chapter.isFree, hasPremiumAccess));
 
   return (
     <Card className="rounded-[22px] border-border/70 bg-background/80 p-4 sm:p-5 md:p-6">
@@ -95,6 +109,7 @@ export function BookDetailPanel({
             <Badge className="border-border/60 bg-background/70 text-foreground">
               {formatAudiobookTestamentLabel(selectedBook.testament)}
             </Badge>
+            <ContentAccessIndicator isFree={selectedBook.isFree} showLabel />
             {historyLoaded ? (
               allChaptersCompleted ? (
                 <Badge className="border-success/30 bg-success/10 text-success">
@@ -112,11 +127,16 @@ export function BookDetailPanel({
           <h3 className="text-2xl font-semibold leading-tight text-foreground sm:text-3xl">{selectedBook.title}</h3>
           <p className="text-sm leading-6 text-muted-foreground">
             {loading
-              ? "Consultando capitulos no backend..."
+              ? "Consultando capítulos no backend..."
               : historyLoaded
-                ? `${chapters.length} capitulos prontos para reproducao. ${completedChaptersCount} concluido(s) ate agora.`
-                : `${chapters.length} capitulos prontos para reproducao.`}
+                ? `${chapters.length} capítulos prontos para reprodução. ${completedChaptersCount} concluido(s) ate agora.`
+                : `${chapters.length} capítulos prontos para reprodução.`}
           </p>
+          {!hasPremiumAccess && hasLockedChapters ? (
+            <p className="text-sm leading-6 text-muted-foreground">
+              Alguns conteúdos são grátuitos, mas você pode assinar a qualquer momento para ter acesso completo.
+            </p>
+          ) : null}
         </div>
       </div>
 
@@ -124,21 +144,30 @@ export function BookDetailPanel({
         {loading ? (
           <div className="flex items-center gap-3 rounded-2xl border border-border/70 bg-background/60 p-4 text-sm text-muted-foreground">
             <LoaderCircle className="size-4 animate-spin" />
-            Carregando capitulos de {selectedBook.title}...
+            Carregando capítulos de {selectedBook.title}...
           </div>
         ) : error ? (
           <div className="rounded-2xl border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive">
             {error}
           </div>
+        ) : chapters.length > 0 && playableTracks.length === 0 ? (
+          <PremiumContentCallout
+            title="Este livro exige plano pago para ouvir"
+            description="Os capitulos deste livro estao visiveis para todos, mas a reproducao esta disponivel apenas para assinantes."
+            onUpgradeRequest={onUpgradeRequest}
+          />
         ) : chapters.length > 0 ? (
           <AudioPlayer
             title={selectedBook.title}
-            tracks={chaptersToTracks(selectedBook.title, chapters)}
+            tracks={displayTracks}
+            playbackTracks={playableTracks}
             getTrackCompletionStatus={getTrackCompletionStatus}
+            canPlayTrack={(track) => canConsumeContent(track.isFree ?? false, hasPremiumAccess)}
+            onLockedTrackSelect={() => onUpgradeRequest()}
           />
         ) : (
           <div className="rounded-2xl border border-border/70 bg-background/60 p-4 text-sm text-muted-foreground">
-            Nenhum capitulo foi encontrado para esse livro no momento.
+            Nenhum capítulo foi encontrado para esse livro no momento.
           </div>
         )}
       </div>

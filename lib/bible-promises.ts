@@ -5,6 +5,7 @@ export interface BiblePromise {
   verse: number;
   promise: string;
   category: string;
+  isFree: boolean;
   createdAt: string;
   updatedAt: string;
 }
