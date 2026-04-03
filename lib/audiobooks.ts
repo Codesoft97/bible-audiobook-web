@@ -5,6 +5,7 @@ export interface Audiobook {
   book: string;
   testament: AudiobookTestament;
   chapter: number;
+  isFree: boolean;
   isActive: boolean;
   coverImageUrl: string;
   createdAt: string;
@@ -15,6 +16,7 @@ export interface AudiobookBookSummary {
   slug: string;
   title: string;
   testament: AudiobookTestament;
+  isFree: boolean;
   totalChapters: number;
   latestChapter: number;
   coverImageUrl: string;
@@ -233,6 +235,7 @@ export function groupAudiobooksByBook(items: Audiobook[]) {
         slug,
         title: formatBookLabel(slug),
         testament,
+        isFree: sortedChapters.every((chapter) => chapter.isFree),
         totalChapters: sortedChapters.length,
         latestChapter: sortedChapters[sortedChapters.length - 1]?.chapter ?? 0,
         coverImageUrl: sortedChapters[0]?.coverImageUrl ?? "",

@@ -6,18 +6,27 @@ import { HandsPraying, LoaderCircle, Volume2 } from "@/components/icons";
 
 import { AudioPlayer } from "@/components/app/audio-player";
 import type { AudioTrack } from "@/components/app/audio-player";
+import { ContentAccessIndicator } from "@/components/app/content-access-indicator";
+import { PremiumContentCallout } from "@/components/app/premium-content-callout";
 import { useAudio } from "@/components/providers/audio-context";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import type { ApiEnvelope } from "@/lib/auth/types";
 import type { BiblePromise, BiblePromiseStreamPayload } from "@/lib/bible-promises";
+import { canConsumeContent } from "@/lib/content-access";
 import { cn } from "@/lib/utils";
 
 function buildPromiseLabel(promise: BiblePromise) {
   return `${promise.book} ${promise.chapter}:${promise.verse}`;
 }
 
-export function BiblePromisePanel() {
+export function BiblePromisePanel({
+  hasPremiumAccess,
+  onUpgradeRequest,
+}: {
+  hasPremiumAccess: boolean;
+  onUpgradeRequest: () => void;
+}) {
   const audio = useAudio();
 
   const [promise, setPromise] = useState<BiblePromise | null>(null);
@@ -37,6 +46,7 @@ export function BiblePromisePanel() {
         title: buildPromiseLabel(promise),
         subtitle: promise.category,
         src: audioUrl,
+        isFree: promise.isFree,
       },
     ];
   }, [audioUrl, promise]);
@@ -65,6 +75,12 @@ export function BiblePromisePanel() {
 
       const selectedPromise = randomPayload.data;
       setPromise(selectedPromise);
+
+      if (!canConsumeContent(selectedPromise.isFree, hasPremiumAccess)) {
+        setAudioUrl("");
+        audio.stop();
+        return;
+      }
 
       const streamResponse = await fetch(
         `/api/bible-promises/${encodeURIComponent(selectedPromise.id)}/stream`,
@@ -195,10 +211,21 @@ export function BiblePromisePanel() {
               Promessa de Deus
             </p>
             <h4 className="text-2xl font-semibold text-foreground">{buildPromiseLabel(promise)}</h4>
-            <p className="text-sm font-medium text-highlight">{promise.category}</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-sm font-medium text-highlight">{promise.category}</p>
+              <ContentAccessIndicator isFree={promise.isFree} showLabel />
+            </div>
             <p className="text-base leading-7 text-foreground">{promise.promise}</p>
           </div>
         </Card>
+      ) : null}
+
+      {promise && !canConsumeContent(promise.isFree, hasPremiumAccess) ? (
+        <PremiumContentCallout
+          title="Assine para ter acesso ao conteúdo em áudio"
+          description="Você pode testar por 7 dias grátis"
+          onUpgradeRequest={onUpgradeRequest}
+        />
       ) : null}
 
       {playerPromise ? (

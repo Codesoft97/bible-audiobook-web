@@ -14,6 +14,7 @@ const AUDIOBOOKS_FIXTURE: Audiobook[] = [
     book: "genesis",
     testament: "old",
     chapter: 1,
+    isFree: true,
     isActive: true,
     coverImageUrl: "/genesis.jpg",
     createdAt: "2026-03-21T10:00:00.000Z",
@@ -24,6 +25,7 @@ const AUDIOBOOKS_FIXTURE: Audiobook[] = [
     book: "genesis",
     testament: "old",
     chapter: 2,
+    isFree: true,
     isActive: true,
     coverImageUrl: "/genesis.jpg",
     createdAt: "2026-03-21T10:00:00.000Z",
@@ -34,6 +36,7 @@ const AUDIOBOOKS_FIXTURE: Audiobook[] = [
     book: "matthew",
     testament: "new",
     chapter: 1,
+    isFree: false,
     isActive: true,
     coverImageUrl: "/matthew.jpg",
     createdAt: "2026-03-21T10:00:00.000Z",
@@ -49,11 +52,13 @@ describe("lib/audiobooks", () => {
       expect.objectContaining({
         slug: "genesis",
         testament: "old",
+        isFree: true,
         totalChapters: 2,
       }),
       expect.objectContaining({
         slug: "matthew",
         testament: "new",
+        isFree: false,
         totalChapters: 1,
       }),
     ]);

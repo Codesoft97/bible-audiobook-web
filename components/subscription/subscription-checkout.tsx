@@ -19,12 +19,15 @@ import type {
 import { formatPlanLabel } from "@/lib/utils";
 
 const PLAN_FEATURES = [
-  "Livros da Biblia, atualizacoes semanais",
-  "Jornadas, parabolas e ensinamentos",
-  "Caixinha de promessas em audio",
+  "Livros da Bíblia em texto e áudio",
+  "Jornadas de personagens bíblicos",
+  "Parábolas de Jesus",
+  "Ensinamentos da bíblia sobre assuntos da vida",
+  "Caixinha de promessas em áudio",
   "Download para ouvir offline no App",
-  "Novos conteudos semanalmente",
-  "Promessas ou capitulos diarios no WhatsApp",
+  "Devocional diário com leitura e áudio",
+  "Compartilhamento de versículos com imagens",
+  "Atualizações semanais dos conteúdos",
 ] as const;
 
 const BRL_CURRENCY_FORMATTER = new Intl.NumberFormat("pt-BR", {
@@ -48,8 +51,8 @@ function formatSubscriptionDate(value: string | null) {
 
 function formatSubscriptionSourceLabel(value: string | null) {
   switch (value) {
-    case "trial":
-      return "Periodo de teste";
+    case "none":
+      return null;
     case "stripe":
       return "Site";
     case "google_play":
@@ -91,7 +94,6 @@ export function SubscriptionCheckout({ session }: { session: AppSession }) {
   const billingSourceLabel = formatSubscriptionSourceLabel(subscriptionStatus?.billingSource ?? null);
   const paidUntilLabel = formatSubscriptionDate(subscriptionStatus?.paidUntil ?? null);
   const lastPaymentLabel = formatSubscriptionDate(subscriptionStatus?.lastPaymentAt ?? null);
-  const freeTrialEndsLabel = formatSubscriptionDate(subscriptionStatus?.freeTrialEndsAt ?? null);
   const monthlyPriceLabel = plans ? BRL_CURRENCY_FORMATTER.format(plans.monthlyPrice) : null;
   const annualPriceLabel = plans ? BRL_CURRENCY_FORMATTER.format(plans.annualPrice) : null;
   const annualEquivalentLabel = plans ? BRL_CURRENCY_FORMATTER.format(plans.annualPrice / 12) : null;
@@ -114,7 +116,7 @@ export function SubscriptionCheckout({ session }: { session: AppSession }) {
       subscriptionStatus?.purchaseBlockedReason ??
       (hasActiveSubscription
         ? "Sua assinatura premium esta ativa."
-        : "Assine com cartao de credito para liberar todos os conteudos.");
+        : "Assine com cartão de crédito para liberar todos os conteúdos.");
 
   useEffect(() => {
     let mounted = true;
@@ -302,23 +304,10 @@ export function SubscriptionCheckout({ session }: { session: AppSession }) {
         <section className="rounded-3xl border border-border/65 bg-card/80 p-6 md:p-8">
           <p className="inline-flex items-center gap-2 rounded-full border border-highlight/30 bg-highlight/12 px-3 py-1 text-xs uppercase tracking-[0.14em] text-highlight">
             <Crown className="size-3.5" />
-            {hasActiveSubscription ? "Assinatura ativa" : resolvedPlan === "free_trial" ? "Periodo de teste" : "Assinatura"}
+            {hasActiveSubscription ? "Assinatura ativa" : "Assinatura"}
           </p>
           <h1 className="mt-4 text-3xl font-semibold text-foreground md:text-4xl">{pageTitle}</h1>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground md:text-base">{pageSubtitle}</p>
-          {resolvedPlan === "free_trial" && freeTrialEndsLabel ? (
-            <p className="mt-2 text-sm text-muted-foreground">
-              Seu periodo de teste vai ate {freeTrialEndsLabel}
-              {subscriptionStatus?.freeTrialDaysRemaining !== null
-                ? ` (${subscriptionStatus?.freeTrialDaysRemaining} dias restantes).`
-                : "."}
-            </p>
-          ) : null}
-          {!hasActiveSubscription && canPurchaseOnWeb && plans ? (
-            <p className="mt-2 text-sm text-muted-foreground">
-              {plans.freeTrialDays} dias de teste gratis apos o cadastro, sem precisar assinar.
-            </p>
-          ) : null}
 
           <div className="mt-5 flex flex-wrap items-center gap-3">
             <span className="inline-flex rounded-full border border-primary/30 bg-primary/10 px-4 py-2 text-sm font-medium text-primary">
@@ -331,7 +320,7 @@ export function SubscriptionCheckout({ session }: { session: AppSession }) {
             ) : null}
             {paidUntilLabel ? (
               <span className="inline-flex rounded-full border border-border/60 bg-background/70 px-4 py-2 text-sm font-medium text-foreground">
-                Acesso ate: {paidUntilLabel}
+                Acesso até: {paidUntilLabel}
               </span>
             ) : null}
 
@@ -426,7 +415,7 @@ export function SubscriptionCheckout({ session }: { session: AppSession }) {
               <div className="flex items-center justify-between gap-3">
                 <p className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.14em] text-muted-foreground">
                   <CreditCard className="size-4 text-highlight" />
-                  Cartao de credito
+                  Cartão de credito
                 </p>
                 <span className="inline-flex rounded-full border border-success/30 bg-success/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-success">
                   Disponivel
@@ -434,7 +423,7 @@ export function SubscriptionCheckout({ session }: { session: AppSession }) {
               </div>
 
               <p className="mt-3 text-4xl font-semibold text-foreground">{monthlyPriceLabel}</p>
-              <p className="mt-1 text-sm text-muted-foreground">Plano mensal, cobranca recorrente.</p>
+              <p className="mt-1 text-sm text-muted-foreground">Plano mensal, cobrança recorrente.</p>
 
               <ul className="mt-4 space-y-2">
                 {PLAN_FEATURES.map((feature) => (
@@ -468,7 +457,7 @@ export function SubscriptionCheckout({ session }: { session: AppSession }) {
               <div className="flex items-center justify-between gap-3">
                 <p className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.14em] text-muted-foreground">
                   <CreditCard className="size-4 text-highlight" />
-                  Cartao de credito
+                  Cartão de credito
                 </p>
                 <span className="inline-flex rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-primary">
                   Melhor custo
@@ -476,10 +465,10 @@ export function SubscriptionCheckout({ session }: { session: AppSession }) {
               </div>
 
               <p className="mt-3 text-4xl font-semibold text-foreground">{annualPriceLabel}</p>
-              <p className="mt-1 text-sm text-muted-foreground">Plano anual. Equivale a {annualEquivalentLabel}/mes.</p>
+              <p className="mt-1 text-sm text-muted-foreground">Plano anual. Equivale a {annualEquivalentLabel}/mês.</p>
               {annualSavingsLabel ? (
                 <p className="mt-2 text-xs font-medium text-primary">
-                  Economia de {annualSavingsLabel} por ano em relacao ao plano mensal.
+                  Economia de {annualSavingsLabel} por ano em relação ao plano mensal.
                 </p>
               ) : null}
 

@@ -45,6 +45,7 @@ import {
 import type { CharacterJourney } from "@/lib/character-journeys";
 import type { HistoryContentType } from "@/lib/history";
 import { WHATSAPP_FEATURE_ENABLED } from "@/lib/constants";
+import { canConsumeContent } from "@/lib/content-access";
 import { cn } from "@/lib/utils";
 
 type LibraryView =
@@ -148,7 +149,7 @@ function selectedIcon(view: JourneyLikeView) {
 }
 
 function isPremiumView(view: LibraryView) {
-  return view !== "books" && view !== "bibleText";
+  return view === "whatsapp";
 }
 
 function FilterTab({
@@ -202,21 +203,31 @@ export function AudiobookBrowser({
   const deferredQuery = useDeferredValue(query);
   const confirmationModal = useConfirmationModal();
 
-  const book = useBookSelection(initialAudiobooks);
+  const book = useBookSelection(initialAudiobooks, {
+    canPlayChapter: (chapter) => canConsumeContent(chapter.isFree, hasPremiumAccess),
+  });
   const bibleText = useBibleTextSelection(
     initialBibleTextBooks,
     initialBibleTextReadingState,
     confirmationModal.requestConfirmation,
+    {
+      canShareVerses: hasPremiumAccess,
+      onShareBlocked: onUpgradeRequest,
+    },
   );
   const { historyLoaded, getContentCompletion } = useContentCompletionStatus();
-  const journey = useJourneySelection();
+  const journey = useJourneySelection({
+    canPlayJourney: (item) => canConsumeContent(item.isFree, hasPremiumAccess),
+  });
   const parable = useJourneySelection({
     audioBasePath: "parables",
     progressContentType: "parable",
+    canPlayJourney: (item) => canConsumeContent(item.isFree, hasPremiumAccess),
   });
   const teaching = useJourneySelection({
     audioBasePath: "teachings",
     progressContentType: "teaching",
+    canPlayJourney: (item) => canConsumeContent(item.isFree, hasPremiumAccess),
   });
 
   const bookSummaries = useMemo(() => groupAudiobooksByBook(initialAudiobooks), [initialAudiobooks]);
@@ -527,50 +538,34 @@ export function AudiobookBrowser({
           <div className="-mx-1 overflow-x-auto px-1">
             <div className="inline-flex min-w-max items-center rounded-full bg-accent/75 p-1">
               <FilterTab active={view === "books"} onClick={() => handleTabChange("books")}>
-                Biblia em audio
+                Bíblia em audio
               </FilterTab>
               <FilterTab active={view === "bibleText"} onClick={() => handleTabChange("bibleText")}>
-                Biblia em texto
+                Bíblia em texto
               </FilterTab>
               <FilterTab
                 active={view === "journeys"}
-                locked={!hasPremiumAccess}
                 onClick={() => handleTabChange("journeys")}
               >
-                <span className="inline-flex items-center gap-1">
-                  Jornadas
-                  {!hasPremiumAccess ? <Lock className="size-3.5" /> : null}
-                </span>
+                Jornadas
               </FilterTab>
               <FilterTab
                 active={view === "parables"}
-                locked={!hasPremiumAccess}
                 onClick={() => handleTabChange("parables")}
               >
-                <span className="inline-flex items-center gap-1">
-                  Parabolas
-                  {!hasPremiumAccess ? <Lock className="size-3.5" /> : null}
-                </span>
+                Parábolas
               </FilterTab>
               <FilterTab
                 active={view === "teachings"}
-                locked={!hasPremiumAccess}
                 onClick={() => handleTabChange("teachings")}
               >
-                <span className="inline-flex items-center gap-1">
-                  Ensinamentos
-                  {!hasPremiumAccess ? <Lock className="size-3.5" /> : null}
-                </span>
+                Ensinamentos
               </FilterTab>
               <FilterTab
                 active={view === "promises"}
-                locked={!hasPremiumAccess}
                 onClick={() => handleTabChange("promises")}
               >
-                <span className="inline-flex items-center gap-1">
-                  Promessas
-                  {!hasPremiumAccess ? <Lock className="size-3.5" /> : null}
-                </span>
+                Promessas
               </FilterTab>
               {WHATSAPP_FEATURE_ENABLED ? (
                 <FilterTab
@@ -633,8 +628,8 @@ export function AudiobookBrowser({
                 Este recurso esta disponivel no plano pago
               </h2>
               <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-                No plano free voce acessa a Biblia em audio e em texto. Assine para liberar
-                jornadas, parabolas, ensinamentos, promessas e historico.
+                No plano free voce ve todos os conteudos, mas os itens marcados como pagos
+                so podem ser reproduzidos no plano pago. O WhatsApp continua exclusivo para assinantes.
               </p>
             </div>
             <button
@@ -649,7 +644,10 @@ export function AudiobookBrowser({
           </section>
         ) : view === "promises" ? (
           <section className="space-y-4">
-            <BiblePromisePanel />
+            <BiblePromisePanel
+              hasPremiumAccess={hasPremiumAccess}
+              onUpgradeRequest={onUpgradeRequest}
+            />
           </section>
         ) : view === "whatsapp" ? (
           <section className="space-y-4">
@@ -673,6 +671,8 @@ export function AudiobookBrowser({
                   error={book.bookError}
                   historyLoaded={historyLoaded}
                   completedChaptersCount={completedBookChaptersCount}
+                  hasPremiumAccess={hasPremiumAccess}
+                  onUpgradeRequest={onUpgradeRequest}
                   getTrackCompletionStatus={(track) => {
                     if (!track.progressContentType || !track.progressContentId) {
                       return null;
@@ -687,6 +687,7 @@ export function AudiobookBrowser({
                     highlights={filteredAllHighlights}
                     loading={bibleText.allHighlightsLoading}
                     error={bibleText.allHighlightsError}
+                    canShareVerses={hasPremiumAccess}
                     sharePendingKey={bibleText.sharePendingKey}
                     shareFeedback={bibleText.shareFeedback}
                     onOpenHighlight={handleOpenBibleTextHighlight}
@@ -700,6 +701,7 @@ export function AudiobookBrowser({
                     selectedChapter={bibleText.selectedChapter}
                     loading={bibleText.chapterLoading}
                     error={bibleText.chapterError}
+                    canShareVerses={hasPremiumAccess}
                     readingStateLoading={bibleText.readingStateLoading}
                     readingStateError={bibleText.readingStateError}
                     fontScale={bibleText.fontScale}
@@ -742,6 +744,8 @@ export function AudiobookBrowser({
                   progressContentType={activeStoryConfig?.progressContentType}
                   icon={ActiveStoryIcon}
                   completionStatus={selectedJourneyCompletionStatus}
+                  hasPremiumAccess={hasPremiumAccess}
+                  onUpgradeRequest={onUpgradeRequest}
                 />
               )}
             </div>

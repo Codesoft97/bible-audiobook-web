@@ -5,6 +5,7 @@ export interface CharacterJourney {
   referencia?: string;
   perfilAlvo: string;
   duracaoEstimadaMinutos: number;
+  isFree: boolean;
   isActive: boolean;
   coverImageUrl: string;
   createdAt: string;

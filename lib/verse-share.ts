@@ -23,6 +23,9 @@ export interface BibleVerseShareFeedback {
   message: string;
 }
 
+export const PAID_PLAN_SHARE_MESSAGE =
+  "O compartilhamento de versiculos esta disponivel apenas no plano pago.";
+
 function normalizeAbbrev(abbrev: string) {
   return abbrev.trim().toLowerCase();
 }

@@ -65,7 +65,7 @@ const SIDEBAR_ITEMS: Array<{
   premium?: boolean;
   route?: string;
 }> = [
-  { key: "history", label: "Historico", icon: Clock3, premium: true },
+  { key: "history", label: "Historico", icon: Clock3 },
   { key: "plans", label: "Assinatura", icon: Crown, route: APP_ROUTES.subscription },
 ];
 
@@ -76,18 +76,18 @@ const LIBRARY_ITEMS: Array<{
   view: LibraryView;
   premium?: boolean;
 }> = [
-  { key: "books", label: "Biblia em audio", icon: BookOpenText, view: "books" },
-  { key: "bibleText", label: "Biblia em texto", icon: BookOpenText, view: "bibleText" },
+  { key: "books", label: "Bíblia em audio", icon: BookOpenText, view: "books" },
+  { key: "bibleText", label: "Bíblia em texto", icon: BookOpenText, view: "bibleText" },
   { key: "bibleHighlights", label: "Destaques", icon: HighlighterCircle, view: "bibleText" },
-  { key: "journeys", label: "Jornadas", icon: PersonSimpleHike, view: "journeys", premium: true },
-  { key: "parables", label: "Parabolas", icon: BookOpenText, view: "parables", premium: true },
-  { key: "teachings", label: "Ensinamentos", icon: NotebookIcon, view: "teachings", premium: true },
-  { key: "promises", label: "Promessas", icon: HandsPraying, view: "promises", premium: true },
+  { key: "journeys", label: "Jornadas", icon: PersonSimpleHike, view: "journeys" },
+  { key: "parables", label: "Parábolas", icon: BookOpenText, view: "parables" },
+  { key: "teachings", label: "Ensinamentos", icon: NotebookIcon, view: "teachings" },
+  { key: "promises", label: "Promessas", icon: HandsPraying, view: "promises" },
   { key: "whatsapp", label: "WhatsApp", icon: MessageCircle, view: "whatsapp", premium: true },
 ];
 
 function isPremiumLibraryView(view: LibraryView) {
-  return view !== "books" && view !== "bibleText";
+  return view === "whatsapp";
 }
 
 type RedirectStatus = "success" | "cancel" | "portal";
@@ -155,7 +155,6 @@ export function AppShell({
   const selectedProfile = session.selectedProfile;
   const hasPremiumAccess = session.family.plan !== "free";
   const hasActiveSubscription = session.family.plan === "paid";
-  const isTrial = session.family.plan === "free_trial";
   const bibleTextExitGuardRef = useRef<null | (() => Promise<boolean>)>(null);
   const [statusFeedback, setStatusFeedback] = useState<RedirectStatus | null>(null);
   const [libraryView, setLibraryView] = useState<LibraryView>("books");
@@ -207,13 +206,7 @@ export function AppShell({
       return;
     }
 
-    const hasLockedSidebar =
-      activeSidebar === "history" ||
-      activeSidebar === "journeys" ||
-      activeSidebar === "parables" ||
-      activeSidebar === "teachings" ||
-      activeSidebar === "promises" ||
-      activeSidebar === "whatsapp";
+    const hasLockedSidebar = activeSidebar === "whatsapp";
 
     if (isPremiumLibraryView(libraryView)) {
       setLibraryView("books");
@@ -246,7 +239,7 @@ export function AppShell({
   const FeedbackIcon = feedback?.icon;
 
   const profileInitial = selectedProfile.name.trim().charAt(0).toUpperCase() || "P";
-  const showingHistory = activeSidebar === "history" && hasPremiumAccess;
+  const showingHistory = activeSidebar === "history";
 
   function closeSidebarOnMobile() {
     if (window.matchMedia("(max-width: 1023px)").matches) {
@@ -457,14 +450,12 @@ export function AppShell({
             <p className="mt-2 text-sm font-semibold">
               {hasActiveSubscription
                 ? "Gerenciar assinatura ativa"
-                : isTrial
-                  ? "Assine antes do fim do teste"
-                  : "Desbloqueie todos os recursos do app"}
+                : "Desbloqueie todos os conteúdos"}
             </p>
             <p className="mt-1 text-xs text-primary-foreground/75">
               {hasActiveSubscription
                 ? "Veja o canal correto para gerenciar sua assinatura"
-                : "Assine com cartao de credito em poucos minutos"}
+                : "Teste grátis por 7 dias"}
             </p>
           </Link>
 
@@ -599,6 +590,7 @@ export function AppShell({
               initialCharacterJourneys={initialCharacterJourneys}
               initialParables={initialParables}
               initialTeachings={initialTeachings}
+              hasPremiumAccess={hasPremiumAccess}
               onOpenContent={(contentType) => {
                 const nextView =
                   contentType === "bible"

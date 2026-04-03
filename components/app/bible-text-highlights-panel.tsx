@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import {
   BookOpenText,
+  Crown,
   HighlighterCircle,
   LoaderCircle,
   ShareNetwork,
@@ -14,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import type { BibleTextHighlight } from "@/lib/bible-text";
 import {
+  PAID_PLAN_SHARE_MESSAGE,
   buildBibleVerseShareKey,
   type BibleVerseShareFeedback,
 } from "@/lib/verse-share";
@@ -23,6 +25,7 @@ interface BibleTextHighlightsPanelProps {
   highlights: BibleTextHighlight[];
   loading: boolean;
   error: string;
+  canShareVerses: boolean;
   sharePendingKey: string | null;
   shareFeedback: BibleVerseShareFeedback | null;
   onOpenHighlight: (highlight: BibleTextHighlight) => void | Promise<void>;
@@ -33,6 +36,7 @@ export function BibleTextHighlightsPanel({
   highlights,
   loading,
   error,
+  canShareVerses,
   sharePendingKey,
   shareFeedback,
   onOpenHighlight,
@@ -69,6 +73,11 @@ export function BibleTextHighlightsPanel({
           Abra todos os destaques do perfil e toque em um item para exibir as acoes
           de compartilhar ou voltar direto ao versiculo no leitor.
         </p>
+        {!canShareVerses ? (
+          <div className="rounded-2xl border border-highlight/30 bg-highlight/10 px-4 py-3 text-sm text-muted-foreground">
+            {PAID_PLAN_SHARE_MESSAGE}
+          </div>
+        ) : null}
       </div>
 
       <div className="mt-5">
@@ -171,7 +180,11 @@ export function BibleTextHighlightsPanel({
                           </>
                         ) : (
                           <>
-                            <ShareNetwork className="size-4" />
+                            {canShareVerses ? (
+                              <ShareNetwork className="size-4" />
+                            ) : (
+                              <Crown className="size-4" />
+                            )}
                             Compartilhar
                           </>
                         )}

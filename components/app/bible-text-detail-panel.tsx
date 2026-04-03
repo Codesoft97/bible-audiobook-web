@@ -3,6 +3,7 @@ import {
   BookOpenText,
   ChevronLeft,
   ChevronRight,
+  Crown,
   HighlighterCircle,
   LoaderCircle,
   ShareNetwork,
@@ -18,6 +19,7 @@ import {
   type BibleTextLastRead,
 } from "@/lib/bible-text";
 import {
+  PAID_PLAN_SHARE_MESSAGE,
   buildBibleVerseShareKey,
   type BibleVerseShareFeedback,
 } from "@/lib/verse-share";
@@ -28,6 +30,7 @@ interface BibleTextDetailPanelProps {
   selectedChapter: BibleTextChapter | null;
   loading: boolean;
   error: string;
+  canShareVerses: boolean;
   readingStateLoading: boolean;
   readingStateError: string;
   fontScale: number;
@@ -94,6 +97,7 @@ export function BibleTextDetailPanel({
   selectedChapter,
   loading,
   error,
+  canShareVerses,
   readingStateLoading,
   readingStateError,
   fontScale,
@@ -277,6 +281,12 @@ export function BibleTextDetailPanel({
               </div>
             ) : null}
 
+            {!canShareVerses ? (
+              <div className="rounded-2xl border border-highlight/30 bg-highlight/10 px-4 py-3 text-sm text-muted-foreground">
+                {PAID_PLAN_SHARE_MESSAGE}
+              </div>
+            ) : null}
+
             {shareFeedback ? (
               <div
                 className={cn(
@@ -392,7 +402,11 @@ export function BibleTextDetailPanel({
                                       </>
                                     ) : (
                                       <>
-                                        <ShareNetwork className="size-4" />
+                                        {canShareVerses ? (
+                                          <ShareNetwork className="size-4" />
+                                        ) : (
+                                          <Crown className="size-4" />
+                                        )}
                                         Compartilhar
                                       </>
                                     )}

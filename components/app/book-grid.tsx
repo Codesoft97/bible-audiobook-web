@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { BookOpenText } from "@/components/icons";
 
+import { ContentAccessIndicator } from "@/components/app/content-access-indicator";
 import { CompletionBadge } from "@/components/app/completion-badge";
 import type { AudiobookBookSummary } from "@/lib/audiobooks";
 import { Badge } from "@/components/ui/badge";
@@ -105,6 +106,7 @@ export function BookGrid({
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
+                  <ContentAccessIndicator isFree={book.isFree} />
                   {renderBookCompletionBadge(completionSummary)}
                   <Badge>{book.totalChapters} caps</Badge>
                 </div>
@@ -158,6 +160,7 @@ export function BookGrid({
                   </div>
                 ) : null}
                 <div className="flex flex-wrap items-center justify-end gap-2">
+                  <ContentAccessIndicator isFree={book.isFree} />
                   {renderBookCompletionBadge(completionSummary)}
                   <Badge>{book.totalChapters} capitulos</Badge>
                 </div>
