@@ -11,5 +11,9 @@ export default async function ProfilesPage() {
     redirect(APP_ROUTES.login);
   }
 
+  if (session.family.requiresLegalAcceptance === true) {
+    redirect(APP_ROUTES.profilesLegalAcceptance);
+  }
+
   return <ProfileSelection session={session} />;
 }

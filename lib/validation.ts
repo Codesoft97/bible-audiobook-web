@@ -50,6 +50,18 @@ export const selectProfileSchema = z.object({
   profileId: z.string().trim().min(1, "Perfil invalido."),
 });
 
+export const legalConsentSchema = z.object({
+  acceptTerms: z.boolean().refine((value) => value, {
+    message: "Voce precisa aceitar os Termos de Uso.",
+  }),
+  acceptPolicy: z.boolean().refine((value) => value, {
+    message: "Voce precisa aceitar a Politica de Privacidade.",
+  }),
+  termsVersion: z.string().trim().min(1, "Versao dos Termos de Uso invalida."),
+  policyVersion: z.string().trim().min(1, "Versao da Politica de Privacidade invalida."),
+  locale: z.string().trim().min(1, "Locale invalido."),
+});
+
 const whatsappNumberSchema = z
   .string()
   .trim()

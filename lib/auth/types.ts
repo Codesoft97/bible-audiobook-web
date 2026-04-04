@@ -2,6 +2,19 @@ export type AuthProvider = "local" | "google";
 export type PlanType = "free" | "paid";
 export type ProfileType = "adult" | "child";
 
+export interface FamilyLegalAcceptance {
+  acceptedAt: string;
+  termsVersion: string;
+  policyVersion: string;
+  source: string;
+  locale: string;
+}
+
+export interface RequiredLegalDocuments {
+  termsVersion: string;
+  policyVersion: string;
+}
+
 export interface Family {
   id: string;
   familyName: string;
@@ -9,6 +22,9 @@ export interface Family {
   email: string;
   plan: PlanType;
   authProvider: AuthProvider;
+  legalAcceptance?: FamilyLegalAcceptance | null;
+  requiresLegalAcceptance?: boolean;
+  requiredLegalDocuments?: RequiredLegalDocuments | null;
   createdAt: string;
   updatedAt: string;
 }

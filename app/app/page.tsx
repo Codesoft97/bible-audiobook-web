@@ -19,6 +19,10 @@ export default async function AppPage() {
     redirect(APP_ROUTES.login);
   }
 
+  if (session.family.requiresLegalAcceptance === true) {
+    redirect(APP_ROUTES.profilesLegalAcceptance);
+  }
+
   if (!session.selectedProfile) {
     redirect(APP_ROUTES.profiles);
   }
