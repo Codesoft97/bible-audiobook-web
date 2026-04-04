@@ -75,6 +75,13 @@ export function ProfileSelection({ session }: { session: AppSession }) {
       const data = (await response.json()) as ApiResponse<{ profile: Profile }>;
 
       if (!response.ok || data.status !== "success") {
+        if (response.status === 403) {
+          setSelectingProfileId(null);
+          router.push(APP_ROUTES.profilesLegalAcceptance);
+          router.refresh();
+          return;
+        }
+
         setError(data.message ?? "Nao foi possivel selecionar o perfil.");
         setSelectingProfileId(null);
         return;

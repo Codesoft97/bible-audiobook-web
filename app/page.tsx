@@ -11,6 +11,7 @@ import {
 } from "@/components/icons";
 
 import { Logo } from "@/components/logo";
+import { SITE_SOCIAL_LINKS, SITE_STORE_LINKS } from "@/components/site-footer";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { APP_ROUTES, WHATSAPP_FEATURE_ENABLED } from "@/lib/constants";
 
@@ -65,37 +66,8 @@ const FEATURES = [
   },
 ] as const;
 
-const STORE_LINKS = [
-  {
-    label: "Google Play",
-    href: "https://play.google.com/store",
-    hint: "Android",
-    available: false,
-    badge: "Em breve",
-  },
-  {
-    label: "App Store",
-    href: "https://www.apple.com/app-store/",
-    hint: "iOS",
-    available: false,
-    badge: "Em breve",
-  },
-] as const;
-
-const SOCIAL_LINKS = [
-  {
-    label: "YouTube",
-    href: "https://www.youtube.com/@Evangelhoemaudio-01",
-  },
-  {
-    label: "Instagram",
-    href: "https://www.instagram.com/evangelhoemaudio",
-  },
-  {
-    label: "Facebook",
-    href: "https://www.facebook.com/profile.php?id=61584976944772&locale=pt_BR",
-  },
-] as const;
+const STORE_LINKS = SITE_STORE_LINKS;
+const SOCIAL_LINKS = SITE_SOCIAL_LINKS;
 
 const MONTHLY_PLAN_FEATURES = [
   "Biblioteca dos livros da Bíblia em áudio",
@@ -505,6 +477,12 @@ export default function HomePage() {
               </Link>
               <Link href={APP_ROUTES.forgotPassword} className="transition hover:text-foreground">
                 Recuperar senha
+              </Link>
+              <Link href={APP_ROUTES.privacyPolicy} className="transition hover:text-foreground">
+                Política de privacidade
+              </Link>
+              <Link href={APP_ROUTES.termsOfUse} className="transition hover:text-foreground">
+                Termos de uso
               </Link>
             </div>
           </div>

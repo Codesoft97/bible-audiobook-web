@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  legalConsentSchema,
   loginSchema,
   profileSchema,
   selectProfileSchema,
@@ -39,6 +40,26 @@ describe("lib/validation", () => {
     const result = selectProfileSchema.safeParse({ profileId: "   " });
 
     expect(result.success).toBe(false);
+  });
+
+  it("exige aceite explicito dos documentos legais", () => {
+    const valid = legalConsentSchema.safeParse({
+      acceptTerms: true,
+      acceptPolicy: true,
+      termsVersion: "terms-v1",
+      policyVersion: "privacy-v1",
+      locale: "pt-BR",
+    });
+    const invalid = legalConsentSchema.safeParse({
+      acceptTerms: true,
+      acceptPolicy: false,
+      termsVersion: "terms-v1",
+      policyVersion: "privacy-v1",
+      locale: "pt-BR",
+    });
+
+    expect(valid.success).toBe(true);
+    expect(invalid.success).toBe(false);
   });
 
   it("valida payload de assinatura de promessas no WhatsApp", () => {
