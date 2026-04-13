@@ -15,18 +15,18 @@ import {
 import { Logo } from "@/components/logo";
 import { SITE_SOCIAL_LINKS, SITE_STORE_LINKS } from "@/components/site-footer";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
-import { APP_ROUTES, WHATSAPP_FEATURE_ENABLED } from "@/lib/constants";
+import { APP_ROUTES, CONTACT_EMAIL, WHATSAPP_FEATURE_ENABLED } from "@/lib/constants";
 
 const FEATURES = [
   {
     eyebrow: "Explore o app",
     title: "Biblioteca completa",
     description:
-      "Navegue por livros, capitulos e jornadas em áudio, continue de onde parou e siga aprendendo.",
+      "Navegue por livros, capítulos e jornadas em áudio, continue de onde parou e siga aprendendo.",
     icon: BookOpenText,
     imageSrc: "/landing_home.png",
     imageAlt: "Tela principal da plataforma Evangelho em áudio",
-    highlights: ["Livros e capitulos organizados", "Retome do ponto em que parou"],
+    highlights: ["Livros e capítulos organizados", "Retome do ponto em que parou"],
     glowClassName: "bg-[radial-gradient(circle,rgba(229,187,102,0.24),transparent_68%)]",
     imageClassName: "object-[center_45%]",
   },
@@ -49,7 +49,7 @@ const FEATURES = [
       "Escute parábolas da Bíblia e aprenda com as histórias contadas por Jesus.",
     icon: PlayCircle,
     imageSrc: "/landing_parabolas.png",
-    imageAlt: "Notebook exibindo a secao de parabolas",
+    imageAlt: "Notebook exibindo a seção de parábolas",
     highlights: ["Parábolas de Jesus em áudio", "Referências para estudo enquanto ouve"],
     glowClassName: "bg-[radial-gradient(circle,rgba(77,131,212,0.24),transparent_68%)]",
     imageClassName: "object-[center_35%]",
@@ -61,7 +61,7 @@ const FEATURES = [
       "Ouça os ensinamentos de Deus sobre fé, perdão, família e muito mais.",
     icon: HandsPraying,
     imageSrc: "/landing_ensinamentos.png",
-    imageAlt: "Pessoa ouvindo ensinamentos biblicos no celular",
+    imageAlt: "Pessoa ouvindo ensinamentos bíblicos no celular",
     highlights: ["Temas para o dia a dia", "Palavra de conforto em momentos difíceis"],
     glowClassName: "bg-[radial-gradient(circle,rgba(229,187,102,0.2),transparent_70%)]",
     imageClassName: "object-[center_45%]",
@@ -73,7 +73,7 @@ const FEATURES = [
       "Ative o envio no WhatsApp para receber diariamente a palavra de Deus.",
     icon: MessageCircleHeart,
     imageSrc: "/landing_whatsapp.png",
-    imageAlt: "Mockup do envio de conteudo pelo WhatsApp",
+    imageAlt: "Mockup do envio de conteúdo pelo WhatsApp",
     highlights: ["Comece o dia com uma promessa", "Mais constância na rotina espiritual"],
     glowClassName: "bg-[radial-gradient(circle,rgba(48,189,124,0.18),transparent_70%)]",
     imageClassName: "object-[center_2%]",
@@ -93,12 +93,12 @@ const MONTHLY_PLAN_FEATURES = [
   "Ensinamentos bíblicos sobre assuntos da vida em áudio",
   "Parábolas da Bíblia em áudio",
   "Envios de promessas diárias via WhatsApp",
-  "Envios de capitulos diários via WhatsApp",
+  "Envios de capítulos diários via WhatsApp",
 ] as const;
 
 const YEARLY_PLAN_FEATURES = [
   "Todos os benefícios do plano mensal",
-  "Melhor custo para uso continuo",
+  "Melhor custo para uso contínuo",
   "Renovação anual simples",
 ] as const;
 
@@ -111,8 +111,8 @@ const LANDING_MONTHLY_PLAN_FEATURES = MONTHLY_PLAN_FEATURES.filter(
 );
 
 const LANDING_HERO_DESCRIPTION = WHATSAPP_FEATURE_ENABLED
-  ? "Biblia em áudio, jornadas, promessas, devocionais, parábolas e envio no WhatsApp em uma experiência única para toda a famí­lia."
-  : "Biblia em áudio, jornadas, promessas, devocionais e parábolas em uma experiência única para toda a famí­lia.";
+  ? "Bíblia em áudio, jornadas, promessas, devocionais, parábolas e envio no WhatsApp em uma experiência única para toda a família."
+  : "Bíblia em áudio, jornadas, promessas, devocionais e parábolas em uma experiência única para toda a família.";
 
 export default function HomePage() {
   return (
@@ -217,8 +217,8 @@ export default function HomePage() {
                 <Headphones className="size-5" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Experiencia de escuta</p>
-                <p className="text-lg font-semibold">Player continuo e histórico por perfil</p>
+                <p className="text-sm text-muted-foreground">Experiência de escuta</p>
+                <p className="text-lg font-semibold">Reprodução contínua e histórico por perfil</p>
               </div>
             </div>
 
@@ -226,11 +226,11 @@ export default function HomePage() {
               <div className="rounded-2xl border border-border/65 bg-background/55 p-4">
                 <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Conteúdo</p>
                 <p className="mt-2 text-2xl font-semibold text-foreground">Em áudio</p>
-                <p className="mt-1 text-sm text-muted-foreground">Livros, Jornadas, Parábolas e muito mais</p>
+                <p className="mt-1 text-sm text-muted-foreground">Livros, jornadas, parábolas e muito mais</p>
               </div>
               <div className="rounded-2xl border border-border/65 bg-background/55 p-4">
                 <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Família</p>
-                <p className="mt-2 text-2xl font-semibold text-foreground">Até 2 Perfis</p>
+                <p className="mt-2 text-2xl font-semibold text-foreground">Até 2 perfis</p>
                 <p className="mt-1 text-sm text-muted-foreground">Progresso e histórico individual</p>
               </div>
             </div>
@@ -337,7 +337,7 @@ export default function HomePage() {
                 Escolha o melhor plano para sua família
               </h2>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground md:text-base">
-                Baixe o app para comecar pelo celular, testar a plataforma e acompanhar sua rotina espiritual.
+                Baixe o app para começar pelo celular, testar a plataforma e acompanhar sua rotina espiritual.
               </p>
             </div>
 
@@ -485,7 +485,7 @@ export default function HomePage() {
           </div>
 
           <div>
-            <p className="text-sm font-semibold text-foreground">Acesso rapido</p>
+            <p className="text-sm font-semibold text-foreground">Acesso rápido</p>
             <div className="mt-3 flex flex-col gap-2 text-sm text-muted-foreground">
               <a href="#funcionalidades" className="transition hover:text-foreground">
                 Funcionalidades
@@ -555,10 +555,10 @@ export default function HomePage() {
             <p className="text-sm font-semibold text-foreground">Contato</p>
             <div className="mt-3 flex flex-col gap-2 text-sm text-muted-foreground">
               <a
-                href="mailto:evangelhoemaudio@gmail.com"
+                href={`mailto:${CONTACT_EMAIL}`}
                 className="transition hover:text-foreground"
               >
-                contato@evangelhoemaudio
+                {CONTACT_EMAIL}
               </a>
             </div>
           </div>
