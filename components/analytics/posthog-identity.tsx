@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 import {
   captureAnalyticsEvent,
   identifyAnalyticsUser,
-  isAnalyticsClientEnabled,
+  onAnalyticsReady,
 } from "@/lib/posthog-client";
 
 interface SessionApiResponse {
@@ -39,10 +39,6 @@ export function PostHogIdentity() {
   const identifiedFamilyId = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!isAnalyticsClientEnabled()) {
-      return;
-    }
-
     let cancelled = false;
 
     async function identifySession() {
@@ -88,10 +84,13 @@ export function PostHogIdentity() {
       }
     }
 
-    void identifySession();
+    const unsubscribe = onAnalyticsReady(() => {
+      void identifySession();
+    });
 
     return () => {
       cancelled = true;
+      unsubscribe();
     };
   }, [pathname]);
 
