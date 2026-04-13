@@ -3,20 +3,25 @@ import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { APP_ROUTES, CONTACT_EMAIL } from "@/lib/constants";
 
+const googlePlayUrl = process.env.NEXT_PUBLIC_GOOGLE_PLAY_URL?.trim() ?? "";
+const appStoreUrl = process.env.NEXT_PUBLIC_APP_STORE_URL?.trim() ?? "";
+
 export const SITE_STORE_LINKS = [
   {
+    id: "google_play",
     label: "Google Play",
-    href: "https://play.google.com/store",
+    href: googlePlayUrl || "https://play.google.com/store",
     hint: "Android",
-    available: false,
-    badge: "Em breve",
+    available: true,
+    badge: undefined,
   },
   {
+    id: "app_store",
     label: "App Store",
-    href: "https://www.apple.com/app-store/",
+    href: appStoreUrl || "https://www.apple.com/app-store/",
     hint: "iOS",
-    available: false,
-    badge: "Em breve",
+    available: Boolean(appStoreUrl),
+    badge: appStoreUrl ? undefined : "Link em breve",
   },
 ] as const;
 

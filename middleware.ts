@@ -12,12 +12,13 @@ const ACCESS_TOKEN_REFRESH_BUFFER_SECONDS = 60;
 function buildCsp() {
   return [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com https://*.gstatic.com",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.i.posthog.com",
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https:",
     "font-src 'self' data:",
     "media-src 'self' blob: https:",
-    "connect-src 'self' https://accounts.google.com https://*.google.com https://*.gstatic.com",
+    "worker-src 'self' blob:",
+    "connect-src 'self' https://accounts.google.com https://*.google.com https://*.gstatic.com https://*.i.posthog.com",
     "frame-src https://accounts.google.com https://*.google.com",
     "object-src 'none'",
     "base-uri 'self'",
@@ -102,6 +103,10 @@ function buildRequestContinuationResponse(requestHeaders?: Headers) {
 }
 
 export async function middleware(request: NextRequest) {
+  if (request.nextUrl.pathname.startsWith("/ingest/")) {
+    return NextResponse.next();
+  }
+
   const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME)?.value;
   const accessToken = request.cookies.get(AUTH_COOKIE_NAME)?.value;
   const refreshToken = request.cookies.get(REFRESH_COOKIE_NAME)?.value;

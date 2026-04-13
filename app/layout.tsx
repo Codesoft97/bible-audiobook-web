@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 
 import "@/app/globals.css";
 
+import { PostHogIdentity } from "@/components/analytics/posthog-identity";
 import { PersistentMiniPlayer } from "@/components/app/mini-player";
 import { AudioProvider } from "@/components/providers/audio-context";
 import { AppGoogleOAuthProvider } from "@/components/providers/google-oauth-provider";
@@ -32,6 +33,7 @@ export default function RootLayout({
         <AppGoogleOAuthProvider>
           <ThemeProvider>
             <AudioProvider>
+              <PostHogIdentity />
               {children}
               <PersistentMiniPlayer />
             </AudioProvider>
