@@ -3,6 +3,8 @@ import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { APP_ROUTES, CONTACT_EMAIL } from "@/lib/constants";
 
+const DEFAULT_GOOGLE_PLAY_URL =
+  "https://play.google.com/store/apps/details?id=com.isaquerosa977.bibleaudiobookapp";
 const googlePlayUrl = process.env.NEXT_PUBLIC_GOOGLE_PLAY_URL?.trim() ?? "";
 const appStoreUrl = process.env.NEXT_PUBLIC_APP_STORE_URL?.trim() ?? "";
 
@@ -10,7 +12,7 @@ export const SITE_STORE_LINKS = [
   {
     id: "google_play",
     label: "Google Play",
-    href: googlePlayUrl || "https://play.google.com/store",
+    href: googlePlayUrl || DEFAULT_GOOGLE_PLAY_URL,
     hint: "Android",
     available: true,
     badge: undefined,
