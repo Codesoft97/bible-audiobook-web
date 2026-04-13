@@ -9,6 +9,7 @@ import { GoogleLoginButton } from "@/components/auth/google-login-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { APP_ROUTES } from "@/lib/constants";
+import { captureAnalyticsEvent } from "@/lib/posthog-client";
 import { loginSchema } from "@/lib/validation";
 
 interface ApiResponse {
@@ -40,6 +41,8 @@ export function LoginForm() {
       return;
     }
 
+    captureAnalyticsEvent("auth_login_submit", { method: "password" });
+
     try {
       const response = await fetch("/api/auth/login", {
         method: "POST",
@@ -53,15 +56,25 @@ export function LoginForm() {
       const data = (await response.json()) as ApiResponse;
 
       if (!response.ok || data.status !== "success") {
+        captureAnalyticsEvent("auth_login_failed", {
+          method: "password",
+          status: response.status,
+        });
         setError(data.message ?? "Nao foi possivel entrar.");
         setSubmitting(false);
         return;
       }
     } catch {
+      captureAnalyticsEvent("auth_login_failed", {
+        method: "password",
+        reason: "network_error",
+      });
       setError("Nao foi possivel conectar ao servidor.");
       setSubmitting(false);
       return;
     }
+
+    captureAnalyticsEvent("auth_login_success", { method: "password" });
 
     startTransition(() => {
       router.push(APP_ROUTES.profiles);

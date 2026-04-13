@@ -1,12 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { LandingAnalytics } from "@/components/analytics/landing-analytics";
 import {
   BookOpenText,
   CheckCircle2,
   Headphones,
   MessageCircleHeart,
   HandsPraying,
+  NotebookIcon,
   PlayCircle,
 } from "@/components/icons";
 
@@ -26,7 +28,19 @@ const FEATURES = [
     imageAlt: "Tela principal da plataforma Evangelho em áudio",
     highlights: ["Livros e capitulos organizados", "Retome do ponto em que parou"],
     glowClassName: "bg-[radial-gradient(circle,rgba(229,187,102,0.24),transparent_68%)]",
-    imageClassName: "object-[center_50%]",
+    imageClassName: "object-[center_45%]",
+  },
+  {
+    eyebrow: "Devocional diário",
+    title: "Devocionais",
+    description:
+      "Acompanhe reflexões para fortalecer sua fé e manter a Palavra de Deus presente na sua rotina.",
+    icon: NotebookIcon,
+    imageSrc: "/landing_devocional.png",
+    imageAlt: "Tela de devocional no aplicativo Evangelho em áudio",
+    highlights: ["Reflexões para o dia", "Mais constância no tempo com Deus"],
+    glowClassName: "bg-[radial-gradient(circle,rgba(87,151,122,0.22),transparent_68%)]",
+    imageClassName: "object-[center_45%]",
   },
   {
     eyebrow: "Histórias reflexivas",
@@ -50,7 +64,7 @@ const FEATURES = [
     imageAlt: "Pessoa ouvindo ensinamentos biblicos no celular",
     highlights: ["Temas para o dia a dia", "Palavra de conforto em momentos difíceis"],
     glowClassName: "bg-[radial-gradient(circle,rgba(229,187,102,0.2),transparent_70%)]",
-    imageClassName: "!object-contain object-center scale-[0.92] md:scale-[0.98]",
+    imageClassName: "object-[center_45%]",
   },
   {
     eyebrow: "Entrega automática",
@@ -68,11 +82,14 @@ const FEATURES = [
 
 const STORE_LINKS = SITE_STORE_LINKS;
 const SOCIAL_LINKS = SITE_SOCIAL_LINKS;
+const DOWNLOAD_SECTION_HREF = "#baixar-app";
+const PLANS_SECTION_HREF = "#planos";
 
 const MONTHLY_PLAN_FEATURES = [
   "Biblioteca dos livros da Bíblia em áudio",
   "Jornadas de personagens bíblicos em áudio",
   "Caixinha de promessas em áudio",
+  "Devocionais para fortalecer sua rotina espiritual",
   "Ensinamentos bíblicos sobre assuntos da vida em áudio",
   "Parábolas da Bíblia em áudio",
   "Envios de promessas diárias via WhatsApp",
@@ -94,12 +111,13 @@ const LANDING_MONTHLY_PLAN_FEATURES = MONTHLY_PLAN_FEATURES.filter(
 );
 
 const LANDING_HERO_DESCRIPTION = WHATSAPP_FEATURE_ENABLED
-  ? "Biblia em áudio, jornadas, promessas, parábolas e envio no WhatsApp em uma experiência única para toda a famí­lia."
-  : "Biblia em áudio, jornadas, promessas e parábolas em uma experiência única para toda a famí­lia.";
+  ? "Biblia em áudio, jornadas, promessas, devocionais, parábolas e envio no WhatsApp em uma experiência única para toda a famí­lia."
+  : "Biblia em áudio, jornadas, promessas, devocionais e parábolas em uma experiência única para toda a famí­lia.";
 
 export default function HomePage() {
   return (
     <main className="relative min-h-screen overflow-hidden auth-atmosphere">
+      <LandingAnalytics />
       <div className="mx-auto w-full max-w-6xl px-4 pb-10 pt-28 md:px-6 md:pt-32">
         <header className="fixed inset-x-0 top-0 z-40 border-b border-border/65 bg-card/85 backdrop-blur-md">
           <div className="mx-auto w-full max-w-6xl px-4 py-3 md:px-6">
@@ -128,18 +146,13 @@ export default function HomePage() {
               </nav>
 
               <div className="flex flex-nowrap items-center justify-end gap-1.5 sm:gap-2">
-                <Link
-                  href={APP_ROUTES.login}
-                  className="inline-flex h-9 items-center justify-center rounded-full border border-border/70 bg-background/70 px-3 text-xs font-medium text-foreground transition hover:bg-background sm:h-10 sm:px-4 sm:text-sm"
+                <a
+                  href={DOWNLOAD_SECTION_HREF}
+                  data-analytics-label="header_download_app"
+                  className="inline-flex h-9 items-center justify-center rounded-full bg-primary px-4 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90 sm:h-10 sm:px-5 sm:text-sm"
                 >
-                  Login
-                </Link>
-                <Link
-                  href={APP_ROUTES.register}
-                  className="inline-flex h-9 items-center justify-center rounded-full bg-primary px-3 text-xs font-medium text-primary-foreground transition hover:bg-primary/90 sm:h-10 sm:px-4 sm:text-sm"
-                >
-                  Cadastro
-                </Link>
+                  Baixar app
+                </a>
                 <ThemeToggle />
               </div>
             </div>
@@ -181,18 +194,20 @@ export default function HomePage() {
             </p>
 
             <div className="mt-7 flex flex-wrap items-center gap-3">
-              <Link
-                href={APP_ROUTES.register}
+              <a
+                href={DOWNLOAD_SECTION_HREF}
+                data-analytics-label="hero_download_app"
                 className="inline-flex h-12 items-center justify-center rounded-full bg-primary px-6 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
               >
-                Criar conta grátis
-              </Link>
-              <Link
-                href={APP_ROUTES.login}
+                Baixar aplicativo
+              </a>
+              <a
+                href={PLANS_SECTION_HREF}
+                data-analytics-label="hero_view_plans"
                 className="inline-flex h-12 items-center justify-center rounded-full border border-border/70 bg-card/65 px-6 text-sm font-semibold text-foreground transition hover:bg-card"
               >
-                Ja tenho conta
-              </Link>
+                Ver planos
+              </a>
             </div>
           </div>
 
@@ -322,7 +337,7 @@ export default function HomePage() {
                 Escolha o melhor plano para sua família
               </h2>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground md:text-base">
-                Ao realizar seu cadastro você já começa no período gratuito para testar a plataforma sem compromisso.
+                Baixe o app para comecar pelo celular, testar a plataforma e acompanhar sua rotina espiritual.
               </p>
             </div>
 
@@ -352,12 +367,13 @@ export default function HomePage() {
                   </li>
                 ))}
               </ul>
-              <Link
-                href={APP_ROUTES.register}
+              <a
+                href={DOWNLOAD_SECTION_HREF}
+                data-analytics-label="monthly_plan_download_app"
                 className="mt-5 inline-flex h-11 w-full items-center justify-center rounded-xl border border-highlight/45 bg-highlight px-4 text-sm font-semibold text-background shadow-[0_14px_30px_rgba(229,187,102,0.22)] transition hover:bg-highlight/90"
               >
-                Assinar plano mensal
-              </Link>
+                Baixar app e testar
+              </a>
             </article>
 
             <article className="rounded-2xl border border-highlight/35 bg-gradient-to-br from-highlight/12 to-background p-5">
@@ -380,12 +396,13 @@ export default function HomePage() {
                   </li>
                 ))}
               </ul>
-              <Link
-                href={APP_ROUTES.register}
+              <a
+                href={DOWNLOAD_SECTION_HREF}
+                data-analytics-label="yearly_plan_download_app"
                 className="mt-5 inline-flex h-11 w-full items-center justify-center rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
               >
-                Assinar plano anual
-              </Link>
+                Baixar app e testar
+              </a>
             </article>
           </div>
         </section>
@@ -398,14 +415,14 @@ export default function HomePage() {
             <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-center">
               <div>
                 <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
-                  Versão mobile
+                  Baixe nas lojas
                 </p>
                 <h2 className="mt-1 text-3xl font-semibold text-foreground md:text-4xl">
-                  Leve o Evangelho com você
+                  Comece pelo aplicativo
                 </h2>
                 <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground md:text-base">
-                  Baixe o app no seu celular e continue ouvindo quando estiver no transito, na
-                  caminhada ou no seu tempo de devocional.
+                  Instale no celular para ouvir a Palavra de Deus no caminho, em casa ou no seu
+                  tempo de devocional.
                 </p>
               </div>
 
@@ -417,6 +434,7 @@ export default function HomePage() {
                       href={store.href}
                       target="_blank"
                       rel="noreferrer"
+                      data-analytics-label={`store_download_${store.id}`}
                       className="inline-flex min-w-[170px] items-center justify-between rounded-2xl border border-border/65 bg-background/70 px-4 py-3 text-left transition hover:border-highlight/40 hover:bg-background"
                     >
                       <span>
@@ -469,15 +487,15 @@ export default function HomePage() {
           <div>
             <p className="text-sm font-semibold text-foreground">Acesso rapido</p>
             <div className="mt-3 flex flex-col gap-2 text-sm text-muted-foreground">
-              <Link href={APP_ROUTES.login} className="transition hover:text-foreground">
-                Login
-              </Link>
-              <Link href={APP_ROUTES.register} className="transition hover:text-foreground">
-                Cadastro
-              </Link>
-              <Link href={APP_ROUTES.forgotPassword} className="transition hover:text-foreground">
-                Recuperar senha
-              </Link>
+              <a href="#funcionalidades" className="transition hover:text-foreground">
+                Funcionalidades
+              </a>
+              <a href={PLANS_SECTION_HREF} className="transition hover:text-foreground">
+                Planos
+              </a>
+              <a href={DOWNLOAD_SECTION_HREF} className="transition hover:text-foreground">
+                Baixar app
+              </a>
               <Link href={APP_ROUTES.privacyPolicy} className="transition hover:text-foreground">
                 Política de privacidade
               </Link>
@@ -497,6 +515,7 @@ export default function HomePage() {
                     href={store.href}
                     target="_blank"
                     rel="noreferrer"
+                    data-analytics-label={`footer_store_download_${store.id}`}
                     className="transition hover:text-foreground"
                   >
                     {store.label} ({store.hint})

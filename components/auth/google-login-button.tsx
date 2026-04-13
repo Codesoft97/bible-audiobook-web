@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { GoogleLogo, LoaderCircle } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { APP_ROUTES } from "@/lib/constants";
+import { captureAnalyticsEvent } from "@/lib/posthog-client";
 
 interface ApiResponse {
   status: "success" | "error";
@@ -53,12 +54,17 @@ export function GoogleLoginButton({ flow = "login" }: GoogleLoginButtonProps) {
     const credential = response.credential;
 
     if (!credential) {
+      captureAnalyticsEvent("auth_google_failed", {
+        flow,
+        reason: "missing_credential",
+      });
       setMessage("Nao foi possivel validar sua conta Google.");
       return;
     }
 
     setMessage("");
     setAuthenticating(true);
+    captureAnalyticsEvent("auth_google_submit", { flow });
 
     try {
       const authResponse = await fetch("/api/auth/google", {
@@ -73,15 +79,25 @@ export function GoogleLoginButton({ flow = "login" }: GoogleLoginButtonProps) {
       const data = (await authResponse.json()) as ApiResponse;
 
       if (!authResponse.ok || data.status !== "success") {
+        captureAnalyticsEvent("auth_google_failed", {
+          flow,
+          status: authResponse.status,
+        });
         setMessage(data.message ?? "Falha ao autenticar com Google.");
         setAuthenticating(false);
         return;
       }
     } catch {
+      captureAnalyticsEvent("auth_google_failed", {
+        flow,
+        reason: "network_error",
+      });
       setMessage("Nao foi possivel conectar ao servidor.");
       setAuthenticating(false);
       return;
     }
+
+    captureAnalyticsEvent("auth_google_success", { flow });
 
     startTransition(() => {
       router.push(APP_ROUTES.profiles);
@@ -105,6 +121,10 @@ export function GoogleLoginButton({ flow = "login" }: GoogleLoginButtonProps) {
                   void handleCredential(response);
                 }}
                 onError={() => {
+                  captureAnalyticsEvent("auth_google_failed", {
+                    flow,
+                    reason: "google_widget_error",
+                  });
                   setMessage("Falha ao iniciar autenticacao com Google.");
                 }}
                 text="continue_with"

@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { useAudio } from "@/components/providers/audio-context";
 import { Button, type ButtonProps } from "@/components/ui/button";
 import { APP_ROUTES } from "@/lib/constants";
+import { resetAnalytics } from "@/lib/posthog-client";
 import { cn } from "@/lib/utils";
 
 export function LogoutButton({
@@ -42,6 +43,8 @@ export function LogoutButton({
       setIsLoggingOut(false);
       return;
     }
+
+    resetAnalytics();
 
     startTransition(() => {
       router.push(APP_ROUTES.login);
