@@ -52,7 +52,7 @@ export function SiteFooter() {
         </div>
 
         <div>
-          <p className="text-sm font-semibold text-foreground">Acesso rapido</p>
+          <p className="text-sm font-semibold text-foreground">Acesso rápido</p>
           <div className="mt-3 flex flex-col gap-2 text-sm text-muted-foreground">
             <Link href={APP_ROUTES.login} className="transition hover:text-foreground">
               Login
@@ -121,7 +121,7 @@ export function SiteFooter() {
           <p className="text-sm font-semibold text-foreground">Contato</p>
           <div className="mt-3 flex flex-col gap-2 text-sm text-muted-foreground">
             <a href={`mailto:${CONTACT_EMAIL}`} className="transition hover:text-foreground">
-              contato@evangelhoemaudio
+              {CONTACT_EMAIL}
             </a>
           </div>
         </div>
