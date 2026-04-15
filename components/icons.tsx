@@ -1,6 +1,8 @@
 import {
   ArrowClockwise,
   ArrowCounterClockwise,
+  AppleLogo,
+  ArrowSquareOut,
   BookmarkSimple,
   BookOpenText,
   CaretLeft,
@@ -14,6 +16,7 @@ import {
   CreditCard,
   Crown,
   GoogleLogo,
+  GooglePlayLogo,
   HandsPraying,
   Headphones,
   HighlighterCircle as HighlighterCircleIcon,
@@ -89,9 +92,12 @@ export function PanelLeftClose(props: IconProps) {
 
 export {
   BookOpenText,
+  AppleLogo,
+  ArrowSquareOut,
   CreditCard,
   Crown,
   GoogleLogo,
+  GooglePlayLogo,
   HandsPraying,
   Headphones,
   Image,

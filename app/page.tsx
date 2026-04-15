@@ -3,13 +3,17 @@ import Link from "next/link";
 
 import { LandingAnalytics } from "@/components/analytics/landing-analytics";
 import {
+  AppleLogo,
+  ArrowSquareOut,
   BookOpenText,
   CheckCircle2,
+  GooglePlayLogo,
   Headphones,
   MessageCircleHeart,
   HandsPraying,
   NotebookIcon,
   PlayCircle,
+  type LucideIcon,
 } from "@/components/icons";
 
 import { Logo } from "@/components/logo";
@@ -85,6 +89,16 @@ const SOCIAL_LINKS = SITE_SOCIAL_LINKS;
 const DOWNLOAD_SECTION_HREF = "#baixar-app";
 const PLANS_SECTION_HREF = "#planos";
 
+const STORE_BUTTON_ICONS = {
+  google_play: GooglePlayLogo,
+  app_store: AppleLogo,
+} satisfies Record<(typeof STORE_LINKS)[number]["id"], LucideIcon>;
+
+const STORE_BUTTON_ACTIONS = {
+  google_play: "Baixar no",
+  app_store: "Baixar na",
+} satisfies Record<(typeof STORE_LINKS)[number]["id"], string>;
+
 const MONTHLY_PLAN_FEATURES = [
   "Biblioteca dos livros da Bíblia em áudio",
   "Jornadas de personagens bíblicos em áudio",
@@ -127,21 +141,15 @@ export default function HomePage() {
               <nav className="hidden items-center justify-center gap-2 lg:flex">
                 <a
                   href="#funcionalidades"
-                  className="rounded-full px-4 py-2 text-sm font-medium text-muted-foreground transition hover:bg-background/75 hover:text-foreground"
+                  className="inline-flex h-10 items-center justify-center rounded-lg border border-border/60 bg-background/55 px-4 text-sm font-semibold text-foreground shadow-[0_10px_24px_rgba(11,31,53,0.07)] transition hover:-translate-y-0.5 hover:border-highlight/45 hover:bg-background hover:text-highlight focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-highlight"
                 >
                   Funcionalidades
                 </a>
                 <a
                   href="#planos"
-                  className="rounded-full px-4 py-2 text-sm font-medium text-muted-foreground transition hover:bg-background/75 hover:text-foreground"
+                  className="inline-flex h-10 items-center justify-center rounded-lg border border-border/60 bg-background/55 px-4 text-sm font-semibold text-foreground shadow-[0_10px_24px_rgba(11,31,53,0.07)] transition hover:-translate-y-0.5 hover:border-highlight/45 hover:bg-background hover:text-highlight focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-highlight"
                 >
                   Planos
-                </a>
-                <a
-                  href="#baixar-app"
-                  className="rounded-full px-4 py-2 text-sm font-medium text-muted-foreground transition hover:bg-background/75 hover:text-foreground"
-                >
-                  Baixar app
                 </a>
               </nav>
 
@@ -149,7 +157,7 @@ export default function HomePage() {
                 <a
                   href={DOWNLOAD_SECTION_HREF}
                   data-analytics-label="header_download_app"
-                  className="inline-flex h-9 items-center justify-center rounded-full bg-primary px-4 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90 sm:h-10 sm:px-5 sm:text-sm"
+                  className="inline-flex h-9 items-center justify-center rounded-lg bg-primary px-4 text-xs font-semibold text-primary-foreground shadow-[0_12px_26px_rgba(11,31,53,0.16)] transition hover:-translate-y-0.5 hover:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-highlight sm:h-10 sm:px-5 sm:text-sm"
                 >
                   Baixar app
                 </a>
@@ -157,24 +165,18 @@ export default function HomePage() {
               </div>
             </div>
 
-            <nav className="mt-3 grid grid-cols-3 gap-2 lg:hidden">
+            <nav className="mt-3 grid grid-cols-2 gap-2 lg:hidden">
               <a
                 href="#funcionalidades"
-                className="inline-flex h-9 items-center justify-center rounded-full border border-border/60 bg-background/65 px-3 text-[11px] font-medium text-foreground sm:text-xs"
+                className="inline-flex h-10 items-center justify-center rounded-lg border border-border/65 bg-background/70 px-3 text-[11px] font-semibold text-foreground shadow-[0_8px_20px_rgba(11,31,53,0.08)] transition hover:border-highlight/45 hover:bg-background hover:text-highlight focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-highlight sm:text-xs"
               >
                 Funcionalidades
               </a>
               <a
                 href="#planos"
-                className="inline-flex h-9 items-center justify-center rounded-full border border-border/60 bg-background/65 px-3 text-[11px] font-medium text-foreground sm:text-xs"
+                className="inline-flex h-10 items-center justify-center rounded-lg border border-border/65 bg-background/70 px-3 text-[11px] font-semibold text-foreground shadow-[0_8px_20px_rgba(11,31,53,0.08)] transition hover:border-highlight/45 hover:bg-background hover:text-highlight focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-highlight sm:text-xs"
               >
                 Planos
-              </a>
-              <a
-                href="#baixar-app"
-                className="inline-flex h-9 items-center justify-center rounded-full border border-border/60 bg-background/65 px-3 text-[11px] font-medium text-foreground sm:text-xs"
-              >
-                Baixar app
               </a>
             </nav>
           </div>
@@ -314,7 +316,6 @@ export default function HomePage() {
                         alt={feature.imageAlt}
                         fill
                         priority={index === 0}
-                        quality={100}
                         sizes="(min-width: 1280px) 760px, (min-width: 1024px) 62vw, 100vw"
                         className={`object-cover drop-shadow-[0_28px_55px_rgba(0,0,0,0.38)] ${feature.imageClassName}`}
                       />
@@ -421,54 +422,74 @@ export default function HomePage() {
                   Comece pelo aplicativo
                 </h2>
                 <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground md:text-base">
-                  Instale no celular para ouvir a Palavra de Deus no caminho, em casa ou no seu
-                  tempo de devocional.
+                  Escolha a loja do seu celular e instale para ouvir a Palavra de Deus no caminho,
+                  em casa ou no seu tempo de devocional.
                 </p>
               </div>
 
-              <div className="flex flex-wrap gap-3">
-                {STORE_LINKS.map((store) =>
-                  store.available ? (
+              <div className="flex w-full flex-wrap gap-3 lg:w-auto">
+                {STORE_LINKS.map((store) => {
+                  const StoreIcon = STORE_BUTTON_ICONS[store.id];
+                  const storeAction = STORE_BUTTON_ACTIONS[store.id];
+
+                  return store.available ? (
                     <a
                       key={store.label}
                       href={store.href}
                       target="_blank"
                       rel="noreferrer"
+                      aria-label={`${storeAction} ${store.label} para ${store.hint}`}
                       data-analytics-label={`store_download_${store.id}`}
-                      className="inline-flex min-w-[170px] items-center justify-between rounded-2xl border border-border/65 bg-background/70 px-4 py-3 text-left transition hover:border-highlight/40 hover:bg-background"
+                      className="group inline-flex min-h-[78px] w-full min-w-[230px] items-center justify-between gap-4 rounded-lg border border-highlight/45 bg-foreground px-4 py-3 text-left text-background shadow-[0_18px_42px_rgba(11,31,53,0.18)] transition duration-200 hover:-translate-y-0.5 hover:border-highlight hover:bg-foreground/95 hover:shadow-[0_22px_48px_rgba(11,31,53,0.24)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-highlight sm:w-auto"
                     >
-                      <span>
-                        <span className="block text-xs uppercase tracking-[0.12em] text-muted-foreground">
-                          {store.hint}
+                      <span className="flex min-w-0 items-center gap-3">
+                        <span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-background/12 text-background ring-1 ring-background/15">
+                          <StoreIcon className="size-7" weight="fill" />
                         </span>
-                        <span className="block text-sm font-semibold text-foreground">{store.label}</span>
-                        {store.badge ? (
-                          <span className="mt-1 inline-flex rounded-full border border-highlight/35 bg-highlight/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-highlight">
-                            {store.badge}
+                        <span className="min-w-0">
+                          <span className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-background/75">
+                            {store.hint}
                           </span>
-                        ) : null}
+                          <span className="block text-base font-semibold leading-5 text-background">
+                            {storeAction} {store.label}
+                          </span>
+                          {store.badge ? (
+                            <span className="mt-1 inline-flex rounded-full border border-background/25 bg-background/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-background">
+                              {store.badge}
+                            </span>
+                          ) : null}
+                        </span>
                       </span>
-                      <PlayCircle className="size-4 text-highlight" />
+                      <ArrowSquareOut className="size-5 shrink-0 text-background/65 transition group-hover:translate-x-0.5 group-hover:text-background" />
                     </a>
                   ) : (
                     <div
                       key={store.label}
                       aria-disabled="true"
-                      className="inline-flex min-w-[170px] items-center justify-between rounded-2xl border border-border/60 bg-background/45 px-4 py-3 text-left opacity-80"
+                      className="inline-flex min-h-[78px] w-full min-w-[230px] cursor-not-allowed items-center justify-between gap-4 rounded-lg border border-border/60 bg-background/45 px-4 py-3 text-left opacity-80 sm:w-auto"
                     >
-                      <span>
-                        <span className="block text-xs uppercase tracking-[0.12em] text-muted-foreground">
-                          {store.hint}
+                      <span className="flex min-w-0 items-center gap-3">
+                        <span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-muted/55 text-muted-foreground ring-1 ring-border/50">
+                          <StoreIcon className="size-7" weight="fill" />
                         </span>
-                        <span className="block text-sm font-semibold text-foreground">{store.label}</span>
-                        <span className="mt-1 inline-flex rounded-full border border-highlight/35 bg-highlight/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-highlight">
-                          {store.badge}
+                        <span className="min-w-0">
+                          <span className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                            {store.hint}
+                          </span>
+                          <span className="block text-base font-semibold leading-5 text-foreground">
+                            {store.label}
+                          </span>
+                          <span className="mt-1 inline-flex rounded-full border border-highlight/35 bg-highlight/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-highlight">
+                            {store.badge}
+                          </span>
                         </span>
                       </span>
-                      <PlayCircle className="size-4 text-muted-foreground/60" />
+                      <span className="rounded-full border border-border/60 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                        Em breve
+                      </span>
                     </div>
-                  ),
-                )}
+                  );
+                })}
               </div>
             </div>
           </div>
