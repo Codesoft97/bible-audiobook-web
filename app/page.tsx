@@ -6,7 +6,6 @@ import {
   AppleLogo,
   ArrowSquareOut,
   BookOpenText,
-  CheckCircle2,
   GooglePlayLogo,
   Headphones,
   MessageCircleHeart,
@@ -87,7 +86,6 @@ const FEATURES = [
 const STORE_LINKS = SITE_STORE_LINKS;
 const SOCIAL_LINKS = SITE_SOCIAL_LINKS;
 const DOWNLOAD_SECTION_HREF = "#baixar-app";
-const PLANS_SECTION_HREF = "#planos";
 
 const STORE_BUTTON_ICONS = {
   google_play: GooglePlayLogo,
@@ -99,29 +97,8 @@ const STORE_BUTTON_ACTIONS = {
   app_store: "Baixar na",
 } satisfies Record<(typeof STORE_LINKS)[number]["id"], string>;
 
-const MONTHLY_PLAN_FEATURES = [
-  "Biblioteca dos livros da Bíblia em áudio",
-  "Jornadas de personagens bíblicos em áudio",
-  "Caixinha de promessas em áudio",
-  "Devocionais para fortalecer sua rotina espiritual",
-  "Ensinamentos bíblicos sobre assuntos da vida em áudio",
-  "Parábolas da Bíblia em áudio",
-  "Envios de promessas diárias via WhatsApp",
-  "Envios de capítulos diários via WhatsApp",
-] as const;
-
-const YEARLY_PLAN_FEATURES = [
-  "Todos os benefícios do plano mensal",
-  "Melhor custo para uso contínuo",
-  "Renovação anual simples",
-] as const;
-
 const LANDING_FEATURES = FEATURES.filter(
   (feature) => WHATSAPP_FEATURE_ENABLED || feature.title !== "WhatsApp",
-);
-
-const LANDING_MONTHLY_PLAN_FEATURES = MONTHLY_PLAN_FEATURES.filter(
-  (feature) => WHATSAPP_FEATURE_ENABLED || !feature.includes("WhatsApp"),
 );
 
 const LANDING_HERO_DESCRIPTION = WHATSAPP_FEATURE_ENABLED
@@ -145,12 +122,6 @@ export default function HomePage() {
                 >
                   Funcionalidades
                 </a>
-                <a
-                  href="#planos"
-                  className="inline-flex h-10 items-center justify-center rounded-lg border border-border/60 bg-background/55 px-4 text-sm font-semibold text-foreground shadow-[0_10px_24px_rgba(11,31,53,0.07)] transition hover:-translate-y-0.5 hover:border-highlight/45 hover:bg-background hover:text-highlight focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-highlight"
-                >
-                  Planos
-                </a>
               </nav>
 
               <div className="flex flex-nowrap items-center justify-end gap-1.5 sm:gap-2">
@@ -165,18 +136,12 @@ export default function HomePage() {
               </div>
             </div>
 
-            <nav className="mt-3 grid grid-cols-2 gap-2 lg:hidden">
+            <nav className="mt-3 flex lg:hidden">
               <a
                 href="#funcionalidades"
-                className="inline-flex h-10 items-center justify-center rounded-lg border border-border/65 bg-background/70 px-3 text-[11px] font-semibold text-foreground shadow-[0_8px_20px_rgba(11,31,53,0.08)] transition hover:border-highlight/45 hover:bg-background hover:text-highlight focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-highlight sm:text-xs"
+                className="inline-flex h-10 w-full items-center justify-center rounded-lg border border-border/65 bg-background/70 px-3 text-[11px] font-semibold text-foreground shadow-[0_8px_20px_rgba(11,31,53,0.08)] transition hover:border-highlight/45 hover:bg-background hover:text-highlight focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-highlight sm:text-xs"
               >
                 Funcionalidades
-              </a>
-              <a
-                href="#planos"
-                className="inline-flex h-10 items-center justify-center rounded-lg border border-border/65 bg-background/70 px-3 text-[11px] font-semibold text-foreground shadow-[0_8px_20px_rgba(11,31,53,0.08)] transition hover:border-highlight/45 hover:bg-background hover:text-highlight focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-highlight sm:text-xs"
-              >
-                Planos
               </a>
             </nav>
           </div>
@@ -202,13 +167,6 @@ export default function HomePage() {
                 className="inline-flex h-12 items-center justify-center rounded-full bg-primary px-6 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
               >
                 Baixar aplicativo
-              </a>
-              <a
-                href={PLANS_SECTION_HREF}
-                data-analytics-label="hero_view_plans"
-                className="inline-flex h-12 items-center justify-center rounded-full border border-border/70 bg-card/65 px-6 text-sm font-semibold text-foreground transition hover:bg-card"
-              >
-                Ver planos
               </a>
             </div>
           </div>
@@ -328,87 +286,6 @@ export default function HomePage() {
         </section>
 
         <section
-          id="planos"
-          className="mt-12 scroll-mt-28 rounded-3xl border border-border/70 bg-card/88 p-6 shadow-glow md:p-8"
-        >
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Planos</p>
-              <h2 className="mt-1 text-3xl font-semibold text-foreground md:text-4xl">
-                Escolha o melhor plano para sua família
-              </h2>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground md:text-base">
-                Baixe o app para começar pelo celular, testar a plataforma e acompanhar sua rotina espiritual.
-              </p>
-            </div>
-
-            <div className="flex flex-col items-start gap-2">
-              <span className="inline-flex items-center rounded-full border border-success/35 bg-success/10 px-4 py-2 text-sm font-semibold text-success">
-                7 dias grátis para testar
-              </span>
-              <p className="text-sm font-medium text-muted-foreground">Cancele a qualquer momento.</p>
-            </div>
-          </div>
-
-          <div className="mt-6 grid gap-4 md:grid-cols-2">
-            <article className="rounded-2xl border border-border/65 bg-background/65 p-5">
-              <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Mensal</p>
-              <p className="mt-3 text-4xl font-semibold text-foreground">R$ 12,90</p>
-              <p className="mt-1 text-sm text-muted-foreground">por mês</p>
-              <ul className="mt-4 grid gap-2 text-sm">
-                {LANDING_MONTHLY_PLAN_FEATURES.map((feature) => (
-                  <li
-                    key={feature}
-                    className="flex items-start gap-2.5 rounded-xl border border-border/60 bg-card/50 px-3 py-2.5 text-foreground/90"
-                  >
-                    <span className="mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-success/15 text-success">
-                      <CheckCircle2 className="size-3.5" />
-                    </span>
-                    <span className="leading-5">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-              <a
-                href={DOWNLOAD_SECTION_HREF}
-                data-analytics-label="monthly_plan_download_app"
-                className="mt-5 inline-flex h-11 w-full items-center justify-center rounded-xl border border-highlight/45 bg-highlight px-4 text-sm font-semibold text-background shadow-[0_14px_30px_rgba(229,187,102,0.22)] transition hover:bg-highlight/90"
-              >
-                Baixar app e testar
-              </a>
-            </article>
-
-            <article className="rounded-2xl border border-highlight/35 bg-gradient-to-br from-highlight/12 to-background p-5">
-              <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Anual</p>
-              <p className="mt-3 text-4xl font-semibold text-foreground">R$ 119,99</p>
-              <p className="mt-1 text-sm text-muted-foreground">por ano</p>
-              <p className="mt-3 inline-flex rounded-full border border-highlight/40 bg-highlight/12 px-3 py-1 text-xs font-semibold uppercase tracking-[0.08em] text-highlight">
-                Economia em relação ao mensal
-              </p>
-              <ul className="mt-4 grid gap-2 text-sm">
-                {YEARLY_PLAN_FEATURES.map((feature) => (
-                  <li
-                    key={feature}
-                    className="flex items-start gap-2.5 rounded-xl border border-highlight/30 bg-highlight/10 px-3 py-2.5 text-foreground/90"
-                  >
-                    <span className="mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-highlight/20 text-highlight">
-                      <CheckCircle2 className="size-3.5" />
-                    </span>
-                    <span className="leading-5">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-              <a
-                href={DOWNLOAD_SECTION_HREF}
-                data-analytics-label="yearly_plan_download_app"
-                className="mt-5 inline-flex h-11 w-full items-center justify-center rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
-              >
-                Baixar app e testar
-              </a>
-            </article>
-          </div>
-        </section>
-
-        <section
           id="baixar-app"
           className="relative left-1/2 mt-12 w-screen -translate-x-1/2 scroll-mt-28 border-y border-border/70 bg-gradient-to-br from-card/90 to-accent/45"
         >
@@ -510,9 +387,6 @@ export default function HomePage() {
             <div className="mt-3 flex flex-col gap-2 text-sm text-muted-foreground">
               <a href="#funcionalidades" className="transition hover:text-foreground">
                 Funcionalidades
-              </a>
-              <a href={PLANS_SECTION_HREF} className="transition hover:text-foreground">
-                Planos
               </a>
               <a href={DOWNLOAD_SECTION_HREF} className="transition hover:text-foreground">
                 Baixar app
